@@ -1,0 +1,5 @@
+node_modules/
+*.local
+.DS_Store
+npm-debug.log*
+# dist/ は raw.githack 配信のため、あえてコミットします（ビルド成果物）
