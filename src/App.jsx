@@ -12,6 +12,25 @@ const MENU_VERSION = 4; // メニュー構造を変えたら +1 して初期化�
 const ADMIN_PW = '1234'; // 管理者パスワード（あとで変更可）
 const FLAVOR_PRESETS = ['塩', '味噌', 'バジル']; // 本日の味メモ候補
 
+// 単位ごとの入力設定（step=±ボタンの刻み, chips=クイック加算, wheel=ロール選択の最大値/刻み）
+const UNIT_CONFIG = {
+  g: { step: 50, chips: [100, 250, 500], wheelMax: 3000, wheelStep: 50 },
+  kg: { step: 0.5, chips: [1, 2, 5], wheelMax: 20, wheelStep: 0.5 },
+};
+const DEFAULT_UNIT_CFG = { step: 1, chips: [1, 5, 10], wheelMax: 50, wheelStep: 1 };
+const cfgFor = (unit) => UNIT_CONFIG[unit] || DEFAULT_UNIT_CFG;
+
+// 単位のワンタップ候補
+const UNIT_PRESETS = ['皿', 'g', 'kg', '枚', '本', '個', '尾', '杯', '丁', '鍋', '袋'];
+
+// ロール選択用の数値リストを生成（浮動小数の誤差を丸める）
+const wheelValues = (unit) => {
+  const { wheelMax, wheelStep } = cfgFor(unit);
+  const arr = [];
+  for (let v = 0; v <= wheelMax + 1e-9; v += wheelStep) arr.push(Math.round(v * 100) / 100);
+  return arr;
+};
+
 const generateId = () => 'id-' + Math.random().toString(36).slice(2, 9) + '-' + Date.now().toString(36);
 const todayStr = () => new Date().toISOString().split('T')[0];
 const yen = (n) => '¥' + Math.round(n || 0).toLocaleString();
@@ -152,7 +171,8 @@ const App = () => {
   const setExactValue = (itemId, field, value) =>
     setRecords((prev) => {
       const cur = prev[itemId] || { supply: 0, remained: 0 };
-      const next = Math.max(0, Math.round(Number(value) || 0));
+      // 小数2桁まで許可（kg などの 0.5 刻みに対応）
+      const next = Math.max(0, Math.round((Number(value) || 0) * 100) / 100);
       return { ...prev, [itemId]: { ...cur, [field]: next } };
     });
 
@@ -316,6 +336,12 @@ const App = () => {
                 />
               </div>
             </div>
+            <div className="flex flex-wrap gap-1.5">
+              {UNIT_PRESETS.map((u) => (
+                <button key={u} onClick={() => setEditingItem({ ...editingItem, unit: u })}
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold border ${editingItem.unit === u ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200'}`}>{u}</button>
+              ))}
+            </div>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setEditingItem(null)} className="px-3 py-2 text-slate-500 text-sm font-bold">キャンセル</button>
               <button onClick={saveItemEdit} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold flex items-center gap-1"><Save size={16} />保存</button>
@@ -359,6 +385,7 @@ const App = () => {
 
   // 数量入力ボックス（−／数字タップで直接入力／＋／クイックチップ）
   const CountBox = ({ label, color, value, item, field }) => {
+    const cfg = cfgFor(item.unit);
     const c = color === 'indigo'
       ? { bg: 'bg-indigo-50/60', bd: 'border-indigo-100', tx: 'text-indigo-600', num: 'text-indigo-700', plus: 'bg-indigo-600 active:bg-indigo-700', chip: 'text-indigo-600 border-indigo-200' }
       : { bg: 'bg-rose-50/60', bd: 'border-rose-100', tx: 'text-rose-600', num: 'text-rose-700', plus: 'bg-rose-500 active:bg-rose-600', chip: 'text-rose-600 border-rose-200' };
@@ -366,15 +393,18 @@ const App = () => {
       <div className={`flex-1 rounded-xl p-2 border ${c.bg} ${c.bd}`}>
         <div className={`text-[10px] font-bold text-center mb-1 ${c.tx}`}>{label}</div>
         <div className="flex items-center justify-between gap-1 mb-1.5">
-          <button onClick={() => updateValue(item.id, field, -1)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm border active:scale-95 transition-transform"><Minus size={18} /></button>
+          <button onClick={() => updateValue(item.id, field, -cfg.step)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm border active:scale-95 transition-transform"><Minus size={18} /></button>
           <button
             onClick={() => setKeypad({ id: item.id, name: item.name, unit: item.unit, field, value: String(value || '') })}
-            className={`font-bold text-2xl tabular min-w-[2.5ch] text-center ${c.num} active:opacity-60`}
-          >{value}</button>
-          <button onClick={() => updateValue(item.id, field, 1)} className={`w-10 h-10 flex items-center justify-center rounded-lg text-white shadow-md active:scale-95 transition-transform ${c.plus}`}><Plus size={20} /></button>
+            className={`flex flex-col items-center ${c.num} active:opacity-60`}
+          >
+            <span className="font-bold text-2xl tabular leading-none">{value}</span>
+            <span className="text-[9px] opacity-60 font-bold">{item.unit}</span>
+          </button>
+          <button onClick={() => updateValue(item.id, field, cfg.step)} className={`w-10 h-10 flex items-center justify-center rounded-lg text-white shadow-md active:scale-95 transition-transform ${c.plus}`}><Plus size={20} /></button>
         </div>
         <div className="flex gap-1 justify-center">
-          {[5, 10].map((n) => (
+          {cfg.chips.map((n) => (
             <button key={n} onClick={() => updateValue(item.id, field, n)} className={`text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border ${c.chip} active:scale-95`}>+{n}</button>
           ))}
         </div>
@@ -617,9 +647,27 @@ const App = () => {
               />
               <span className="text-slate-400 font-bold">{keypad.unit}</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[1, 5, 10, 20].map((n) => (
-                <button key={n} onClick={() => setKeypad({ ...keypad, value: String((Number(keypad.value) || 0) + n) })} className="py-2.5 bg-slate-100 rounded-xl font-bold text-slate-700 active:bg-indigo-100">+{n}</button>
+            {/* ロール式ピッカー（iPhone/iPadではクルクル回るホイールで表示） */}
+            <div className="mb-3">
+              <div className="relative">
+                <select
+                  value=""
+                  onChange={(e) => { if (e.target.value !== '') setKeypad({ ...keypad, value: e.target.value }); }}
+                  className="w-full appearance-none bg-white border-2 border-indigo-200 rounded-xl py-3 pl-4 pr-10 text-base font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="">🎡 ロールで数を選ぶ…</option>
+                  {wheelValues(keypad.unit).map((v) => (
+                    <option key={v} value={v}>{v}{keypad.unit}</option>
+                  ))}
+                </select>
+                <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* 単位に合わせたクイック加算 */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {cfgFor(keypad.unit).chips.map((n) => (
+                <button key={n} onClick={() => setKeypad({ ...keypad, value: String(Math.round(((Number(keypad.value) || 0) + n) * 100) / 100) })} className="py-2.5 bg-slate-100 rounded-xl font-bold text-slate-700 active:bg-indigo-100">+{n}</button>
               ))}
             </div>
             <div className="flex gap-2">
@@ -640,7 +688,7 @@ const App = () => {
             </div>
             <input value={newDaily.name} onChange={(e) => setNewDaily({ ...newDaily, name: e.target.value })} placeholder="品名（例: 本日限定 上ハラミ）" autoFocus
               className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold mb-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-2 mb-2">
               <input value={newDaily.unit} onChange={(e) => setNewDaily({ ...newDaily, unit: e.target.value })} placeholder="単位"
                 className="w-20 border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
               <div className="flex-1 flex items-center border border-slate-300 rounded-lg px-3">
@@ -648,6 +696,12 @@ const App = () => {
                 <input type="number" inputMode="numeric" value={newDaily.cost} onChange={(e) => setNewDaily({ ...newDaily, cost: e.target.value })} placeholder="0"
                   className="w-full py-2.5 text-sm focus:outline-none tabular" />
               </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {UNIT_PRESETS.map((u) => (
+                <button key={u} onClick={() => setNewDaily({ ...newDaily, unit: u })}
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold border ${newDaily.unit === u ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200'}`}>{u}</button>
+              ))}
             </div>
             <button
               onClick={() => { if (newDaily.name.trim()) { addDailyItem(newDaily.name, newDaily.unit, newDaily.cost); setDailyModal(false); } }}
