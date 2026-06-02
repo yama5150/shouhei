@@ -300,16 +300,15 @@ const App = () => {
     URL.revokeObjectURL(a.href);
   };
 
-  // ==========================================
-  // パーツ：1品の入力カード
-  // ==========================================
-  const ItemCard = ({ item, catId, isDaily }) => {
+  // パーツは「コンポーネント」ではなく描画関数として呼ぶ。
+  // （<ItemCard/> と書くと毎回再マウントされ、編集中に入力欄のフォーカスが外れて操作しづらくなるため）
+  const renderItemCard = ({ item, catId, isDaily }) => {
     const rec = records[item.id] || { supply: 0, remained: 0 };
     const editing = !isDaily && editingItem?.itemId === item.id;
 
     if (editing) {
       return (
-        <div className="p-3 bg-amber-50">
+        <div key={item.id} className="p-3 bg-amber-50">
           <div className="space-y-2">
             <input
               value={editingItem.name}
@@ -352,7 +351,7 @@ const App = () => {
     }
 
     return (
-      <div className="p-3 bg-white">
+      <div key={item.id} className="p-3 bg-white">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2 flex-1 min-w-0 border-l-4 border-indigo-500 pl-2">
             <span className="text-sm font-bold text-slate-800 truncate">{item.name.replace(/　?未確定.*$/, '')}</span>
@@ -376,15 +375,15 @@ const App = () => {
         </div>
 
         <div className="flex gap-3">
-          <CountBox label="補充・提供" color="indigo" value={rec.supply || 0} item={item} field="supply" />
-          <CountBox label="残数・廃棄" color="rose" value={rec.remained || 0} item={item} field="remained" />
+          {renderCountBox({ label: '補充・提供', color: 'indigo', value: rec.supply || 0, item, field: 'supply' })}
+          {renderCountBox({ label: '残数・廃棄', color: 'rose', value: rec.remained || 0, item, field: 'remained' })}
         </div>
       </div>
     );
   };
 
   // 数量入力ボックス（−／数字タップで直接入力／＋／クイックチップ）
-  const CountBox = ({ label, color, value, item, field }) => {
+  const renderCountBox = ({ label, color, value, item, field }) => {
     const cfg = cfgFor(item.unit);
     const c = color === 'indigo'
       ? { bg: 'bg-indigo-50/60', bd: 'border-indigo-100', tx: 'text-indigo-600', num: 'text-indigo-700', plus: 'bg-indigo-600 active:bg-indigo-700', chip: 'text-indigo-600 border-indigo-200' }
@@ -482,7 +481,7 @@ const App = () => {
                   <div className="px-4 py-4 text-center text-slate-400 text-xs">日替わりの品があれば「追加」から登録（翌日ボタンは自動で消えますが記録は残ります）</div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {dailyItems.map((it) => <ItemCard key={it.id} item={it} isDaily />)}
+                    {dailyItems.map((it) => renderItemCard({ item: it, isDaily: true }))}
                   </div>
                 )}
               </div>
@@ -530,7 +529,7 @@ const App = () => {
 
                   {open && (
                     <div className="divide-y divide-slate-100">
-                      {filtered.map((item) => <ItemCard key={item.id} item={item} catId={cat.id} />)}
+                      {filtered.map((item) => renderItemCard({ item, catId: cat.id }))}
 
                       {isAdmin && (
                         <div className="p-3 bg-slate-50 border-t border-dashed border-slate-300">
