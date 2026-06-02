@@ -10,5 +10,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // ソースの入口は app.html（ビルド成果物を root の index.html に置くため衝突を避ける）
+    rollupOptions: { input: 'app.html' },
   },
 });

@@ -6,7 +6,7 @@
   "description": "焼肉・食べ放題店向け 廃棄ロス管理アプリ",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp dist/app.html index.html",
     "preview": "vite preview"
   },
   "dependencies": {
