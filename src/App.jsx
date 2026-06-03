@@ -35,6 +35,29 @@ const generateId = () => 'id-' + Math.random().toString(36).slice(2, 9) + '-' + 
 const todayStr = () => new Date().toISOString().split('T')[0];
 const yen = (n) => '¥' + Math.round(n || 0).toLocaleString();
 
+// 日付ユーティリティ
+const addDays = (dateStr, delta) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  return d.toISOString().split('T')[0];
+};
+const formatDateJP = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  const w = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+  return `${d.getMonth() + 1}/${d.getDate()}(${w})`;
+};
+// 指定日の記録をlocalStorageから読む（破損時は空で返す）
+const readDay = (date) => {
+  const safe = (k, fb) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? fb; } catch { return fb; } };
+  return {
+    date,
+    records: safe(`bl_rec_${date}`, {}),
+    dailyItems: safe(`bl_daily_${date}`, []),
+    flavors: safe(`bl_flavors_${date}`, []),
+    closed: localStorage.getItem(`bl_closed_${date}`) === '1',
+  };
+};
+
 // メニュー項目を作るヘルパー（cost=原価, defaultQty=入力時の初期値）
 function mk(name, unit = '皿', cost = 0, defaultQty = 1) {
   return { id: 'i-' + name, name, unit, cost, defaultQty };
@@ -85,10 +108,13 @@ const App = () => {
 
   const [view, setView] = useState('input');
   const [menuData, setMenuData] = useState(INITIAL_MENU_DATA);
-  const [records, setRecords] = useState({}); // { [itemId]: { supply, remained } }
-  const [dailyItems, setDailyItems] = useState([]); // 本日だけの品 [{id,name,unit,cost}]
-  const [dailyPool, setDailyPool] = useState([]); // 使い回し用の引き出し
-  const [flavors, setFlavors] = useState([]); // 本日の味メモ
+  // 1日分のデータを1つのstateにまとめる（日付ごとに取り違えず保存・切替するため）
+  const [day, setDay] = useState({ date: today, records: {}, dailyItems: [], flavors: [], closed: false });
+  const [dailyPool, setDailyPool] = useState([]); // 使い回し用の引き出し（日付に依存しない）
+  const { records, dailyItems, flavors } = day;
+  const viewDate = day.date;
+  const isToday = viewDate === today;
+  const [toast, setToast] = useState('');
   const [expanded, setExpanded] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -127,19 +153,21 @@ const App = () => {
       }
     }
 
-    // 当日データ
-    try { setRecords(JSON.parse(localStorage.getItem(`bl_rec_${today}`)) || {}); } catch { setRecords({}); }
-    try { setDailyItems(JSON.parse(localStorage.getItem(`bl_daily_${today}`)) || []); } catch { setDailyItems([]); }
-    try { setFlavors(JSON.parse(localStorage.getItem(`bl_flavors_${today}`)) || []); } catch { setFlavors([]); }
+    // 引き出し（日付非依存）＋ 当日データ
     try { setDailyPool(JSON.parse(localStorage.getItem('bl_pool')) || []); } catch { setDailyPool([]); }
+    setDay(readDay(today));
 
     setIsInitialized(true);
   }, [today]);
 
-  // ---- 保存 ----
-  useEffect(() => { if (isInitialized) localStorage.setItem(`bl_rec_${today}`, JSON.stringify(records)); }, [records, isInitialized, today]);
-  useEffect(() => { if (isInitialized) localStorage.setItem(`bl_daily_${today}`, JSON.stringify(dailyItems)); }, [dailyItems, isInitialized, today]);
-  useEffect(() => { if (isInitialized) localStorage.setItem(`bl_flavors_${today}`, JSON.stringify(flavors)); }, [flavors, isInitialized, today]);
+  // ---- 保存（day.date を基準に保存するので日付切替でも取り違えない） ----
+  useEffect(() => {
+    if (!isInitialized) return;
+    localStorage.setItem(`bl_rec_${day.date}`, JSON.stringify(day.records));
+    localStorage.setItem(`bl_daily_${day.date}`, JSON.stringify(day.dailyItems));
+    localStorage.setItem(`bl_flavors_${day.date}`, JSON.stringify(day.flavors));
+    if (day.closed) localStorage.setItem(`bl_closed_${day.date}`, '1');
+  }, [day, isInitialized]);
   useEffect(() => { if (isInitialized) localStorage.setItem('bl_pool', JSON.stringify(dailyPool)); }, [dailyPool, isInitialized]);
   useEffect(() => {
     if (!isInitialized) return;
@@ -162,18 +190,18 @@ const App = () => {
     setExpanded((prev) => (prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]));
 
   const updateValue = (itemId, field, delta) =>
-    setRecords((prev) => {
-      const cur = prev[itemId] || { supply: 0, remained: 0 };
-      const next = Math.max(0, (cur[field] || 0) + delta);
-      return { ...prev, [itemId]: { ...cur, [field]: next } };
+    setDay((d) => {
+      const cur = d.records[itemId] || { supply: 0, remained: 0 };
+      const next = Math.max(0, Math.round(((cur[field] || 0) + delta) * 100) / 100);
+      return { ...d, records: { ...d.records, [itemId]: { ...cur, [field]: next } } };
     });
 
   const setExactValue = (itemId, field, value) =>
-    setRecords((prev) => {
-      const cur = prev[itemId] || { supply: 0, remained: 0 };
+    setDay((d) => {
+      const cur = d.records[itemId] || { supply: 0, remained: 0 };
       // 小数2桁まで許可（kg などの 0.5 刻みに対応）
       const next = Math.max(0, Math.round((Number(value) || 0) * 100) / 100);
-      return { ...prev, [itemId]: { ...cur, [field]: next } };
+      return { ...d, records: { ...d.records, [itemId]: { ...cur, [field]: next } } };
     });
 
   // ---- メニュー編集 ----
@@ -217,28 +245,29 @@ const App = () => {
   const addDailyItem = (name, unit, cost) => {
     if (!name.trim()) return;
     const item = { id: 'd-' + generateId(), name: name.trim(), unit: unit.trim() || '皿', cost: Math.max(0, Number(cost) || 0) };
-    setDailyItems((prev) => [...prev, item]);
+    setDay((d) => ({ ...d, dailyItems: [...d.dailyItems, item] }));
     // 引き出しにも保存（同名があれば更新）
     setDailyPool((prev) => {
       const without = prev.filter((p) => p.name !== item.name);
       return [{ name: item.name, unit: item.unit, cost: item.cost }, ...without].slice(0, 50);
     });
   };
-  const reuseFromPool = (p) => {
-    if (dailyItems.some((d) => d.name === p.name)) return; // 重複追加しない
-    setDailyItems((prev) => [...prev, { id: 'd-' + generateId(), name: p.name, unit: p.unit, cost: p.cost }]);
-  };
-  const removeDailyItem = (id) => setDailyItems((prev) => prev.filter((d) => d.id !== id));
+  const reuseFromPool = (p) =>
+    setDay((d) => (d.dailyItems.some((x) => x.name === p.name) ? d : { ...d, dailyItems: [...d.dailyItems, { id: 'd-' + generateId(), name: p.name, unit: p.unit, cost: p.cost }] }));
+  const removeDailyItem = (id) => setDay((d) => ({ ...d, dailyItems: d.dailyItems.filter((x) => x.id !== id) }));
 
   // ---- 味メモ ----
-  const toggleFlavor = (f) => setFlavors((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
+  const toggleFlavor = (f) => setDay((d) => ({ ...d, flavors: d.flavors.includes(f) ? d.flavors.filter((x) => x !== f) : [...d.flavors, f] }));
+
+  // ---- 日付ナビ・締め ----
+  const goDay = (delta) => setDay(readDay(addDays(viewDate, delta)));
+  const goToday = () => setDay(readDay(today));
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500); };
 
   // ---- データリセット ----
   const clearData = () => {
-    if (!window.confirm('本日の記録（数量・味メモ）をリセットしますか？\n（メニュー表は消えません）')) return;
-    setRecords({}); setFlavors([]);
-    localStorage.removeItem(`bl_rec_${today}`);
-    localStorage.removeItem(`bl_flavors_${today}`);
+    if (!window.confirm(`${formatDateJP(viewDate)} の記録（数量・味メモ）をリセットしますか？\n（メニュー表は消えません）`)) return;
+    setDay((d) => ({ ...d, records: {}, flavors: [], closed: false }));
   };
   const resetMenuStructure = () => {
     if (!window.confirm('メニュー表を初期状態（焼肉メニュー）に戻しますか？\n（編集内容は消えます）')) return;
@@ -295,9 +324,17 @@ const App = () => {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `buffet_report_${today}.csv`;
+    a.download = `buffet_report_${viewDate}.csv`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+  };
+
+  // この日を締める：CSV保存 ＋ 確定フラグ
+  const closeDay = () => {
+    if (stats.length === 0) { alert('記録がありません'); return; }
+    downloadCSV();
+    setDay((d) => ({ ...d, closed: true }));
+    showToast(`${formatDateJP(viewDate)} を締めました（CSV保存＆確定）`);
   };
 
   // パーツは「コンポーネント」ではなく描画関数として呼ぶ。
@@ -423,6 +460,12 @@ const App = () => {
           <span className="font-bold text-sm text-center">メニューを初期化しました (v{MENU_VERSION})</span>
         </div>
       )}
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-sm bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-center gap-2">
+          <Check className="shrink-0" size={20} />
+          <span className="font-bold text-sm text-center">{toast}</span>
+        </div>
+      )}
 
       {/* ヘッダー */}
       <header className={`sticky top-0 z-30 px-4 py-3 shadow-lg ${isAdmin ? 'bg-slate-800' : 'bg-indigo-900'} text-white`}>
@@ -432,7 +475,7 @@ const App = () => {
               <Flame size={20} /> 焼肉ロス管理
               {isAdmin && <span className="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold">編集モード</span>}
             </h1>
-            <p className="text-[10px] opacity-70">{isAdmin ? 'メニュー・原価の編集中' : `${today} の記録`}</p>
+            <p className="text-[10px] opacity-70">{isAdmin ? 'メニュー・原価の編集中' : `${formatDateJP(viewDate)} の記録${day.closed ? '・締め済' : ''}`}</p>
           </div>
           <div className="flex gap-2">
             <button onClick={toggleAdmin} className={`p-2 rounded-lg ${isAdmin ? 'bg-amber-500 text-black' : 'bg-white/10 hover:bg-white/20'}`}>{isAdmin ? <Unlock size={18} /> : <Lock size={18} />}</button>
@@ -452,6 +495,23 @@ const App = () => {
       </header>
 
       <main className="p-3 max-w-2xl mx-auto">
+
+        {/* 日付ナビ（過去の日を見返す・修正する） */}
+        {!isAdmin && (
+          <div className="mb-3 flex items-center justify-between bg-white rounded-xl border border-slate-200 shadow-sm px-2 py-1.5">
+            <button onClick={() => goDay(-1)} className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 active:bg-slate-100"><ChevronRight className="rotate-180" size={20} /></button>
+            <div className="text-center flex items-center gap-1.5">
+              <span className="text-sm font-bold text-slate-800">{formatDateJP(viewDate)}</span>
+              {isToday && <span className="text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold">今日</span>}
+              {day.closed && <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">締め済</span>}
+            </div>
+            <div className="flex items-center gap-1">
+              {!isToday && <button onClick={goToday} className="text-[11px] font-bold text-indigo-600 px-2 py-1 rounded-lg active:bg-indigo-50">今日へ</button>}
+              <button onClick={() => goDay(1)} disabled={isToday} className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 active:bg-slate-100 disabled:opacity-30"><ChevronRight size={20} /></button>
+            </div>
+          </div>
+        )}
+
         {view === 'input' ? (
           <div className="space-y-4">
 
@@ -594,6 +654,9 @@ const App = () => {
                 <span>総廃棄数: <b className="tabular text-rose-300">{totalRemained}</b></span>
                 {flavors.length > 0 && <span>味: <b>{flavors.join(' / ')}</b></span>}
               </div>
+              <button onClick={closeDay} className="mt-4 w-full py-3 bg-white/15 hover:bg-white/25 active:scale-[0.99] rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                <Save size={16} /> {day.closed ? `${formatDateJP(viewDate)} 締め済み（もう一度CSV保存）` : `${formatDateJP(viewDate)} を締める（CSV保存＋確定）`}
+              </button>
             </div>
 
             <div className="space-y-3">
