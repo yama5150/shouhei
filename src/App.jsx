@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Minus, ClipboardList, BarChart3, ChevronRight, ChevronDown,
   Trash2, Search, Utensils, Beef, Drumstick, Flame,
-  Download, AlertTriangle, Save, Edit, X, Lock, Unlock, RefreshCw, Sparkles, Check,
+  Download, AlertTriangle, Save, Edit, X, Lock, Unlock, RefreshCw, Sparkles, Check, Clock,
 } from 'lucide-react';
 
 // ==========================================
@@ -256,6 +256,24 @@ const App = () => {
     setDay((d) => (d.dailyItems.some((x) => x.name === p.name) ? d : { ...d, dailyItems: [...d.dailyItems, { id: 'd-' + generateId(), name: p.name, unit: p.unit, cost: p.cost }] }));
   const removeDailyItem = (id) => setDay((d) => ({ ...d, dailyItems: d.dailyItems.filter((x) => x.id !== id) }));
 
+  // ---- 補充（時刻つき） ----
+  const nowHHMM = () => { const t = new Date(); return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; };
+  const addRefill = (itemId, qty) => {
+    const q = Math.max(0, Math.round((Number(qty) || 0) * 100) / 100);
+    if (q <= 0) return;
+    setDay((d) => {
+      const cur = d.records[itemId] || { supply: 0, remained: 0 };
+      const refills = [...(cur.refills || []), { id: generateId(), time: nowHHMM(), qty: q }];
+      return { ...d, records: { ...d.records, [itemId]: { ...cur, refills } } };
+    });
+  };
+  const removeRefill = (itemId, rid) =>
+    setDay((d) => {
+      const cur = d.records[itemId];
+      if (!cur) return d;
+      return { ...d, records: { ...d.records, [itemId]: { ...cur, refills: (cur.refills || []).filter((r) => r.id !== rid) } } };
+    });
+
   // ---- 味メモ ----
   const toggleFlavor = (f) => setDay((d) => ({ ...d, flavors: d.flavors.includes(f) ? d.flavors.filter((x) => x !== f) : [...d.flavors, f] }));
 
@@ -292,14 +310,18 @@ const App = () => {
     const report = [];
     allItems.forEach((it) => {
       const rec = records[it.id];
-      if (rec && (rec.supply > 0 || rec.remained > 0)) {
-        const consumed = Math.max(0, (rec.supply || 0) - (rec.remained || 0));
+      const refills = (rec && rec.refills) || [];
+      const refillTotal = refills.reduce((a, r) => a + (r.qty || 0), 0);
+      const totalOut = (rec?.supply || 0) + refillTotal;
+      if (rec && (totalOut > 0 || rec.remained > 0)) {
+        const consumed = Math.max(0, totalOut - (rec.remained || 0));
         const cost = it.cost || 0;
         const wasteYen = (rec.remained || 0) * cost;
         const consumedYen = consumed * cost;
-        const lossRate = rec.supply > 0 ? ((rec.remained / rec.supply) * 100) : 0;
+        const lossRate = totalOut > 0 ? (((rec.remained || 0) / totalOut) * 100) : 0;
         report.push({
-          ...it, supply: rec.supply || 0, remained: rec.remained || 0,
+          ...it, supply: rec.supply || 0, refillTotal, totalOut, refills,
+          remained: rec.remained || 0,
           consumed, wasteYen, consumedYen, lossRate: parseFloat(lossRate.toFixed(1)),
         });
       }
@@ -316,9 +338,12 @@ const App = () => {
   // ---- CSV出力 ----
   const downloadCSV = () => {
     if (stats.length === 0) { alert('出力するデータがありません'); return; }
-    const header = 'カテゴリ,品名,単位,原価,提供数,残数,消費数,廃棄ロス金額,提供原価,ロス率%';
+    const header = 'カテゴリ,品名,単位,原価,開店出し,補充合計,出した合計,残数,提供数,廃棄ロス金額,提供原価,ロス率%,補充明細(時刻)';
     const esc = (s) => { const v = String(s ?? ''); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
-    const rows = stats.map((s) => [s.category, s.name, s.unit, s.cost, s.supply, s.remained, s.consumed, Math.round(s.wasteYen), Math.round(s.consumedYen), s.lossRate].map(esc).join(','));
+    const rows = stats.map((s) => {
+      const detail = (s.refills || []).map((r) => `${r.time}+${r.qty}`).join(' ');
+      return [s.category, s.name, s.unit, s.cost, s.supply, s.refillTotal, s.totalOut, s.remained, s.consumed, Math.round(s.wasteYen), Math.round(s.consumedYen), s.lossRate, detail].map(esc).join(',');
+    });
     const flavorLine = flavors.length ? `\n本日の味,${flavors.join(' / ')}` : '';
     const csv = '﻿' + [header, ...rows].join('\n') + flavorLine;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -340,7 +365,9 @@ const App = () => {
   // パーツは「コンポーネント」ではなく描画関数として呼ぶ。
   // （<ItemCard/> と書くと毎回再マウントされ、編集中に入力欄のフォーカスが外れて操作しづらくなるため）
   const renderItemCard = ({ item, catId, isDaily }) => {
-    const rec = records[item.id] || { supply: 0, remained: 0 };
+    const rec = records[item.id] || { supply: 0, remained: 0, refills: [] };
+    const refills = rec.refills || [];
+    const totalOut = (rec.supply || 0) + refills.reduce((a, r) => a + (r.qty || 0), 0);
     const editing = !isDaily && editingItem?.itemId === item.id;
 
     if (editing) {
@@ -412,8 +439,33 @@ const App = () => {
         </div>
 
         <div className="flex gap-3">
-          {renderCountBox({ label: '補充・提供', color: 'indigo', value: rec.supply || 0, item, field: 'supply' })}
-          {renderCountBox({ label: '残数・廃棄', color: 'rose', value: rec.remained || 0, item, field: 'remained' })}
+          {renderCountBox({ label: '開店時の出し', color: 'indigo', value: rec.supply || 0, item, field: 'supply' })}
+          {renderCountBox({ label: '残り・廃棄', color: 'rose', value: rec.remained || 0, item, field: 'remained' })}
+        </div>
+
+        {/* 営業中の補充（時刻つき） */}
+        <div className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50/50 p-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1"><Clock size={12} /> 営業中の補充</span>
+            <button onClick={() => setKeypad({ id: item.id, name: item.name, unit: item.unit, field: 'refill', value: '' })}
+              className="text-[11px] font-bold text-white bg-emerald-600 active:bg-emerald-700 rounded-full px-2.5 py-1 flex items-center gap-0.5"><Plus size={12} />補充</button>
+          </div>
+          {refills.length === 0 ? (
+            <div className="text-[10px] text-slate-400 text-center py-0.5">まだ補充なし</div>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {refills.map((r) => (
+                <span key={r.id} className="inline-flex items-center gap-1 bg-white border border-emerald-200 rounded-full pl-2 pr-1 py-0.5 text-[11px] font-bold text-emerald-700">
+                  <span className="tabular">{r.time}</span><span>+{r.qty}{item.unit}</span>
+                  <button onClick={() => removeRefill(item.id, r.id)} className="text-emerald-300 hover:text-rose-500 leading-none">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="mt-1.5 pt-1.5 border-t border-emerald-100 flex justify-between text-[10px] text-slate-500 font-bold">
+            <span>出した合計 <b className="text-slate-700 tabular">{totalOut}{item.unit}</b></span>
+            <span>提供 <b className="text-indigo-600 tabular">{Math.max(0, totalOut - (rec.remained || 0))}{item.unit}</b></span>
+          </div>
         </div>
       </div>
     );
@@ -668,7 +720,7 @@ const App = () => {
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-slate-800 truncate">{item.name.replace(/　?未確定.*$/, '')}</div>
-                    <div className="text-[10px] text-slate-400">提供 {item.supply} / 残 {item.remained}{item.unit}・ロス率 {item.lossRate}%</div>
+                    <div className="text-[10px] text-slate-400">出し {item.totalOut}（開店{item.supply}+補充{item.refillTotal}）/ 残 {item.remained}{item.unit}・ロス率 {item.lossRate}%</div>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-rose-600 tabular">{item.cost > 0 ? yen(item.wasteYen) : `${item.remained}${item.unit}`}</div>
@@ -696,7 +748,7 @@ const App = () => {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3" onClick={() => setKeypad(null)}>
           <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{keypad.field === 'supply' ? '補充・提供' : '残数・廃棄'}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{keypad.field === 'supply' ? '開店時の出し' : keypad.field === 'refill' ? '補充を追加（時刻つき）' : '残り・廃棄'}</span>
               <button onClick={() => setKeypad(null)} className="text-slate-300 text-2xl leading-none">×</button>
             </div>
             <p className="font-bold text-lg text-slate-800 mb-3 truncate">{keypad.name}</p>
@@ -734,7 +786,7 @@ const App = () => {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setKeypad({ ...keypad, value: '0' })} className="px-4 py-3 bg-slate-100 rounded-xl font-bold text-slate-500">クリア</button>
-              <button onClick={() => { setExactValue(keypad.id, keypad.field, keypad.value); setKeypad(null); }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold active:bg-indigo-700">確定</button>
+              <button onClick={() => { if (keypad.field === 'refill') addRefill(keypad.id, keypad.value); else setExactValue(keypad.id, keypad.field, keypad.value); setKeypad(null); }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold active:bg-indigo-700">{keypad.field === 'refill' ? `${nowHHMM()} に追加` : '確定'}</button>
             </div>
           </div>
         </div>
