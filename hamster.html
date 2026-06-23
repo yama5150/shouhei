@@ -209,8 +209,7 @@ const STAGES = [
       {t:'chili',  x:3150}, {t:'bee', x:3350, y:280},  
       {t:'walker', x:3500}, {t:'slime', x:3650},  
       {t:'chili',  x:3800}, {t:'bee', x:3900, y:300},
-    ],
-    boss:{ type:'bean', x:3780 } },
+    ] },
   { name:'こおりの谷',
     sky:['#5c6bc0','#90caf9','#e1f5fe'], hill:'#b0bec5',  
     dirt:'#78909c', grass:'#eceff1', grass2:'#b3e5fc',  
@@ -243,8 +242,7 @@ const STAGES = [
       {t:'bee', x:3500, y:300}, {t:'chili', x:3700},  
       {t:'slime', x:3900}, {t:'bee', x:4100, y:280},  
       {t:'walker', x:4250},
-    ],
-    boss:{ type:'frost', x:4180 } },
+    ] },
   { name:'ゆうやけ火山',
     sky:['#4a148c','#e65100','#ffcc80'], hill:'#6d4c41',  
     dirt:'#4e342e', grass:'#8d6e63', grass2:'#a1887f',  
@@ -279,8 +277,7 @@ const STAGES = [
       {t:'chili', x:3850}, {t:'slime', x:4050},  
       {t:'bee', x:4250, y:300}, {t:'chili', x:4450},  
       {t:'bee', x:4650, y:320},
-    ],
-    boss:{ type:'magma', x:4600 } },
+    ] },
   { name:'ほしぞら城',
     sky:['#1a1140','#3b2f6e','#8e7cc3'], hill:'#2e2a52',
     dirt:'#5d4a7e', grass:'#b39ddb', grass2:'#d1c4e9',
@@ -1298,7 +1295,7 @@ function drawTitle(){
   bigText('モグモグ大冒険', 205, 52, '#ffd54f');  
   bigText('全4ステージ! てきを すいこんで ほおばろう!', 280, 24);
   bigText('のみこむと能力コピー / はきだすと星アタック!', 320, 20, '#ffcc80');
-  bigText('各ステージのさいごは ボスとたいけつ!', 350, 19, '#ff8a80');
+  bigText('さいごのステージで ボスとたいけつ!', 350, 19, '#ff8a80');
   bigText('わざ:とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 378, 16, '#aed581');
   bigText('PC: ←→移動 Space ジャンプ(空中れんだで ぷくぷく滞空) X 吸う/はく ↓ のみこむ', 408, 16, '#b3e5fc');
   if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 465, 28, '#fff176');  
