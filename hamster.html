@@ -212,6 +212,27 @@ const ABILITIES = {
   spark: { name:'スパーク', color:'#ffee58', desc:'まわりにビリビリ!' },  
   ice:   { name:'アイス',   color:'#81d4fa', desc:'こおりの息で凍らせる!' },
 };
+// アイテム定義
+//   おやつ(snack) = スコアアップ / ごちそう = HPかいふく
+const ITEM_TYPES = {
+  strawberry: { name:'いちご',       w:22, h:24, score:300, color:'#ef5350', snack:true },
+  acorn:      { name:'どんぐり',     w:22, h:26, score:250, color:'#c98b46', snack:true },
+  cookie:     { name:'クッキー',     w:24, h:24, score:350, color:'#d9a05b', snack:true },
+  senbei:     { name:'せんべい',     w:26, h:26, score:400, color:'#e8c88a', snack:true },
+  soda:       { name:'メロンソーダ', w:24, h:32, heal:1, color:'#43c64a' },
+  potato:     { name:'じゃがバター', w:30, h:26, heal:1, color:'#ffd24a' },
+  ramen:      { name:'ラーメン',     w:34, h:28, heal:2, color:'#f2c14e' },
+};
+const SNACKS = ['strawberry','acorn','cookie','senbei'];
+const FEASTS = ['soda','soda','potato','potato','ramen'];  // ラーメンは ちょっとレア
+const pick = (a)=> a[Math.floor(Math.random()*a.length)];
+// アイテムを ぽとっと おとす
+function dropItem(kind, x, y){
+  const d = ITEM_TYPES[kind];
+  items.push({ kind, x:x-d.w/2, y:y-d.h/2, w:d.w, h:d.h,
+    vy:-2-Math.random()*1.5, settled:false, t:0 });
+}
+
 // ボス定義: element=攻撃のぞくせい, shoot=攻撃パターン
 const BOSS_TYPES = {
   bean:  { name:'おやぶん豆',     color:'#689f38', w:92,  h:84, hp:6,  element:null,   shoot:'lob'    },
@@ -743,7 +764,7 @@ function defeatBoss(){
   // ごほうび: 種とメロンソーダ
   for(let i=0;i<12;i++) seeds.push({ x:b.x+b.w/2, y:b.y+b.h/2,
     vx:(Math.random()-0.5)*6, vy:-4-Math.random()*4, life:600, picked:false });
-  items.push({ kind:'soda', x:b.x+b.w/2-12, y:b.y, w:24, h:32, vy:-3, settled:false, t:0 });
+  dropItem('ramen', b.x+b.w/2, b.y);   // ボスのごほうびは ごうかにラーメン
 }
 
 // ---------- 敵更新 ----------
@@ -891,11 +912,10 @@ function killEnemy(e, by){
       vx:(Math.random()-0.5)*4, vy:-3-Math.random()*3,  
       life:600, picked:false });  
   }  
-  // たまにメロンソーダ(約12%)  
-  if(Math.random() < 0.12){  
-    items.push({ kind:'soda', x:e.x+e.w/2-12, y:e.y+e.h/2-16, w:24, h:32,  
-      vy:-2, settled:false, t:0 });  
-  }  
+  // たまに おやつ(約24%) / ごちそう(約6%) が おちる
+  const r = Math.random();
+  if(r < 0.24)      dropItem(pick(SNACKS), e.x+e.w/2, e.y+e.h/2);
+  else if(r < 0.30) dropItem(pick(FEASTS), e.x+e.w/2, e.y+e.h/2);  
 }  
   
 // ---------- 種・アイテム更新 ----------  
@@ -942,12 +962,23 @@ function updateSeeds(){
         }  
       }  
     }  
-    if(hit(it, p)){  
-      it.taken = true; SFX.power();  
-      if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, 'メロンソーダ! HP+1', '#66bb6a');
-        spawnHearts(p.x+p.w/2, p.y-4, 7); }  
-      else { game.score += 1000; popup(p.x+p.w/2, p.y-30, '+1000', '#66bb6a'); }  
-      spawnParticles(it.x+it.w/2, it.y, '#66bb6a', 14, 4);  
+    if(hit(it, p)){
+      it.taken = true; SFX.power();
+      const d = ITEM_TYPES[it.kind] || ITEM_TYPES.soda;
+      if(d.heal){
+        if(player.hp < player.maxHp){
+          player.hp = Math.min(player.maxHp, player.hp + d.heal);
+          popup(p.x+p.w/2, p.y-30, d.name+'! HP+'+d.heal, '#ef9a9a');
+          spawnHearts(p.x+p.w/2, p.y-4, 5 + d.heal*3);
+        } else {
+          game.score += 1000; popup(p.x+p.w/2, p.y-30, d.name+' +1000', d.color);
+        }
+      } else {
+        game.score += d.score;
+        popup(p.x+p.w/2, p.y-30, d.name+' +'+d.score, d.color);
+        spawnSparkles(it.x+it.w/2, it.y+it.h/2, 9, d.color);
+      }
+      spawnParticles(it.x+it.w/2, it.y, d.color, 12, 4);
     }  
   }  
   items = items.filter(it=>!it.taken && it.t < 900);  
@@ -1087,27 +1118,13 @@ function draw(){
     ctx.beginPath(); ctx.ellipse(-1, -1, 1.4, 2.4, 0, 0, Math.PI*2); ctx.fill();  
     ctx.restore();  
   }  
-  // メロンソーダ  
-  for(const it of items){  
-    if(it.taken) continue;  
-    const bob = it.settled ? Math.sin(it.t*0.1)*2 : 0;  
-    ctx.save(); ctx.translate(it.x+it.w/2, it.y+it.h/2 + bob);  
-    // グラス  
-    ctx.fillStyle = 'rgba(255,255,255,.25)';  
-    ctx.beginPath(); ctx.moveTo(-9,-13); ctx.lineTo(9,-13); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();  
-    // ソーダ  
-    ctx.fillStyle = '#43c64a';  
-    ctx.beginPath(); ctx.moveTo(-8,-4); ctx.lineTo(8,-4); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();  
-    // アイス  
-    ctx.fillStyle = '#fffde7';  
-    ctx.beginPath(); ctx.arc(-2,-13,5,0,Math.PI*2); ctx.fill();  
-    // さくらんぼ  
-    ctx.fillStyle = '#e53935';  
-    ctx.beginPath(); ctx.arc(5,-15,3,0,Math.PI*2); ctx.fill();  
-    // ストロー  
-    ctx.strokeStyle = '#e91e63'; ctx.lineWidth=2;  
-    ctx.beginPath(); ctx.moveTo(3,-12); ctx.lineTo(8,-22); ctx.stroke();  
-    ctx.restore();  
+  // おやつ と ごちそう
+  for(const it of items){
+    if(it.taken) continue;
+    const bob = it.settled ? Math.sin(it.t*0.1)*2 : 0;
+    ctx.save(); ctx.translate(it.x+it.w/2, it.y+it.h/2 + bob);
+    drawItem(it);
+    ctx.restore();
   }  
   drawPlayer();  
   
@@ -1170,6 +1187,144 @@ function drawFlower(x, y, rnd){
   ctx.fillStyle = '#ffd54f';
   ctx.beginPath(); ctx.arc(x+sway, y-13, 1.9, 0, Math.PI*2); ctx.fill();
 }
+// ---------- おやつ と ごちそう の絵 ----------
+function drawItem(it){
+  switch(it.kind){
+    case 'strawberry': return drawStrawberry();
+    case 'acorn':      return drawAcorn();
+    case 'cookie':     return drawCookie();
+    case 'senbei':     return drawSenbei();
+    case 'potato':     return drawPotato();
+    case 'ramen':      return drawRamen(it);
+    default:           return drawSoda();
+  }
+}
+// いちご
+function drawStrawberry(){
+  ctx.fillStyle = '#ef5350';
+  ctx.beginPath();
+  ctx.moveTo(0, 12);
+  ctx.bezierCurveTo(-11, 5, -10, -8, 0, -7);
+  ctx.bezierCurveTo(10, -8, 11, 5, 0, 12);
+  ctx.fill();
+  ctx.fillStyle = '#fff59d';
+  [[-4,-1],[4,-1],[0,3],[-5,5],[5,5],[0,-4]].forEach(q=>{
+    ctx.beginPath(); ctx.ellipse(q[0],q[1],1.1,1.5,0,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = '#66bb6a';                       // へた
+  for(let i=0;i<5;i++){
+    const a = -Math.PI/2 + (i-2)*0.55;
+    ctx.beginPath(); ctx.ellipse(Math.cos(a)*5.5, -8+Math.sin(a)*2.5, 4.5, 2.2, a, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#43a047'; ctx.fillRect(-1.2,-13,2.4,4);
+  ctx.fillStyle = 'rgba(255,255,255,.55)';         // ツヤ
+  ctx.beginPath(); ctx.ellipse(-4.5,0,2,3.4,-0.4,0,Math.PI*2); ctx.fill();
+}
+// どんぐり
+function drawAcorn(){
+  ctx.fillStyle = '#d8a35c';
+  ctx.beginPath(); ctx.ellipse(0, 4, 8.5, 9.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#8d5524';                       // ぼうし
+  ctx.beginPath(); ctx.ellipse(0, -4, 10, 6.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.18)';
+  for(let i=-2;i<=2;i++){ ctx.fillRect(i*3.6-0.6, -9, 1.2, 9); }
+  ctx.fillStyle = '#6d4423'; ctx.fillRect(-1.6,-14,3.2,5);
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.beginPath(); ctx.ellipse(-3.5,4,2,3.5,-0.3,0,Math.PI*2); ctx.fill();
+}
+// クッキー
+function drawCookie(){
+  ctx.fillStyle = '#d9a05b';
+  ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#c1874a'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = '#5d4037';                       // チョコチップ
+  [[-4,-3],[4,-4],[1,4],[-5,4],[6,2]].forEach(q=>{
+    ctx.beginPath(); ctx.arc(q[0],q[1],2.1,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  ctx.beginPath(); ctx.ellipse(-4,-7,4,2,-0.5,0,Math.PI*2); ctx.fill();
+}
+// せんべい(のり巻き)
+function drawSenbei(){
+  ctx.fillStyle = '#e8c88a';
+  ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(176,120,58,.35)';          // 焼き色
+  [[-5,-5],[5,-3],[-3,6],[6,5]].forEach(q=>{
+    ctx.beginPath(); ctx.arc(q[0],q[1],3,0,Math.PI*2); ctx.fill(); });
+  ctx.save();                                      // のり(円で切り抜く)
+  ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.clip();
+  ctx.fillStyle = '#2f4038'; ctx.fillRect(-12,-4,24,8);
+  ctx.restore();
+  ctx.strokeStyle = '#d9b271'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.stroke();
+}
+// じゃがバター
+function drawPotato(){
+  ctx.fillStyle = '#b07a45';                        // じゃがいも本体
+  ctx.beginPath(); ctx.ellipse(0, 3, 15, 10.5, -0.06, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#9a6537';
+  ctx.beginPath(); ctx.ellipse(0, 7, 13.5, 5.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(80,52,26,.5)';              // 皮のポツポツ
+  [[-11,6],[10,6],[-8,-2],[9,-1],[0,9]].forEach(q=>{
+    ctx.beginPath(); ctx.arc(q[0],q[1],1.3,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = '#ffe9a8';                        // ぱっくり割れた中身
+  ctx.beginPath(); ctx.ellipse(0, -1, 9.5, 4.6, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#f6d476';
+  ctx.beginPath(); ctx.ellipse(0, 0.8, 8, 2.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffca28';                        // とけたバターだまり
+  ctx.beginPath(); ctx.ellipse(0, -1, 5.4, 2.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff176';                        // バターのかたまり
+  ctx.beginPath(); ctx.moveTo(-4.5,-3); ctx.lineTo(4.5,-3); ctx.lineTo(3.5,-8.5); ctx.lineTo(-5.5,-8.5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#fffde7';
+  ctx.beginPath(); ctx.moveTo(-5.5,-8.5); ctx.lineTo(3.5,-8.5); ctx.lineTo(4.6,-10.2); ctx.lineTo(-4.4,-10.2); ctx.closePath(); ctx.fill();
+}
+// ラーメン
+function drawRamen(it){
+  ctx.fillStyle = '#f2c14e';                       // スープ
+  ctx.beginPath(); ctx.ellipse(0,-3, 15, 5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 1.5; ctx.lineCap='round';
+  for(let i=-1;i<=1;i++){                          // 麺
+    ctx.beginPath();
+    ctx.moveTo(-9+i*1.5, -5); ctx.quadraticCurveTo(-2+i*4, -8, 4+i*3, -4);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#fff';                          // なると
+  ctx.beginPath(); ctx.arc(-7,-4,3.4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#ff8a80'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.arc(-7,-4,1.8,0,Math.PI*1.6); ctx.stroke();
+  ctx.fillStyle = '#7cb342';                       // ねぎ
+  [[3,-6],[8,-3],[0,-7]].forEach(q=>{
+    ctx.beginPath(); ctx.arc(q[0],q[1],1.5,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = '#f5f5f5';                       // どんぶり
+  ctx.beginPath();
+  ctx.moveTo(-16,-3); ctx.lineTo(16,-3);
+  ctx.quadraticCurveTo(13, 12, 0, 12);
+  ctx.quadraticCurveTo(-13, 12, -16,-3); ctx.fill();
+  ctx.fillStyle = '#e53935'; ctx.fillRect(-14.5, 1, 29, 3.2);
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 2; // ゆげ
+  const t = (it.t||0)*0.05;
+  for(let i=0;i<2;i++){
+    ctx.globalAlpha = 0.5 + Math.sin(t + i)*0.3;
+    ctx.beginPath();
+    ctx.moveTo(-5+i*10, -9);
+    ctx.quadraticCurveTo(-9+i*10 + Math.sin(t+i)*3, -14, -5+i*10, -19);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+// メロンソーダ
+function drawSoda(){
+  ctx.fillStyle = 'rgba(255,255,255,.25)';
+  ctx.beginPath(); ctx.moveTo(-9,-13); ctx.lineTo(9,-13); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#43c64a';
+  ctx.beginPath(); ctx.moveTo(-8,-4); ctx.lineTo(8,-4); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#fffde7';
+  ctx.beginPath(); ctx.arc(-2,-13,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#e53935';
+  ctx.beginPath(); ctx.arc(5,-15,3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#e91e63'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(3,-12); ctx.lineTo(8,-22); ctx.stroke();
+}
+
 // ふわふわ飛ぶ ちょうちょ
 function drawButterfly(x, y, i){
   const f = Math.abs(Math.sin(game.frame*0.22 + i*1.7));
