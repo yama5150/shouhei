@@ -1,0 +1,1190 @@
+<!doctype html>
+<!--
+  株式会社ほくと給食 コーポレートサイト（デザイン提案版）
+  - 外部リソース非依存（フォント/JS/CSS すべて自己完結）
+  - 掲載している会社情報は公開情報にもとづく
+-->
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>株式会社ほくと給食｜札幌の給食受託・食材販売</title>
+<meta name="description" content="株式会社ほくと給食は、札幌を拠点に障がい者施設・保育園・高齢者施設・学校寄宿舎などへの給食受託と、グループホーム向けの食材販売を行っています。衛生管理委員会による徹底した衛生管理と、管理栄養士の献立設計で「おいしい」を毎日お届けします。" />
+<meta name="theme-color" content="#0f2e22" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="株式会社ほくと給食｜札幌の給食受託・食材販売" />
+<meta property="og:description" content="毎日の食事を、施設の力に。札幌・厚別区から、福祉施設と保育の現場へ。" />
+<meta property="og:locale" content="ja_JP" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f2e22'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23e8b055' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23e8b055'/%3E%3C/svg%3E" />
+
+<style>
+/* ============================================================
+   Design tokens
+   ============================================================ */
+:root{
+  --deep:      #0f2e22;
+  --deep-2:    #143b2c;
+  --green:     #1f6b45;
+  --green-soft:#e6efe8;
+  --accent:    #d8873a;
+  --accent-2:  #e8b055;
+  --cream:     #faf7f0;
+  --cream-2:   #f3ede1;
+  --paper:     #ffffff;
+  --ink:       #1a231e;
+  --ink-2:     #4c5a52;
+  --ink-3:     #7b8a81;
+  --line:      #e2ddd2;
+
+  --serif: "Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans: -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP","Segoe UI",sans-serif;
+
+  --gut: clamp(20px, 5vw, 64px);
+  --maxw: 1180px;
+  --r: 18px;
+  --shadow-s: 0 1px 2px rgba(15,46,34,.06), 0 4px 14px rgba(15,46,34,.05);
+  --shadow-m: 0 2px 6px rgba(15,46,34,.06), 0 18px 44px rgba(15,46,34,.09);
+  --shadow-l: 0 4px 10px rgba(15,46,34,.07), 0 34px 80px rgba(15,46,34,.14);
+  --ease: cubic-bezier(.22,.68,.32,1);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+body{
+  margin:0;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.9;
+  letter-spacing:.02em;
+  font-feature-settings:"palt" 1;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img,svg{ max-width:100%; height:auto; display:block; }
+a{ color:inherit; }
+h1,h2,h3,h4{ margin:0; font-weight:600; line-height:1.45; letter-spacing:.01em; }
+p{ margin:0; }
+ul{ margin:0; padding:0; list-style:none; }
+
+.wrap{ width:100%; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--gut); }
+.serif{ font-family:var(--serif); font-weight:600; }
+
+/* section rhythm */
+section{ position:relative; }
+.sec{ padding-block:clamp(72px,11vw,140px); }
+
+/* eyebrow label */
+.eyebrow{
+  display:inline-flex; align-items:center; gap:.65em;
+  font-size:12px; font-weight:700; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--green);
+}
+.eyebrow::before{
+  content:""; width:26px; height:1px; background:currentColor; opacity:.6;
+}
+.sec-title{
+  font-family:var(--serif);
+  font-size:clamp(27px,4.4vw,44px);
+  line-height:1.5;
+  margin-top:18px;
+  letter-spacing:.04em;
+}
+.sec-lead{
+  margin-top:20px; max-width:62ch; color:var(--ink-2);
+  font-size:clamp(14.5px,1.5vw,16px);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.hdr{
+  position:fixed; inset:0 0 auto 0; z-index:60;
+  transition:background .4s var(--ease), box-shadow .4s var(--ease), backdrop-filter .4s;
+}
+.hdr__in{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  height:78px; transition:height .4s var(--ease);
+}
+.hdr.is-stuck{
+  background:rgba(250,247,240,.86);
+  backdrop-filter:saturate(160%) blur(14px);
+  -webkit-backdrop-filter:saturate(160%) blur(14px);
+  box-shadow:0 1px 0 rgba(15,46,34,.08);
+}
+.hdr.is-stuck .hdr__in{ height:64px; }
+
+.logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+.logo__mark{ width:34px; height:34px; flex:none; }
+.logo__txt{ display:flex; flex-direction:column; line-height:1.2; }
+.logo__ja{ font-family:var(--serif); font-size:17px; letter-spacing:.09em; font-weight:600; }
+.logo__en{ font-size:9.5px; letter-spacing:.24em; color:var(--ink-3); font-weight:700; }
+
+.nav{ display:flex; align-items:center; gap:clamp(14px,2vw,30px); }
+.nav a{
+  position:relative; text-decoration:none; font-size:13.5px; font-weight:600;
+  letter-spacing:.08em; color:var(--ink-2); padding-block:6px;
+}
+.nav a::after{
+  content:""; position:absolute; left:0; right:100%; bottom:0; height:1.5px;
+  background:var(--green); transition:right .38s var(--ease);
+}
+.nav a:hover{ color:var(--deep); }
+.nav a:hover::after{ right:0; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:.6em;
+  padding:.92em 1.6em; border-radius:999px; text-decoration:none;
+  font-size:13.5px; font-weight:700; letter-spacing:.08em; border:1px solid transparent;
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease), background .3s, color .3s, border-color .3s;
+  white-space:nowrap;
+}
+.btn--fill{ background:var(--deep); color:#fff; box-shadow:var(--shadow-s); }
+.btn--fill:hover{ background:var(--green); transform:translateY(-2px); box-shadow:var(--shadow-m); }
+.btn--line{ border-color:rgba(15,46,34,.22); color:var(--deep); }
+.btn--line:hover{ border-color:var(--deep); background:rgba(15,46,34,.04); transform:translateY(-2px); }
+.btn--ghost{ border-color:rgba(255,255,255,.4); color:#fff; }
+.btn--ghost:hover{ background:rgba(255,255,255,.12); border-color:#fff; transform:translateY(-2px); }
+.btn--lg{ padding:1.05em 2em; font-size:14.5px; }
+
+.hdr .btn{ padding:.72em 1.35em; }
+
+/* burger + drawer */
+.burger{
+  display:none; position:relative; width:44px; height:44px;
+  border:0; background:transparent; cursor:pointer; padding:0; border-radius:12px;
+}
+.burger span{
+  position:absolute; left:11px; width:22px; height:1.8px;
+  background:var(--deep); border-radius:2px;
+  transition:top .3s var(--ease), transform .38s var(--ease), opacity .24s var(--ease);
+}
+.burger span:nth-child(1){ top:15px; }
+.burger span:nth-child(2){ top:21px; }
+.burger span:nth-child(3){ top:27px; }
+.burger[aria-expanded="true"] span:nth-child(1){ top:21px; transform:rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2){ opacity:0; }
+.burger[aria-expanded="true"] span:nth-child(3){ top:21px; transform:rotate(-45deg); }
+
+.drawer{
+  position:fixed; inset:0; z-index:55;
+  background:var(--cream);
+  display:flex; flex-direction:column; justify-content:center;
+  padding:var(--gut);
+  opacity:0; visibility:hidden; transform:translateY(-8px);
+  transition:opacity .4s var(--ease), transform .4s var(--ease), visibility .4s;
+}
+.drawer.open{ opacity:1; visibility:visible; transform:none; }
+.drawer a{
+  display:block; text-decoration:none; font-family:var(--serif);
+  font-size:26px; letter-spacing:.08em; padding-block:15px;
+  border-bottom:1px solid var(--line);
+}
+.drawer a small{
+  display:block; font-family:var(--sans); font-size:10px; letter-spacing:.2em;
+  color:var(--ink-3); font-weight:700; margin-top:4px;
+}
+.drawer .btn{ margin-top:30px; align-self:flex-start; }
+body.lock{ overflow:hidden; }
+
+@media (max-width:900px){
+  .nav{ display:none; }
+  .burger{ display:block; }
+  .hdr__in > .btn{ display:none; }
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero{
+  position:relative; overflow:hidden;
+  padding-top:clamp(112px,15vw,168px);
+  padding-bottom:clamp(64px,9vw,110px);
+  background:
+    radial-gradient(120% 90% at 88% 4%, #fff6e6 0%, rgba(255,246,230,0) 58%),
+    radial-gradient(90% 70% at 4% 96%, #e9f1ea 0%, rgba(233,241,234,0) 60%),
+    var(--cream);
+}
+.hero::after{ /* subtle paper grain */
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+.hero__grid{
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:1.12fr .88fr; gap:clamp(28px,4vw,60px); align-items:center;
+}
+@media (max-width:920px){ .hero__grid{ grid-template-columns:1fr; } }
+
+.hero__tag{
+  display:inline-flex; align-items:center; gap:.6em;
+  background:rgba(31,107,69,.09); color:var(--green);
+  border-radius:999px; padding:.5em 1.05em;
+  font-size:11.5px; font-weight:700; letter-spacing:.14em;
+}
+.hero__tag i{ width:6px; height:6px; border-radius:50%; background:var(--accent); flex:none; }
+
+.hero h1{
+  font-family:var(--serif);
+  font-size:clamp(32px,5.4vw,56px);
+  line-height:1.38; letter-spacing:.04em;
+  margin-top:26px;
+}
+.hero h1 .em{
+  background:linear-gradient(transparent 68%, rgba(232,176,85,.42) 68%);
+}
+.hero__sub{
+  margin-top:26px; max-width:34em; color:var(--ink-2);
+  font-size:clamp(14.5px,1.6vw,16.5px);
+}
+.hero__en{
+  margin-top:34px; font-size:10.5px; letter-spacing:.3em; color:var(--ink-3); font-weight:700;
+}
+.hero__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+@media (max-width:520px){
+  .hero__cta{ display:grid; grid-template-columns:1fr; }
+  .hero__cta .btn{ width:100%; }
+}
+
+/* hero illustration */
+.tray-wrap{ position:relative; }
+.tray-wrap::before{
+  content:""; position:absolute; inset:6% 4% 2% 6%;
+  background:radial-gradient(closest-side, rgba(15,46,34,.16), rgba(15,46,34,0) 72%);
+  filter:blur(26px); border-radius:50%;
+}
+.tray{ position:relative; filter:drop-shadow(0 26px 46px rgba(15,46,34,.18)); }
+.tray .steam{ animation:steam 5.5s ease-in-out infinite; transform-origin:center bottom; }
+.tray .steam:nth-of-type(2){ animation-delay:-1.9s; }
+.tray .steam:nth-of-type(3){ animation-delay:-3.6s; }
+@keyframes steam{
+  0%   { opacity:0; transform:translateY(6px) scaleX(.94); }
+  35%  { opacity:.75; }
+  100% { opacity:0; transform:translateY(-24px) scaleX(1.14); }
+}
+
+.hero__badge{
+  position:absolute; z-index:2;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(15,46,34,.07);
+  border-radius:14px; padding:12px 16px;
+  box-shadow:var(--shadow-m);
+  display:flex; align-items:center; gap:11px;
+  animation:float 7s ease-in-out infinite;
+}
+.hero__badge b{ font-family:var(--serif); font-size:19px; letter-spacing:.04em; display:block; line-height:1.3; }
+.hero__badge span{ font-size:10.5px; letter-spacing:.12em; color:var(--ink-3); font-weight:700; }
+.hero__badge .ic{
+  width:34px; height:34px; border-radius:10px; flex:none;
+  background:var(--green-soft); color:var(--green);
+  display:grid; place-items:center;
+}
+.hero__badge--a{ left:-7%; bottom:2%; }
+.hero__badge--b{ right:-6%; top:2%; animation-delay:-3.4s; }
+@keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+@media (max-width:1100px){
+  .hero__badge--a{ left:-2%; bottom:0; }
+  .hero__badge--b{ right:-2%; top:0; }
+}
+@media (max-width:920px){
+  .hero__badge--a{ left:0; bottom:-2%; }
+  .hero__badge--b{ right:0; top:-2%; }
+}
+@media (max-width:520px){
+  .hero__badge{ padding:9px 12px; }
+  .hero__badge b{ font-size:16px; }
+}
+
+/* ticker strip */
+.strip{
+  background:var(--deep); color:rgba(255,255,255,.9);
+  overflow:hidden; padding-block:15px; position:relative;
+}
+.strip__row{ display:flex; width:max-content; animation:marquee 34s linear infinite; }
+.strip__row > span{
+  display:inline-flex; align-items:center; gap:26px; padding-right:26px;
+  font-size:12.5px; letter-spacing:.2em; font-weight:600; white-space:nowrap;
+}
+.strip__row > span::after{ content:"◆"; color:var(--accent-2); font-size:8px; }
+@keyframes marquee{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+/* ============================================================
+   Reveal animation
+   ============================================================ */
+.rv{ opacity:0; transform:translateY(26px); transition:opacity .85s var(--ease), transform .85s var(--ease); }
+.rv.in{ opacity:1; transform:none; }
+.rv-d1{ transition-delay:.09s; } .rv-d2{ transition-delay:.18s; }
+.rv-d3{ transition-delay:.27s; } .rv-d4{ transition-delay:.36s; }
+.rv-d5{ transition-delay:.45s; } .rv-d6{ transition-delay:.54s; }
+
+/* ============================================================
+   Stats
+   ============================================================ */
+.stats{ background:var(--paper); border-block:1px solid var(--line); }
+.stats__grid{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  padding-block:clamp(40px,6vw,64px);
+}
+.stat{ padding-inline:clamp(10px,2.4vw,30px); border-left:1px solid var(--line); }
+.stat:first-child{ border-left:0; padding-left:0; }
+.stat__num{
+  font-family:var(--serif); font-size:clamp(30px,4.6vw,50px);
+  line-height:1.15; color:var(--deep); letter-spacing:.02em;
+}
+.stat__num small{ font-size:.42em; margin-left:.28em; color:var(--green); letter-spacing:.06em; }
+.stat__lb{ margin-top:9px; font-size:12.5px; letter-spacing:.1em; color:var(--ink-3); font-weight:700; }
+@media (max-width:760px){
+  .stats__grid{ grid-template-columns:repeat(2,1fr); gap:34px 0; }
+  .stat:nth-child(odd){ border-left:0; padding-left:0; }
+}
+
+/* ============================================================
+   Business cards
+   ============================================================ */
+.biz{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(18px,2.4vw,30px); margin-top:clamp(38px,5vw,60px); }
+@media (max-width:840px){ .biz{ grid-template-columns:1fr; } }
+.card{
+  position:relative; overflow:hidden;
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r);
+  padding:clamp(26px,3.4vw,42px);
+  transition:transform .5s var(--ease), box-shadow .5s var(--ease), border-color .5s;
+}
+.card:hover{ transform:translateY(-6px); box-shadow:var(--shadow-l); border-color:transparent; }
+.card__no{
+  font-family:var(--serif); font-size:12px; letter-spacing:.24em; color:var(--accent);
+  font-weight:700;
+}
+.card__ttl{ font-family:var(--serif); font-size:clamp(21px,2.5vw,27px); margin-top:14px; letter-spacing:.05em; }
+.card__txt{ margin-top:16px; color:var(--ink-2); font-size:14.6px; }
+.card__ic{
+  position:absolute; right:-14px; top:-14px; width:130px; height:130px;
+  color:var(--green); opacity:.07; transition:transform .6s var(--ease), opacity .6s;
+}
+.card:hover .card__ic{ transform:scale(1.08) rotate(-6deg); opacity:.12; }
+.tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.tag{
+  font-size:12px; letter-spacing:.06em; font-weight:600;
+  background:var(--green-soft); color:var(--green);
+  padding:.42em .9em; border-radius:999px;
+}
+
+/* ============================================================
+   Facilities
+   ============================================================ */
+.fac{ background:var(--paper); }
+.fac__grid{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r);
+  overflow:hidden; margin-top:clamp(34px,4.5vw,54px);
+}
+@media (max-width:900px){ .fac__grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:460px){ .fac__grid{ grid-template-columns:1fr; } }
+.fac__item{
+  background:var(--paper); padding:clamp(24px,3vw,34px) clamp(18px,2.4vw,26px);
+  transition:background .4s var(--ease);
+}
+.fac__item:hover{ background:var(--cream); }
+.fac__item svg{ width:30px; height:30px; color:var(--green); }
+.fac__item h3{ font-family:var(--serif); font-size:16.5px; margin-top:16px; letter-spacing:.06em; }
+.fac__item p{ margin-top:9px; font-size:13.2px; color:var(--ink-3); line-height:1.85; }
+
+/* ============================================================
+   Strengths (dark)
+   ============================================================ */
+.str{
+  background:
+    radial-gradient(80% 60% at 92% 0%, #1b4a35 0%, rgba(27,74,53,0) 62%),
+    radial-gradient(70% 60% at 0% 100%, #16382a 0%, rgba(22,56,42,0) 60%),
+    var(--deep);
+  color:#fff;
+}
+.str .eyebrow{ color:var(--accent-2); }
+.str .sec-lead{ color:rgba(255,255,255,.72); }
+.str__grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2.2vw,26px); margin-top:clamp(38px,5vw,58px); }
+@media (max-width:880px){ .str__grid{ grid-template-columns:1fr; } }
+.str__card{
+  border:1px solid rgba(255,255,255,.14); border-radius:var(--r);
+  background:rgba(255,255,255,.045);
+  padding:clamp(26px,3vw,36px);
+  transition:background .5s var(--ease), transform .5s var(--ease), border-color .5s;
+}
+.str__card:hover{ background:rgba(255,255,255,.085); border-color:rgba(232,176,85,.42); transform:translateY(-6px); }
+.str__ic{
+  width:52px; height:52px; border-radius:14px; display:grid; place-items:center;
+  background:rgba(232,176,85,.16); color:var(--accent-2);
+}
+.str__card h3{ font-family:var(--serif); font-size:20px; margin-top:22px; letter-spacing:.06em; }
+.str__card p{ margin-top:14px; font-size:14.2px; color:rgba(255,255,255,.74); }
+
+/* hygiene cycle */
+.cycle{
+  margin-top:clamp(40px,5vw,62px);
+  border:1px solid rgba(255,255,255,.14); border-radius:var(--r);
+  padding:clamp(24px,3.2vw,40px);
+  background:rgba(0,0,0,.14);
+}
+.cycle__hd{ display:flex; flex-wrap:wrap; align-items:baseline; gap:14px; }
+.cycle__hd h3{ font-family:var(--serif); font-size:clamp(18px,2.2vw,23px); letter-spacing:.06em; }
+.cycle__hd span{ font-size:11.5px; letter-spacing:.16em; color:var(--accent-2); font-weight:700; }
+.cycle__steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:26px; }
+@media (max-width:820px){ .cycle__steps{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:460px){ .cycle__steps{ grid-template-columns:1fr; } }
+.step{ position:relative; padding-top:22px; border-top:1px solid rgba(255,255,255,.16); }
+.step::before{
+  content:""; position:absolute; top:-4.5px; left:0; width:9px; height:9px;
+  border-radius:50%; background:var(--accent-2);
+}
+.step b{ display:block; font-size:11px; letter-spacing:.2em; color:rgba(255,255,255,.5); font-weight:700; }
+.step h4{ font-family:var(--serif); font-size:16px; margin-top:8px; letter-spacing:.05em; }
+.step p{ margin-top:8px; font-size:13px; color:rgba(255,255,255,.66); line-height:1.8; }
+
+/* ============================================================
+   Ingredients / benefits
+   ============================================================ */
+.ing__grid{ display:grid; grid-template-columns:.92fr 1.08fr; gap:clamp(28px,4vw,64px); align-items:center; }
+@media (max-width:900px){ .ing__grid{ grid-template-columns:1fr; } }
+.needs{ display:grid; gap:12px; }
+.need{
+  display:flex; gap:16px; align-items:flex-start;
+  background:var(--paper); border:1px solid var(--line); border-radius:14px;
+  padding:20px 22px;
+  transition:transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+.need:hover{ transform:translateX(6px); box-shadow:var(--shadow-m); }
+.need__q{
+  flex:none; width:30px; height:30px; border-radius:9px;
+  background:var(--cream-2); color:var(--accent); font-weight:800; font-size:13px;
+  display:grid; place-items:center;
+}
+.need p{ font-size:14.2px; color:var(--ink-2); }
+.need p b{ color:var(--ink); font-weight:700; }
+
+/* ============================================================
+   Company table
+   ============================================================ */
+.about{ background:var(--paper); }
+.tbl{ margin-top:clamp(32px,4vw,48px); border-top:1px solid var(--line); }
+.tbl__row{
+  display:grid; grid-template-columns:200px 1fr; gap:20px;
+  padding-block:20px; border-bottom:1px solid var(--line);
+}
+.tbl__row dt{ font-size:13px; letter-spacing:.12em; color:var(--ink-3); font-weight:700; }
+.tbl__row dd{ margin:0; font-size:15px; }
+.tbl__row dd a{ color:var(--green); text-decoration:none; border-bottom:1px solid rgba(31,107,69,.3); }
+.tbl__row dd a:hover{ border-color:var(--green); }
+@media (max-width:640px){
+  .tbl__row{ grid-template-columns:1fr; gap:6px; padding-block:17px; }
+}
+
+/* ============================================================
+   Contact
+   ============================================================ */
+.cta{
+  background:linear-gradient(180deg, var(--cream) 0%, var(--cream-2) 100%);
+}
+.cta__box{
+  position:relative; overflow:hidden;
+  background:
+    radial-gradient(90% 120% at 100% 0%, #1d5039 0%, rgba(29,80,57,0) 60%),
+    var(--deep);
+  color:#fff; border-radius:26px;
+  padding:clamp(34px,5vw,68px);
+  box-shadow:var(--shadow-l);
+}
+.cta__box::after{
+  content:""; position:absolute; right:-70px; bottom:-90px; width:280px; height:280px;
+  border:1px solid rgba(232,176,85,.24); border-radius:50%;
+}
+.cta__grid{ position:relative; z-index:1; display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(28px,4vw,56px); align-items:center; }
+@media (max-width:860px){ .cta__grid{ grid-template-columns:1fr; } }
+.cta h2{ font-family:var(--serif); font-size:clamp(23px,3vw,34px); line-height:1.55; letter-spacing:.05em; margin-top:16px; }
+.cta p{ margin-top:18px; color:rgba(255,255,255,.75); font-size:14.6px; }
+.tel-card{
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16);
+  border-radius:var(--r); padding:clamp(22px,3vw,30px);
+}
+.tel-card__lb{ font-size:11.5px; letter-spacing:.18em; color:var(--accent-2); font-weight:700; }
+.tel-card__no{
+  display:inline-flex; align-items:center; gap:12px;
+  font-family:var(--serif); font-size:clamp(28px,4.4vw,40px); letter-spacing:.03em;
+  color:#fff; text-decoration:none; margin-top:10px; line-height:1.2;
+}
+.tel-card__no:hover{ color:var(--accent-2); }
+.tel-card__hr{ margin-top:12px; font-size:13px; color:rgba(255,255,255,.6); }
+.tel-card .btn{ margin-top:22px; width:100%; }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.ftr{ background:var(--deep-2); color:rgba(255,255,255,.66); padding-block:clamp(48px,6vw,72px) 0; }
+.ftr__grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:clamp(24px,3vw,44px); }
+@media (max-width:760px){ .ftr__grid{ grid-template-columns:1fr 1fr; } .ftr__brand{ grid-column:1/-1; } }
+.ftr .logo__ja,.ftr .logo__en{ color:#fff; }
+.ftr__addr{ margin-top:18px; font-size:13.4px; line-height:2; }
+.ftr h4{ font-size:11.5px; letter-spacing:.2em; color:var(--accent-2); font-weight:700; }
+.ftr ul{ margin-top:16px; display:grid; gap:11px; }
+.ftr ul a{ text-decoration:none; font-size:13.4px; transition:color .3s; }
+.ftr ul a:hover{ color:#fff; }
+.ftr__bar{
+  margin-top:clamp(38px,5vw,58px); border-top:1px solid rgba(255,255,255,.12);
+  padding-block:22px; display:flex; flex-wrap:wrap; gap:10px 20px; justify-content:space-between;
+  font-size:11.5px; letter-spacing:.06em; color:rgba(255,255,255,.42);
+}
+
+/* to top */
+.top{
+  position:fixed; right:18px; bottom:18px; z-index:50;
+  width:46px; height:46px; border-radius:50%;
+  background:var(--deep); color:#fff; border:0; cursor:pointer;
+  display:grid; place-items:center;
+  box-shadow:var(--shadow-m);
+  opacity:0; visibility:hidden; transform:translateY(12px);
+  transition:opacity .4s var(--ease), transform .4s var(--ease), visibility .4s, background .3s;
+}
+.top.on{ opacity:1; visibility:visible; transform:none; }
+.top:hover{ background:var(--green); }
+
+:focus-visible{ outline:2.5px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation:none !important; transition-duration:.01ms !important; }
+  .rv{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========================= HEADER ========================= -->
+<header class="hdr" id="hdr">
+  <div class="wrap hdr__in">
+    <a class="logo" href="#top" aria-label="株式会社ほくと給食 ホーム">
+      <svg class="logo__mark" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="11" fill="#0f2e22"/>
+        <circle cx="20" cy="20" r="9.5" fill="none" stroke="#e8b055" stroke-width="1.6"/>
+        <circle cx="20" cy="20" r="3.4" fill="#e8b055"/>
+        <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#e8b055" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+      </svg>
+      <span class="logo__txt">
+        <span class="logo__ja">ほくと給食</span>
+        <span class="logo__en">HOKUTO KYUSHOKU</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="メインナビゲーション">
+      <a href="#business">事業内容</a>
+      <a href="#facilities">対応施設</a>
+      <a href="#strength">私たちの強み</a>
+      <a href="#ingredients">食材販売</a>
+      <a href="#about">会社概要</a>
+    </nav>
+
+    <a class="btn btn--fill" href="#contact">お問い合わせ</a>
+
+    <button class="burger" id="burger" aria-label="メニューを開く" aria-expanded="false" aria-controls="drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<nav class="drawer" id="drawer" aria-label="モバイルナビゲーション">
+  <a href="#business">事業内容<small>OUR BUSINESS</small></a>
+  <a href="#facilities">対応施設<small>FACILITIES</small></a>
+  <a href="#strength">私たちの強み<small>OUR STRENGTH</small></a>
+  <a href="#ingredients">食材販売<small>FOOD SUPPLY</small></a>
+  <a href="#about">会社概要<small>COMPANY</small></a>
+  <a class="btn btn--fill btn--lg" href="#contact">お問い合わせ</a>
+</nav>
+
+<!-- ========================= HERO ========================= -->
+<main id="top">
+<section class="hero">
+  <div class="wrap hero__grid">
+    <div>
+      <span class="hero__tag rv in"><i></i>札幌市厚別区・創業1997年</span>
+
+      <h1 class="rv rv-d1">
+        毎日の食事を、<br>
+        施設の<span class="em">力</span>に変える。
+      </h1>
+
+      <p class="hero__sub rv rv-d2">
+        障がい者施設、保育園、高齢者施設、学校寄宿舎。<br>
+        ほくと給食は、食べる人の毎日に寄り添う給食受託と食材販売で、
+        「おいしい」と「安心」を札幌の現場へお届けしています。
+      </p>
+
+      <div class="hero__cta rv rv-d3">
+        <a class="btn btn--fill btn--lg" href="#contact">給食委託を相談する</a>
+        <a class="btn btn--line btn--lg" href="#business">事業内容を見る</a>
+      </div>
+
+      <p class="hero__en rv rv-d4">MEAL SERVICE &amp; FOOD SUPPLY — SAPPORO, HOKKAIDO</p>
+    </div>
+
+    <div class="tray-wrap rv rv-d2">
+      <!-- 給食トレー（真上から） -->
+      <svg class="tray" viewBox="0 0 520 420" role="img" aria-label="給食トレーのイラスト">
+        <defs>
+          <linearGradient id="trayG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2ece0"/>
+          </linearGradient>
+          <linearGradient id="soupG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c9762f"/><stop offset="1" stop-color="#a85c22"/>
+          </linearGradient>
+          <linearGradient id="mainG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e8b055"/><stop offset="1" stop-color="#d8873a"/>
+          </linearGradient>
+        </defs>
+
+        <!-- tray -->
+        <rect x="26" y="40" width="468" height="336" rx="34" fill="url(#trayG)" stroke="#e2ddd2" stroke-width="2"/>
+        <rect x="44" y="58" width="432" height="300" rx="24" fill="none" stroke="#efe9dc" stroke-width="1.5"/>
+
+        <!-- rice bowl -->
+        <g>
+          <circle cx="150" cy="152" r="70" fill="#1f6b45"/>
+          <circle cx="150" cy="152" r="61" fill="#2b7d54"/>
+          <circle cx="150" cy="152" r="52" fill="#f7f4ec"/>
+          <ellipse cx="150" cy="150" rx="45" ry="43" fill="#fffdf8"/>
+          <g fill="#efeadd">
+            <ellipse cx="130" cy="136" rx="8" ry="5.5" transform="rotate(-24 130 136)"/>
+            <ellipse cx="152" cy="128" rx="8" ry="5.5" transform="rotate(12 152 128)"/>
+            <ellipse cx="171" cy="143" rx="8" ry="5.5" transform="rotate(-40 171 143)"/>
+            <ellipse cx="126" cy="160" rx="8" ry="5.5" transform="rotate(18 126 160)"/>
+            <ellipse cx="146" cy="176" rx="8" ry="5.5" transform="rotate(-8 146 176)"/>
+            <ellipse cx="172" cy="170" rx="8" ry="5.5" transform="rotate(34 172 170)"/>
+          </g>
+          <circle cx="151" cy="153" r="8" fill="#d24a45"/>
+          <circle cx="148" cy="150" r="2.6" fill="#fff" opacity=".4"/>
+        </g>
+        <path class="steam" d="M138 96c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".5"/>
+        <path class="steam" d="M160 92c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".5"/>
+
+        <!-- soup bowl -->
+        <g>
+          <circle cx="150" cy="288" r="58" fill="url(#soupG)"/>
+          <circle cx="150" cy="288" r="47" fill="#2f2a24"/>
+          <circle cx="150" cy="288" r="40" fill="#7d5a2e"/>
+          <circle cx="132" cy="278" r="7" fill="#f2ede2" opacity=".85"/>
+          <circle cx="164" cy="292" r="5.5" fill="#8fb87a" opacity=".9"/>
+          <circle cx="148" cy="302" r="4.5" fill="#f2ede2" opacity=".7"/>
+        </g>
+        <path class="steam" d="M150 220c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".45"/>
+
+        <!-- main plate -->
+        <g>
+          <ellipse cx="340" cy="196" rx="118" ry="98" fill="#fff" stroke="#e2ddd2" stroke-width="2"/>
+          <ellipse cx="340" cy="196" rx="98" ry="80" fill="#fbfaf6"/>
+          <path d="M282 176c16-26 52-32 74-16 20 14 22 44 4 58-22 17-60 9-76-12-4-6-6-20-2-30z" fill="url(#mainG)"/>
+          <path d="M300 170c14-10 34-12 48-4" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+          <ellipse cx="386" cy="232" rx="30" ry="20" fill="#8fb87a"/>
+          <ellipse cx="386" cy="232" rx="19" ry="12" fill="#a6c993"/>
+          <circle cx="392" cy="164" r="16" fill="#e05a4a"/>
+          <circle cx="386" cy="159" r="5" fill="#fff" opacity=".45"/>
+        </g>
+
+        <!-- milk -->
+        <g>
+          <rect x="252" y="286" width="70" height="70" rx="10" fill="#ffffff" stroke="#e2ddd2" stroke-width="2"/>
+          <path d="M252 300h70" stroke="#e2ddd2" stroke-width="2"/>
+          <path d="M262 286h50l-6-10h-38z" fill="#f7f4ec" stroke="#e2ddd2" stroke-width="2" stroke-linejoin="round"/>
+          <rect x="262" y="310" width="50" height="36" rx="6" fill="#1f6b45"/>
+          <path d="M272 338c2-13 9-20 19-21" fill="none" stroke="#e8b055" stroke-width="3.4" stroke-linecap="round"/>
+          <circle cx="299" cy="320" r="4.5" fill="#e8b055"/>
+        </g>
+
+        <!-- chopsticks -->
+        <g stroke="#b98a55" stroke-width="7" stroke-linecap="round">
+          <path d="M362 292h96"/>
+          <path d="M362 314h96"/>
+        </g>
+      </svg>
+
+      <div class="hero__badge hero__badge--a" aria-hidden="false">
+        <span class="ic">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>
+          <b>衛生管理委員会</b>
+          <span>月1回・全社で運用</span>
+        </span>
+      </div>
+
+      <div class="hero__badge hero__badge--b">
+        <span class="ic">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </span>
+        <span>
+          <b>札幌市厚別区</b>
+          <span>大谷地西の本社より</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ticker -->
+<div class="strip" aria-hidden="true">
+  <div class="strip__row">
+    <span>給食受託業務</span><span>食材販売</span><span>管理栄養士による献立設計</span>
+    <span>衛生管理委員会</span><span>食育の推進</span><span>産地までさかのぼる食材管理</span>
+    <span>給食受託業務</span><span>食材販売</span><span>管理栄養士による献立設計</span>
+    <span>衛生管理委員会</span><span>食育の推進</span><span>産地までさかのぼる食材管理</span>
+  </div>
+</div>
+
+<!-- ========================= STATS ========================= -->
+<section class="stats">
+  <div class="wrap stats__grid">
+    <div class="stat rv">
+      <div class="stat__num" data-count="1997">1997</div>
+      <div class="stat__lb">創業（平成9年7月）</div>
+    </div>
+    <div class="stat rv rv-d1">
+      <div class="stat__num"><span data-count="180">180</span><small>名</small></div>
+      <div class="stat__lb">従業員数</div>
+    </div>
+    <div class="stat rv rv-d2">
+      <div class="stat__num"><span data-count="7">7</span><small>分野</small></div>
+      <div class="stat__lb">対応する施設ジャンル</div>
+    </div>
+    <div class="stat rv rv-d3">
+      <div class="stat__num"><span data-count="365">365</span><small>日</small></div>
+      <div class="stat__lb">止まらない食の現場</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= BUSINESS ========================= -->
+<section class="sec" id="business">
+  <div class="wrap">
+    <span class="eyebrow rv">Our Business</span>
+    <h2 class="sec-title rv rv-d1">「食べる」を任せていただく、<br>ふたつの事業。</h2>
+    <p class="sec-lead rv rv-d2">
+      調理から提供までを一括で担う給食受託業務と、忙しい現場を支える食材販売。
+      施設の規模や運営体制にあわせて、必要なかたちで食を支えます。
+    </p>
+
+    <div class="biz">
+      <article class="card rv rv-d1">
+        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M3 11h18"/><path d="M4 11a8 8 0 0 1 16 0"/><path d="M2 15h20"/><path d="M6 19h12"/>
+        </svg>
+        <div class="card__no">01 — MEAL SERVICE</div>
+        <h3 class="card__ttl">給食受託業務</h3>
+        <p class="card__txt">
+          施設内の厨房で、朝・昼・夕の食事を調理してお届けします。管理栄養士が栄養価とバランスを考えた献立を作成し、
+          一人ひとりの状態に合わせた食事形態にも対応。見た目の彩りや季節感まで含めて、「食べる時間が楽しみになる給食」を設計します。
+        </p>
+        <div class="tags">
+          <span class="tag">献立作成</span><span class="tag">調理・盛付</span>
+          <span class="tag">個別対応食</span><span class="tag">行事食</span><span class="tag">食育</span>
+        </div>
+      </article>
+
+      <article class="card rv rv-d2">
+        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M3 7h18l-1.5 12.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 7z"/><path d="M8 7a4 4 0 0 1 8 0"/>
+        </svg>
+        <div class="card__no">02 — FOOD SUPPLY</div>
+        <h3 class="card__ttl">食材販売</h3>
+        <p class="card__txt">
+          グループホームをはじめとした施設向けに、必要な食材をまとめてお届けします。
+          買い出しの時間が取れない、調理に不慣れなスタッフが多い、食材費の変動が読めない——
+          そんな現場の悩みに、仕入れごと引き受けるかたちでお応えします。
+        </p>
+        <div class="tags">
+          <span class="tag">グループホーム</span><span class="tag">高齢者施設</span>
+          <span class="tag">仕入れ代行</span><span class="tag">コスト平準化</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= FACILITIES ========================= -->
+<section class="sec fac" id="facilities">
+  <div class="wrap">
+    <span class="eyebrow rv">Facilities</span>
+    <h2 class="sec-title rv rv-d1">子どもから高齢者まで。<br>幅広い現場での実績。</h2>
+    <p class="sec-lead rv rv-d2">
+      施設の種類ごとに、求められる食事はまったく違います。ほくと給食は、それぞれの現場に合わせた運営で対応しています。
+    </p>
+
+    <div class="fac__grid rv rv-d1">
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+        <h3>障がい者施設</h3>
+        <p>咀嚼・嚥下の状態や個別の配慮に合わせた食事形態で提供します。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <h3>保育園</h3>
+        <p>成長期の栄養設計に加え、食べる楽しさを伝える食育にも力を入れています。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8v11h18V8z"/><path d="M9 19v-5h6v5"/></svg>
+        <h3>高齢者施設</h3>
+        <p>栄養価と食べやすさを両立し、日々の楽しみになる献立をご用意します。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <h3>デイサービス</h3>
+        <p>利用時間に合わせた提供スケジュールで、温かい食事をお出しします。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10.5V16c0 1.7 2.2 3 5 3s5-1.3 5-3v-5.5"/></svg>
+        <h3>学校寄宿舎</h3>
+        <p>毎日の三食を通じて、学びの時間を支える体づくりをサポートします。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+        <h3>研修所</h3>
+        <p>研修日程に合わせた食数の変動にも柔軟に対応いたします。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+        <h3>グループホーム</h3>
+        <p>食材販売を中心に、少人数の生活の場に合った量とかたちでお届けします。</p>
+      </div>
+      <div class="fac__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <h3>その他の施設</h3>
+        <p>上記以外の福祉・教育施設についても、まずはご相談ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= STRENGTH ========================= -->
+<section class="sec str" id="strength">
+  <div class="wrap">
+    <span class="eyebrow rv">Our Strength</span>
+    <h2 class="sec-title rv rv-d1">おいしさの前に、<br>安全がある。</h2>
+    <p class="sec-lead rv rv-d2">
+      給食は毎日続くものだからこそ、仕組みで守ります。ほくと給食が大切にしている3つの柱です。
+    </p>
+
+    <div class="str__grid">
+      <article class="str__card rv rv-d1">
+        <div class="str__ic">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h3>衛生管理委員会</h3>
+        <p>
+          社内に衛生管理委員会を設置し、月1回の開催で毎月の目標を設定。衛生管理と労働安全管理の対策を全社で協議し、実行まで落とし込んでいます。
+          食中毒の防止、災害発生時の対応、感染症発生時の対策も、事前に議論を重ねたうえで運用しています。
+        </p>
+      </article>
+
+      <article class="str__card rv rv-d2">
+        <div class="str__ic">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C11 5 13 4 15 4c-2 3-1 6 1 8"/><path d="M11 20c0-4 2-8 6-10"/></svg>
+        </div>
+        <h3>食材の目利き</h3>
+        <p>
+          食材の仕入れには専任の担当者を置き、産地や注文履歴といった情報を管理したうえで、良質な食材の確保に努めています。
+          「おいしい食材を選ぶ」ことが、おいしい給食のいちばんの近道だと考えています。
+        </p>
+      </article>
+
+      <article class="str__card rv rv-d3">
+        <div class="str__ic">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M8 8h6M8 12h6"/></svg>
+        </div>
+        <h3>栄養設計と食育</h3>
+        <p>
+          管理栄養士が、一人ひとりの状態に合わせて栄養価とバランスを考えた献立を作成します。
+          保育園では、食べることの楽しさや喜びを味わってもらい、食に興味を持ってもらえるよう食育にも力を入れています。
+        </p>
+      </article>
+    </div>
+
+    <div class="cycle rv rv-d2">
+      <div class="cycle__hd">
+        <h3>衛生管理委員会の1か月</h3>
+        <span>MONTHLY CYCLE</span>
+      </div>
+      <div class="cycle__steps">
+        <div class="step">
+          <b>STEP 01</b>
+          <h4>目標の設定</h4>
+          <p>季節や施設の状況を踏まえ、その月に重点的に取り組むテーマを決めます。</p>
+        </div>
+        <div class="step">
+          <b>STEP 02</b>
+          <h4>委員会での協議</h4>
+          <p>衛生管理・労働安全管理の両面から、具体的な対策を検討します。</p>
+        </div>
+        <div class="step">
+          <b>STEP 03</b>
+          <h4>現場での実践</h4>
+          <p>決めた対策を各事業所の日々の作業に反映し、全員で運用します。</p>
+        </div>
+        <div class="step">
+          <b>STEP 04</b>
+          <h4>振り返りと共有</h4>
+          <p>結果を確認し、気づきを次の月の目標へ。改善を止めずに続けます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= INGREDIENTS ========================= -->
+<section class="sec" id="ingredients">
+  <div class="wrap ing__grid">
+    <div>
+      <span class="eyebrow rv">Food Supply</span>
+      <h2 class="sec-title rv rv-d1">食材の手配ごと、<br>お任せください。</h2>
+      <p class="sec-lead rv rv-d2">
+        食材販売はグループホームを基本にご提供しています。
+        買い出しにかかっていた時間を、利用者さんと向き合う時間へ。現場の負担をまるごと軽くする選択肢です。
+      </p>
+      <div class="hero__cta rv rv-d3" style="margin-top:30px">
+        <a class="btn btn--fill" href="#contact">食材販売について問い合わせる</a>
+      </div>
+    </div>
+
+    <div class="needs">
+      <div class="need rv rv-d1">
+        <span class="need__q">Q</span>
+        <p><b>通常業務が忙しく、食材の買い出しまで手が回らない。</b><br>必要な食材をまとめてお届けするので、買い出しの時間がそのまま空きます。</p>
+      </div>
+      <div class="need rv rv-d2">
+        <span class="need__q">Q</span>
+        <p><b>調理に不慣れな担当者が多く、献立づくりに困っている。</b><br>食材の内容から相談できるので、調理の負担そのものを減らせます。</p>
+      </div>
+      <div class="need rv rv-d3">
+        <span class="need__q">Q</span>
+        <p><b>食材費の変動が激しく、費用の見通しが立てにくい。</b><br>まとめての仕入れにより、月々の食材費を管理しやすくなります。</p>
+      </div>
+      <div class="need rv rv-d4">
+        <span class="need__q">Q</span>
+        <p><b>利用者の健康管理をしっかりやりたい。</b><br>栄養バランスを踏まえた食材選定で、日々の食事の質を底上げします。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= ABOUT ========================= -->
+<section class="sec about" id="about">
+  <div class="wrap">
+    <span class="eyebrow rv">Company</span>
+    <h2 class="sec-title rv rv-d1">会社概要</h2>
+
+    <dl class="tbl rv rv-d2">
+      <div class="tbl__row"><dt>商号</dt><dd>株式会社ほくと給食</dd></div>
+      <div class="tbl__row"><dt>代表者</dt><dd>代表取締役　古井 榮一</dd></div>
+      <div class="tbl__row"><dt>設立</dt><dd>平成9年（1997年）7月1日</dd></div>
+      <div class="tbl__row"><dt>従業員数</dt><dd>180名</dd></div>
+      <div class="tbl__row">
+        <dt>所在地</dt>
+        <dd>〒004-0042　北海道札幌市厚別区大谷地西6丁目3番1号</dd>
+      </div>
+      <div class="tbl__row">
+        <dt>電話番号</dt>
+        <dd><a href="tel:0118945251">011-894-5251</a></dd>
+      </div>
+      <div class="tbl__row"><dt>営業時間</dt><dd>平日 9:00〜18:00</dd></div>
+      <div class="tbl__row">
+        <dt>事業内容</dt>
+        <dd>給食受託業務（社会福祉施設・障がい者施設・保育園・高齢者施設・高齢者デイサービス・学校寄宿舎・研修所 ほか）／ 食材販売</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<!-- ========================= CONTACT ========================= -->
+<section class="sec cta" id="contact">
+  <div class="wrap">
+    <div class="cta__box rv">
+      <div class="cta__grid">
+        <div>
+          <span class="eyebrow" style="color:var(--accent-2)">Contact</span>
+          <h2>給食のこと、<br>まずは話してみませんか。</h2>
+          <p>
+            現在の運営体制のお悩み、切り替えのご相談、食材販売のご案内まで。
+            施設の規模や状況をお聞きしたうえで、できることをご提案します。お気軽にご連絡ください。
+          </p>
+        </div>
+
+        <div class="tel-card">
+          <div class="tel-card__lb">TEL — お電話でのご相談</div>
+          <a class="tel-card__no" href="tel:0118945251">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+            011-894-5251
+          </a>
+          <p class="tel-card__hr">受付時間　平日 9:00〜18:00</p>
+          <a class="btn btn--ghost" href="https://www.hokutokyuushoku.net/contact" target="_blank" rel="noopener">
+            お問い合わせフォームへ
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ========================= FOOTER ========================= -->
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr__grid">
+      <div class="ftr__brand">
+        <div class="logo">
+          <svg class="logo__mark" viewBox="0 0 40 40" aria-hidden="true">
+            <rect width="40" height="40" rx="11" fill="#0f2e22"/>
+            <circle cx="20" cy="20" r="9.5" fill="none" stroke="#e8b055" stroke-width="1.6"/>
+            <circle cx="20" cy="20" r="3.4" fill="#e8b055"/>
+            <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#e8b055" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+          </svg>
+          <span class="logo__txt">
+            <span class="logo__ja">株式会社ほくと給食</span>
+            <span class="logo__en">HOKUTO KYUSHOKU CO., LTD.</span>
+          </span>
+        </div>
+        <p class="ftr__addr">
+          〒004-0042　北海道札幌市厚別区大谷地西6丁目3番1号<br>
+          TEL <a href="tel:0118945251" style="color:#fff;text-decoration:none">011-894-5251</a>（平日 9:00〜18:00）
+        </p>
+      </div>
+
+      <div>
+        <h4>SERVICE</h4>
+        <ul>
+          <li><a href="#business">事業内容</a></li>
+          <li><a href="#facilities">対応施設</a></li>
+          <li><a href="#ingredients">食材販売</a></li>
+          <li><a href="#strength">私たちの強み</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>COMPANY</h4>
+        <ul>
+          <li><a href="#about">会社概要</a></li>
+          <li><a href="#contact">お問い合わせ</a></li>
+          <li><a href="https://www.hokutokyuushoku.net/" target="_blank" rel="noopener">公式サイト</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ftr__bar">
+      <span>© <span id="yr">2026</span> HOKUTO KYUSHOKU CO., LTD.</span>
+      <span>本ページは公開情報をもとに制作したデザイン提案版です。</span>
+    </div>
+  </div>
+</footer>
+
+<button class="top" id="toTop" aria-label="ページ上部へ戻る">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+(function(){
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- scroll reveal --- */
+  var targets = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    targets.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold:.05, rootMargin:'0px 0px -6% 0px' });
+    targets.forEach(function(el){ io.observe(el); });
+
+    /* 安全網: 何らかの理由で監視が働かなくても、表示域に入った要素は必ず出す */
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        document.querySelectorAll('.rv:not(.in)').forEach(function(el){
+          var r = el.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('in');
+        });
+      }, 700);
+    });
+  }
+
+  /* --- count up --- */
+  var nums = document.querySelectorAll('[data-count]');
+  function countUp(el){
+    var goal = parseInt(el.dataset.count, 10);
+    if (reduce){ el.textContent = goal; return; }
+    var dur = 1300, t0 = null;
+    function tick(t){
+      if (!t0) t0 = t;
+      var p = Math.min((t - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(goal * eased);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  if ('IntersectionObserver' in window){
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ countUp(e.target); io2.unobserve(e.target); }
+      });
+    }, { threshold:.6 });
+    nums.forEach(function(el){ io2.observe(el); });
+  } else {
+    nums.forEach(function(el){ el.textContent = el.dataset.count; });
+  }
+
+  /* --- header state + back to top --- */
+  var hdr = document.getElementById('hdr');
+  var toTop = document.getElementById('toTop');
+  var ticking = false;
+  function onScroll(){
+    var y = window.pageYOffset;
+    hdr.classList.toggle('is-stuck', y > 24);
+    toTop.classList.toggle('on', y > 700);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking){ requestAnimationFrame(onScroll); ticking = true; }
+  }, { passive:true });
+  onScroll();
+
+  toTop.addEventListener('click', function(){
+    window.scrollTo({ top:0, behavior: reduce ? 'auto' : 'smooth' });
+  });
+
+  /* --- mobile drawer --- */
+  var burger = document.getElementById('burger');
+  var drawer = document.getElementById('drawer');
+  function setMenu(open){
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+    drawer.classList.toggle('open', open);
+    document.body.classList.toggle('lock', open);
+  }
+  burger.addEventListener('click', function(){
+    setMenu(burger.getAttribute('aria-expanded') !== 'true');
+  });
+  drawer.addEventListener('click', function(e){
+    if (e.target.closest('a')) setMenu(false);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') setMenu(false);
+  });
+  window.addEventListener('resize', function(){
+    if (window.innerWidth > 900) setMenu(false);
+  });
+
+  /* --- year --- */
+  document.getElementById('yr').textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>
