@@ -493,11 +493,36 @@ function goTitle(){
   
 // ---------- ユーティリティ ----------  
 const hit = (a,b)=> a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;  
-function spawnParticles(x,y,color,n=8,spd=3){  
-  for(let i=0;i<n;i++){  
-    const a = Math.random()*Math.PI*2, s = Math.random()*spd+1;  
-    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:30+Math.random()*15,color,r:2+Math.random()*3});  
-  }  
+function spawnParticles(x,y,color,n=8,spd=3){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s = Math.random()*spd+1;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:30+Math.random()*15,color,r:2+Math.random()*3});
+  }
+}
+// ふわっと浮かぶハート(HPが回復した時など)
+function spawnHearts(x,y,n=6){
+  for(let i=0;i<n;i++){
+    const a = -Math.PI/2 + (Math.random()-0.5)*1.5, sp = 1+Math.random()*1.6;
+    particles.push({ x:x+(Math.random()-0.5)*22, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.2,
+      life:46+Math.random()*18, color:['#ff8fab','#ffb3c6','#ff6b9d'][i%3],
+      r:4.5+Math.random()*2.5, shape:'heart', rot:(Math.random()-0.5)*0.5, spin:(Math.random()-0.5)*0.06, g:-0.008 });
+  }
+}
+// キラキラ(能力コピーなど)
+function spawnSparkles(x,y,n=10,color='#fff59d'){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = Math.random()*3+1;
+    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1, life:28+Math.random()*18,
+      color, r:3+Math.random()*3.5, shape:'star', rot:Math.random()*6, spin:(Math.random()-0.5)*0.3, g:0.05 });
+  }
+}
+// 着地のもくもく
+function spawnDust(x,y){
+  for(let i=0;i<7;i++){
+    particles.push({ x:x+(Math.random()-0.5)*18, y:y-2,
+      vx:(Math.random()-0.5)*4.5, vy:-Math.random()*1.3,
+      life:18+Math.random()*10, color:'rgba(255,255,255,.8)', r:3+Math.random()*3, g:0.03 });
+  }
 }  
 function popup(x,y,text,color='#fff'){ popups.push({x,y,text,color,life:60}); }  
   
@@ -535,8 +560,10 @@ function updatePlayer(){
   for(const pf of platforms){  
     if(p.x+p.w > pf.x && p.x < pf.x+pf.w){  
       if(p.vy >= 0 && p.y+p.h > pf.y && p.y+p.h - p.vy <= pf.y + 8){  
-        p.y = pf.y - p.h; p.vy = 0;  
-        if(!p.onGround){ p.onGround = true; p.airPuffs = 4; }  
+        const landVy = p.vy;
+        p.y = pf.y - p.h; p.vy = 0;
+        if(!p.onGround){ p.onGround = true; p.airPuffs = 4;
+          if(landVy > 5) spawnDust(p.x+p.w/2, p.y+p.h); }  
       }  
     }  
   }  
@@ -554,7 +581,8 @@ function updatePlayer(){
       const ab = ENEMY_TYPES[p.mouthful].ability;  
       p.mouthful = null;  
       SFX.gulp();  
-      if(ab){ p.ability = ab; p.abilityT = 0; SFX.power();  
+      if(ab){ p.ability = ab; p.abilityT = 0; SFX.power();
+        spawnSparkles(p.x+p.w/2, p.y+p.h/2, 14, ABILITIES[ab].color);
         popup(p.x+p.w/2, p.y-20, ABILITIES[ab].name+'コピー!', ABILITIES[ab].color); }  
       else popup(p.x+p.w/2, p.y-20, 'もぐもぐ…', '#fff');  
       game.score += 100;  
@@ -893,7 +921,8 @@ function updateSeeds(){
       game.seedCount++; game.score += 10;  
       if(game.seedCount >= 100){  
         game.seedCount -= 100;  
-        if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, '1UP! HP+1', '#ef9a9a'); }  
+        if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, '1UP! HP+1', '#ef9a9a');
+          spawnHearts(p.x+p.w/2, p.y-4, 7); }  
         else { game.score += 1000; popup(p.x+p.w/2, p.y-30, '+1000', '#fff176'); }  
         SFX.power();  
         spawnParticles(p.x+p.w/2, p.y, '#ffd54f', 16, 4);  
@@ -915,7 +944,8 @@ function updateSeeds(){
     }  
     if(hit(it, p)){  
       it.taken = true; SFX.power();  
-      if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, 'メロンソーダ! HP+1', '#66bb6a'); }  
+      if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, 'メロンソーダ! HP+1', '#66bb6a');
+        spawnHearts(p.x+p.w/2, p.y-4, 7); }  
       else { game.score += 1000; popup(p.x+p.w/2, p.y-30, '+1000', '#66bb6a'); }  
       spawnParticles(it.x+it.w/2, it.y, '#66bb6a', 14, 4);  
     }  
@@ -927,7 +957,7 @@ function updateSeeds(){
 function update(){  
   if(game.state==='next'){  
     game.banner--;  
-    for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; }  
+    for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy += (pt.g===undefined?0.12:pt.g); if(pt.spin) pt.rot += pt.spin; pt.life--; }  
     particles = particles.filter(p=>p.life>0);  
     if(game.banner <= 0){  
       game.stage++; loadStage(game.stage);  
@@ -943,7 +973,7 @@ function update(){
   updateBullets();
   updateSeeds();
   
-  for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; }  
+  for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy += (pt.g===undefined?0.12:pt.g); if(pt.spin) pt.rot += pt.spin; pt.life--; }  
   particles = particles.filter(p=>p.life>0);  
   for(const pp of popups){ pp.y -= 0.7; pp.life--; }  
   popups = popups.filter(p=>p.life>0);  
@@ -998,8 +1028,16 @@ function draw(){
     ctx.beginPath(); ctx.ellipse(hx, GROUND_Y+40, 230, 130, 0, Math.PI, 0); ctx.fill();  
   }  
   
-  ctx.save();  
-  ctx.translate(-Math.floor(game.cam), 0);  
+  // ちょうちょ(ふわふわ)
+  for(let i=0;i<3;i++){
+    const span = 1500;
+    const bx = ((i*520 - game.cam*0.45) % span + span) % span - 60;
+    const by = 160 + i*58 + Math.sin(game.frame*0.035 + i*2.1)*28;
+    drawButterfly(bx, by, i);
+  }
+
+  ctx.save();
+  ctx.translate(-Math.floor(game.cam), 0);
   
   // 足場  
   for(const pf of platforms){  
@@ -1015,6 +1053,18 @@ function draw(){
     }  
   }  
   
+  // 地面のお花(位置は x から決めるので ちらつかない)
+  for(const pf of platforms){
+    if(pf.h <= 50) continue;
+    if(pf.x+pf.w < game.cam-40 || pf.x > game.cam+W+40) continue;
+    for(let fx = pf.x+50; fx < pf.x+pf.w-30; fx += 118){
+      const k = Math.sin(fx*12.9898)*43758.5453;
+      const rnd = k - Math.floor(k);
+      if(rnd < 0.34) continue;
+      drawFlower(fx, pf.y+3, rnd);
+    }
+  }
+
   // ゴール(ひまわりの旗)  
   ctx.fillStyle = '#795548'; ctx.fillRect(GOAL_X, GROUND_Y-180, 8, 180);  
   ctx.fillStyle = '#ffb300';  
@@ -1061,10 +1111,12 @@ function draw(){
   }  
   drawPlayer();  
   
-  for(const pt of particles){  
-    ctx.globalAlpha = Math.min(1, pt.life/20);  
-    ctx.fillStyle = pt.color;  
-    ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill();  
+  for(const pt of particles){
+    ctx.globalAlpha = Math.min(1, pt.life/20);
+    ctx.fillStyle = pt.color;
+    if(pt.shape==='heart') drawHeart(pt.x, pt.y, pt.r, pt.rot||0);
+    else if(pt.shape==='star') drawSparkle(pt.x, pt.y, pt.r, pt.rot||0);
+    else { ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill(); }
   }  
   ctx.globalAlpha = 1;  
   for(const pp of popups){  
@@ -1084,6 +1136,51 @@ function draw(){
   if(game.state==='next') drawNext();  
 }  
   
+// ちいさなハート
+function drawHeart(x,y,r,rot){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(rot);
+  ctx.beginPath();
+  ctx.moveTo(0, r*0.95);
+  ctx.bezierCurveTo(-r*1.35, -r*0.2, -r*0.55, -r*1.2, 0, -r*0.42);
+  ctx.bezierCurveTo( r*0.55, -r*1.2,  r*1.35, -r*0.2, 0, r*0.95);
+  ctx.fill(); ctx.restore();
+}
+// ちいさなキラキラ
+function drawSparkle(x,y,r,rot){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(rot);
+  ctx.beginPath();
+  for(let i=0;i<4;i++){
+    const a = i*Math.PI/2, b = a + Math.PI/4;
+    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+    ctx.lineTo(Math.cos(b)*r*0.3, Math.sin(b)*r*0.3);
+  }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+// 地面のお花
+const FLOWER_COLORS = ['#fff59d','#f8bbd0','#e1bee7','#ffffff'];
+function drawFlower(x, y, rnd){
+  const sway = Math.sin(game.frame*0.03 + x*0.05)*1.3;
+  ctx.strokeStyle = '#7cb342'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x+sway*0.5, y-7, x+sway, y-13); ctx.stroke();
+  ctx.fillStyle = FLOWER_COLORS[Math.floor(rnd*100)%4];
+  for(let i=0;i<5;i++){
+    const a = i/5*Math.PI*2 + rnd;
+    ctx.beginPath(); ctx.arc(x+sway+Math.cos(a)*3.5, y-13+Math.sin(a)*3.5, 2.7, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#ffd54f';
+  ctx.beginPath(); ctx.arc(x+sway, y-13, 1.9, 0, Math.PI*2); ctx.fill();
+}
+// ふわふわ飛ぶ ちょうちょ
+function drawButterfly(x, y, i){
+  const f = Math.abs(Math.sin(game.frame*0.22 + i*1.7));
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = ['rgba(255,241,118,.92)','rgba(244,143,177,.92)','rgba(179,229,252,.92)'][i%3];
+  ctx.beginPath(); ctx.ellipse(-4, 0, 2.5+f*3.5, 6, -0.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 4, 0, 2.5+f*3.5, 6,  0.4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(90,70,60,.85)';
+  ctx.beginPath(); ctx.ellipse(0, 0, 1.2, 5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
 function rounded(x,y,w,h,r){  
   ctx.beginPath();  
   ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);  
@@ -1163,20 +1260,35 @@ function drawPlayer(){
   ctx.beginPath(); ctx.ellipse(-12, 4, cheek, cheek*0.9, 0, 0, Math.PI*2); ctx.fill();  
   ctx.beginPath(); ctx.ellipse(12, 4, cheek, cheek*0.9, 0, 0, Math.PI*2); ctx.fill();  
   
-  // 目(まんまるの点目)  
-  ctx.fillStyle = '#2e2a20';  
-  ctx.beginPath(); ctx.arc(-6,-3,3,0,Math.PI*2); ctx.arc(6,-3,3,0,Math.PI*2); ctx.fill();  
-  ctx.fillStyle = '#fff';  
-  ctx.beginPath(); ctx.arc(-5,-4,1.1,0,Math.PI*2); ctx.arc(7,-4,1.1,0,Math.PI*2); ctx.fill();  
-  
-  // 口  
-  if(p.sucking){  
-    ctx.fillStyle = '#6d4c41';  
-    ctx.beginPath(); ctx.ellipse(0, 5, 5, 6, 0, 0, Math.PI*2); ctx.fill();  
-  } else {  
-    // にっこり「v」っぽい口  
-    ctx.strokeStyle = '#5d4530'; ctx.lineWidth = 1.6; ctx.lineCap='round';  
-    ctx.beginPath(); ctx.moveTo(-4,3); ctx.lineTo(0,6); ctx.lineTo(4,3); ctx.stroke();  
+  // 目(ときどき まばたき。ほおばると にっこり)
+  const blinking = (game.frame + 41) % 205 < 8;
+  if(blinking || p.mouthful){
+    ctx.strokeStyle = '#2e2a20'; ctx.lineWidth = 2.3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(-6,-2, 3.6, Math.PI*1.15, Math.PI*1.85); ctx.stroke();
+    ctx.beginPath(); ctx.arc( 6,-2, 3.6, Math.PI*1.15, Math.PI*1.85); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#2e2a20';
+    ctx.beginPath(); ctx.arc(-6,-3,3,0,Math.PI*2); ctx.arc(6,-3,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-5,-4,1.1,0,Math.PI*2); ctx.arc(7,-4,1.1,0,Math.PI*2); ctx.fill();
+  }
+
+  // 口
+  if(p.sucking){
+    ctx.fillStyle = '#6d4c41';
+    ctx.beginPath(); ctx.ellipse(0, 5, 5, 6, 0, 0, Math.PI*2); ctx.fill();
+  } else if(!p.onGround){
+    // ジャンプ中は ちいさく まるい口で「わあ!」
+    ctx.fillStyle = '#8d5b3f';
+    ctx.beginPath(); ctx.ellipse(0, 5, 3.2, 3.9, 0, 0, Math.PI*2); ctx.fill();
+  } else if(p.mouthful){
+    // ほおばって ごきげん
+    ctx.strokeStyle = '#5d4530'; ctx.lineWidth = 1.8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(0, 2, 4.6, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+  } else {
+    // にっこり「v」っぽい口
+    ctx.strokeStyle = '#5d4530'; ctx.lineWidth = 1.6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-4,3); ctx.lineTo(0,6); ctx.lineTo(4,3); ctx.stroke();
   }  
   
   // 足(白っぽい小さいの)  
@@ -1234,9 +1346,13 @@ function drawEnemy(e){
     ctx.fillStyle = 'rgba(255,255,255,.7)';  
     ctx.beginPath(); ctx.ellipse(-6,-3,5,3,0,0,Math.PI*2); ctx.fill();  
   }  
-  // 共通の目  
-  ctx.fillStyle = '#212121';  
-  ctx.beginPath(); ctx.arc(-5,-3,2.5,0,Math.PI*2); ctx.arc(4,-3,2.5,0,Math.PI*2); ctx.fill();  
+  // 共通の目(ハイライト付き)と ほっぺ
+  ctx.fillStyle = '#212121';
+  ctx.beginPath(); ctx.arc(-5,-3,2.8,0,Math.PI*2); ctx.arc(4,-3,2.8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.beginPath(); ctx.arc(-4.1,-4,1,0,Math.PI*2); ctx.arc(4.9,-4,1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,138,128,.4)';
+  ctx.beginPath(); ctx.ellipse(-10.5,1.5,3,2,0,0,Math.PI*2); ctx.ellipse(10.5,1.5,3,2,0,0,Math.PI*2); ctx.fill();  
   
   if(e.frozen > 0){  
     ctx.fillStyle = 'rgba(178,235,242,.55)';  
