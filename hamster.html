@@ -351,6 +351,22 @@ function loadStage(i){
 // ---------- ゲーム状態 ----------  
 const game = { state:'title', cam:0, time:0, score:0, frame:0 };  
 let player, enemies, bullets, particles, popups, seeds, items, boss;
+
+// ---------- きろく(ハイスコア・最高到達) ----------
+const REC_KEY = 'hamster_record_v1';
+let record = { best:0, stage:0, clears:0, plays:0 };
+try{ const raw = localStorage.getItem(REC_KEY); if(raw) record = Object.assign(record, JSON.parse(raw)); }
+catch(e){}
+// ゲーム終了時に呼ぶ。ハイスコア更新なら true を返す
+function submitRecord(cleared){
+  record.plays++;
+  if(cleared) record.clears++;
+  if(game.stage > record.stage) record.stage = game.stage;
+  const isNew = game.score > record.best;
+  if(isNew) record.best = game.score;
+  try{ localStorage.setItem(REC_KEY, JSON.stringify(record)); }catch(e){}
+  return isNew;
+}
   
 function resetGame(){  
   player = {  
@@ -363,7 +379,8 @@ function resetGame(){
     anim:0, squash:1, frozenSpit:0,  
   };  
   game.cam = 0; game.score = 0; game.time = 0; game.frame = 0;  
-  game.stage = 0; game.banner = 0; game.seedCount = 0;  
+  game.stage = 0; game.banner = 0; game.seedCount = 0;
+  game.newRecord = false;
   loadStage(0);  
 }  
   
@@ -502,7 +519,8 @@ function damagePlayer(d, pit=false){
     p.x = Math.min(Math.max(best.x+20, p.x), best.x+best.w-60);  
   }  
   if(p.ability){ p.ability = null; popup(p.x+p.w/2, p.y-20, '能力が逃げた!', '#aaa'); }  
-  if(p.hp <= 0){ game.state = 'over'; document.body.classList.remove('playing'); stopBGM(); }
+  if(p.hp <= 0){ game.state = 'over'; game.newRecord = submitRecord(false);
+    document.body.classList.remove('playing'); stopBGM(); }
 }
 
 // ---------- ボス更新 ----------
@@ -845,8 +863,9 @@ function update(){
     SFX.goal();
     game.score += Math.max(0, 5000 - Math.floor(game.time/6)*10);  
     if(game.stage >= STAGES.length - 1){  
-      game.state = 'clear';  
-      document.body.classList.remove('playing');  
+      game.state = 'clear';
+      game.newRecord = submitRecord(true);
+      document.body.classList.remove('playing');
     } else {  
       game.state = 'next'; game.banner = 150;  
       player.hp = Math.min(player.maxHp, player.hp + 1);  
@@ -1298,8 +1317,24 @@ function bigText(t, y, size=46, color='#fff'){
   ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=8;  
   ctx.strokeText(t, W/2, y); ctx.fillStyle=color; ctx.fillText(t, W/2, y);  
 }  
-function drawTitle(){  
-  overlay();  
+// きろく表示: 更新した時はおいわい、ふだんはハイスコア
+function drawRecordLine(y){
+  if(game.newRecord){
+    if(Math.floor(performance.now()/300)%2===0)
+      bigText('★ ハイスコア こうしん!! ★', y, 26, '#fff176');
+  } else if(record.best > 0){
+    bigText('ハイスコア ' + record.best.toLocaleString(), y, 22, '#ffcc80');
+  }
+}
+function drawTitleRecord(){
+  if(record.plays <= 0) return;
+  const parts = ['ハイスコア ' + record.best.toLocaleString(),
+                 '最高到達 STAGE ' + (record.stage+1)];
+  if(record.clears > 0) parts.push('クリア ' + record.clears + 'かい');
+  bigText(parts.join('  /  '), 505, 17, '#ce93d8');
+}
+function drawTitle(){
+  overlay();
   bigText('ほおばりハムスター', 140, 52, '#ffd54f');  
   bigText('モグモグ大冒険', 205, 52, '#ffd54f');  
   bigText('全4ステージ! てきを すいこんで ほおばろう!', 280, 24);
@@ -1307,13 +1342,15 @@ function drawTitle(){
   bigText('さいごのステージで ボスとたいけつ!', 350, 19, '#ff8a80');
   bigText('わざ:とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 378, 16, '#aed581');
   bigText('PC: ←→移動 Space ジャンプ(空中れんだで ぷくぷく滞空) X 吸う/はく ↓ のみこむ', 408, 16, '#b3e5fc');
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 465, 28, '#fff176');  
-}  
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 465, 28, '#fff176');
+  drawTitleRecord();
+}
 function drawOver(){  
   overlay();  
   bigText('やられた…', 220, 56, '#ef9a9a');  
-  bigText('SCORE: '+game.score, 300, 32);  
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど!', 380, 26, '#fff176');  
+  bigText('SCORE: '+game.score, 300, 32);
+  drawRecordLine(350);
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど!', 405, 26, '#fff176');
 }  
 function drawNext(){  
   ctx.fillStyle='rgba(40,25,60,.55)'; ctx.fillRect(0,0,W,H);  
@@ -1325,8 +1362,9 @@ function drawClear(){
   overlay();  
   bigText('全ステージクリア!!', 200, 56, '#ffd54f');  
   bigText('SCORE: '+game.score, 285, 36);  
-  bigText('ほっぺもおなかも いっぱい だいまんぞく!', 340, 24, '#ffcc80');  
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど あそぶ', 420, 24, '#fff176');  
+  bigText('ほっぺもおなかも いっぱい だいまんぞく!', 340, 24, '#ffcc80');
+  drawRecordLine(383);
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど あそぶ', 430, 24, '#fff176');
 }  
   
 // ---------- ループ ----------  
