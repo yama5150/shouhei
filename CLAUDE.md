@@ -2,38 +2,96 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this is
+## What this repo is
 
-A single-file restaurant/buffet inventory tracking app ("店舗管理Master" / "Susukino MASTER"). Staff record stock counts, refills, and waste per dish; managers review a daily cost/waste summary and edit the menu. The entire application — markup, styles, and logic — lives in `index.html`. There is no build step, package manager, test suite, or backend code in this repo.
+One repo holding **three unrelated deliverables**, all shipped as standalone HTML files that are opened directly from GitHub via `raw.githack.com` (QR codes are handed out to users, and the pages are installable as PWAs). There is no server, no test suite, and no linter.
 
-## Running / developing
+| Deliverable | Source | What ships |
+|---|---|---|
+| 焼肉ロス管理アプリ (Buffet Log) | `src/` (React + Vite) | `dist/app.html` → copied to `index.html` and `yakiniku.html` |
+| ほおばりハムスター モグモグ大冒険 (game) | `hamster.html` | `hamster.html` itself |
+| 店舗管理Master v16.9 (retired) | `legacy/susukino-v16.9.html` | not served |
 
-- **Run it**: open `index.html` directly in a browser, or serve it statically (`python3 -m http.server` then visit `index.html`). All dependencies load from CDNs (Tailwind, qrcodejs, Firebase 11.6.1 ESM), so an internet connection is required.
-- **No build, lint, or test commands exist.** Edit `index.html` and reload the browser. Because logic is inline ES module code, there is no transpilation — syntax must be browser-native.
-- **Reset app state during testing**: the Settings tab has a "Critical Reset" button (`localStorage.clear()`), or clear `localStorage` keys prefixed `tracker_menu_`, `daily_logs_`, `sales_`, and `staff_name` in devtools.
+`.nojekyll`, `manifest.webmanifest`, and `icon-*.png` exist so GitHub Pages / the PWA install flow work. **The manifest and icons belong to the hamster game**, not to the buffet app.
 
-## Architecture
+## Commands
 
-Everything is driven by one global `state` object and a set of `window.*` functions invoked directly from inline `onclick`/`oninput` handlers in the HTML. There is no framework and no module bundling — rendering is manual `innerHTML` string assembly into fixed container IDs (`refill-buttons-container`, `summary-list`, `log-list`, `menu-manager-list`, etc.).
+```bash
+npm install
+npm run dev      # Vite dev server for the React app (entry: app.html → src/main.jsx)
+npm run build    # vite build && cp dist/app.html index.html && cp dist/app.html yakiniku.html
+npm run preview
+```
 
-**Dual persistence with automatic fallback.** `initApp()` tries to initialize Firebase from a `__firebase_config` global (injected by the host environment — this app is built to run inside a Canvas/Gemini-style sandbox that provides `__firebase_config`, `__app_id`, and `__initial_auth_token`). If that global is absent or init fails, `fallbackToLocal()` switches to `localStorage`. Every read/write path branches on `state.isFirebaseMode`:
-- Firestore paths: `artifacts/{appId}/public/data/{menu_config_v16_9 | logs_v16_9 | sales_v16_9}`. Logs use `onSnapshot` listeners (one filtered by today's `date`, one ordered by `timestamp` limit 20).
-- localStorage equivalents: `tracker_menu_v16_9`, `daily_logs_v16_9` (array, capped at 2000 entries), `sales_v16_9` (map keyed by date string).
+There are **no tests and no lint config**. `hamster.html` and `legacy/` are not part of the Vite build at all — open them directly in a browser.
 
-**`MASTER_CONFIG` is the source of truth for the menu, and it is version-gated.** It defines `pages` (4 tabs, each mapping to category keys) and `categories` (each with label, color, icon, and a `dishes` array of `{name, unit, defaultQuantity, cost}`). `ensureMenuState(data)` compares the stored config's `version` against `MASTER_CONFIG.version`; on mismatch (or missing data) it **discards the stored menu and force-resets to `MASTER_CONFIG`**. Consequence: bumping the version string is an intentional way to push a new menu to all clients, but it wipes any user-edited menu customizations. When you change the menu defaults, also decide whether to bump the version.
+## The build overwrites tracked files — do not hand-edit them
 
-**Log model and cost math.** Each log entry is `{dish, quantity, unit, type, timestamp, date, staffName}`. `type` is one of `start` (朝在庫 / morning stock), `end` (夜在庫 / night stock), `refill` (補充), `waste` (廃棄). The daily summary (`updateSummaryView`) computes consumption as `(start + refill) - end` when start/end stock was recorded, otherwise just `refill`; food cost = consumption × dish `cost`, waste loss = waste × `cost`.
+`vite.config.js` uses `viteSingleFile` and sets `rollupOptions.input = 'app.html'` so the built page inlines all JS/CSS into a single file that works from any URL (`base: './'`).
 
-**Admin gate.** The Stats and Settings tabs are PIN-protected. The PIN (`1129`) is hardcoded in `inputPin()`. This is cosmetic access control, not security.
+- **`app.html` is the source entry** (a 20-line shell with `<div id="root">`). Edit this.
+- **`index.html`, `yakiniku.html`, and `dist/app.html` are generated** — three identical ~215 KB copies of the build output. Never edit them by hand; run `npm run build`.
+- `dist/` is **deliberately committed** (see the comment in `.gitignore`) because `raw.githack.com` serves it. `yakiniku.html` exists purely as a cache-busting alias.
 
-**Render flow.** `renderUI()` calls `renderPageNav()` + `renderCategories()` + `renderDishButtons()`. Page/category/search state lives in `state.currentPage`, `state.activeCategory`, `state.searchQuery`; changing any re-renders from `state.currentMenu`. Menu edits go through `openEditDish`/`saveEditDish`/`deleteEditDish`, which mutate `state.currentMenu` then call `saveMenu()` to persist.
+## React app (`src/App.jsx`)
+
+One ~856-line component; no router, no state library, no backend. All state is `useState` in `App`, persisted to `localStorage` via `useEffect`.
+
+**Per-day storage keys.** A "day" is an ISO date string, and each day is stored under its own set of keys, read back by `readDay(date)`:
+
+- `bl_rec_{date}` — the records map, keyed by item id
+- `bl_daily_{date}` — 本日だけメニュー (one-off items added for that day)
+- `bl_flavors_{date}` — 本日の味メモ
+- `bl_closed_{date}` — `'1'` once the day is closed
+- `bl_menu` / `bl_menu_ver` — the menu table (shared across days)
+- `bl_pool` — a reuse pool of past one-off items
+
+Saving is keyed off `day.date`, not "today", so viewing and editing a past day writes to the right place.
+
+**Record model and cost math.** Each record is `{ supply, refills: [{id, time, qty}], remained }`:
+
+- `supply` = 開店時の出し, `refills` = 営業中の補充 (each stamped with `HH:MM`), `remained` = 残り
+- `totalOut = supply + Σrefills`
+- `consumed = max(0, totalOut - remained)` → `consumedYen = consumed × cost`
+- **`wasteYen = remained × cost`** — every unit left over is currently counted as waste. There is no notion of carrying stock over to the next day or reusing it, so a high-value item that was saved rather than binned still scores as loss.
+- `lossRate = remained / totalOut × 100`
+
+**`MENU_VERSION` is a reset gate.** On load, `bl_menu_ver` is compared against `MENU_VERSION` (currently `4`); on mismatch the stored menu is **discarded and replaced with `INITIAL_MENU_DATA`**. Bumping it pushes a new menu to every client but wipes user menu edits — decide deliberately when changing menu defaults.
+
+**Other things worth knowing.** Two views (`input` / `report`) toggled by `view`. Admin/edit mode is gated by `ADMIN_PW = '1234'` hardcoded in the file (cosmetic, not security). `UNIT_CONFIG` drives per-unit keypad step sizes, quick-add chips, and the roller picker. CSV export builds its own escaping and prepends a BOM.
+
+## Hamster game (`hamster.html`)
+
+Single file, no build, plain `<script>` (not a module) with `"use strict"`. Canvas is a fixed **960×540** internal resolution scaled by CSS.
+
+**The file is ~2.6 MB but only ~1,400 lines** — one line near the top is a base64 MP3 (`const BGM_DATA = "..."`, ~2.57 M characters). Never read or rewrite that line; use targeted edits and avoid whole-file rewrites.
+
+**Beware trailing whitespace.** Many original lines end with two trailing spaces. Exact-match edits must include them, or anchor on a substring that avoids line ends.
+
+**Shape of the code.** A `game` object holds the state machine (`title` / `play` / `next` / `over` / `clear`) plus `mode`, `stage`, `sel`. `STAGES` defines the 4 story stages (theme colors, platforms, enemy spawns, optional `boss`). `BOSS_TYPES` defines 4 bosses. `BOSS_RUSH` is built from `STAGES` themes + `RUSH_ORDER` to give each boss its own short arena. **`stageList` is the indirection that matters**: it points at either `STAGES` or `BOSS_RUSH`, and `loadStage`, `draw`, `drawHUD`, and `drawNext` all read through it — reference `stageList`, not `STAGES`, in anything stage-driven.
+
+**Progress is saved** under `hamster_record_v1` as `{best, bestRush, stage, clears, rushClears, plays}`. `record.stage` (max story stage reached) unlocks stage select; `record.clears > 0` unlocks boss rush. Story and rush high scores are kept separate so they can't contaminate each other.
+
+**Title-screen input is coordinate-based.** The on-screen D-pad (`#ui`) is hidden unless `body.playing`, so the title/over/clear screens handle taps by converting client coords to canvas coords (`toCanvasXY`) and hit-testing `SEL_L` / `SEL_R` / `BACK_Y`. If you move that UI, move the rects with it.
+
+**Verifying changes.** There is no test runner, but the script can be syntax-checked and driven headlessly:
+
+```bash
+# 構文チェック: <script> を抜き出して node に通す
+python3 -c "import re,io; s=io.open('hamster.html',encoding='utf-8').read(); \
+m=re.search(r'<script>\s*\"use strict\";(.*?)</script>', s, re.S); \
+io.open('/tmp/game.js','w',encoding='utf-8').write('\"use strict\";'+m.group(1))"
+node --check /tmp/game.js
+```
+
+For behavior, drive it with Playwright against the preinstalled browser at
+`/opt/pw-browsers/chromium-1194/chrome-linux/chrome` (do **not** run `playwright install`). Top-level `let`/`const` are reachable from `page.evaluate`, so `game`, `record`, `player`, `boss`, and functions like `startOrRetry()` / `defeatBoss()` can be poked directly. When simulating a stage transition, wait for `game.state` to actually become `'next'` before forcing `game.banner = 1` — the goal handler resets `banner` to 150 after you set it.
 
 ## Conventions
 
-- **UI text and comments are in Japanese**; match that when editing user-facing strings.
-- **Styling is Tailwind utility classes inline.** Custom theme colors (`primary`, `waste`, `start`, `end`, plus per-category colors like `crab`, `sashimi`, `mutton`) are defined in the `tailwind.config` block in the `<head>`. Category `color` values in `MASTER_CONFIG` (e.g. `bg-hokkaido`) must correspond to a defined color or a real Tailwind class, or buttons render colorless.
-- **Functions called from HTML must be assigned to `window`** (e.g. `window.recordLog = ...`), since handlers are global inline attributes.
-- **The version string appears in multiple places** (`MASTER_CONFIG.version`, the `<title>`, the header badge, localStorage/Firestore key suffixes `_v16_9`). Keep them consistent when bumping.
+- **All UI text and code comments are in Japanese.** Match that when editing user-facing strings, and write commit messages in Japanese to match the history.
+- Buffet app styling is Tailwind utility classes; the game draws everything to canvas by hand.
+- PWA/icon URLs inside `hamster.html` and `manifest.webmanifest` are **absolute `raw.githack.com` links**, so they 404 when the file is opened locally. That is expected — don't "fix" them to relative paths without checking how the page is distributed.
 
 ## Git workflow
 
