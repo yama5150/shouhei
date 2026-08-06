@@ -83,8 +83,43 @@ function bindBtn(id, name){
 bindBtn('btnL','left'); bindBtn('btnR','right');  
 bindBtn('btnJ','jump'); bindBtn('btnS','suck'); bindBtn('btnG','swallow');  
   
-cv.addEventListener('touchstart', e=>{ e.preventDefault(); if(game.state!=='play') startOrRetry(); }, {passive:false});  
-cv.addEventListener('mousedown', e=>{ if(game.state!=='play') startOrRetry(); });  
+// キャンバス座標へ変換(CSSで拡大縮小されているため)
+function toCanvasXY(clientX, clientY){
+  const r = cv.getBoundingClientRect();
+  return { x:(clientX - r.left) * (W / r.width), y:(clientY - r.top) * (H / r.height) };
+}
+const inRect = (x,y,r)=> x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h;
+// タイトル/終了画面のタップ処理。true を返したら「開始」はしない
+function screenTap(cx, cy){
+  if(game.state==='title'){
+    if(titleOptions().length > 1){
+      if(inRect(cx,cy,SEL_L)){ moveSel(-1); return true; }
+      if(inRect(cx,cy,SEL_R)){ moveSel(1);  return true; }
+    }
+  } else if(game.state==='over' || game.state==='clear'){
+    if(cy > BACK_Y){ goTitle(); return true; }
+  }
+  return false;
+}
+cv.addEventListener('touchstart', e=>{ e.preventDefault();
+  if(game.state==='play') return;
+  const t = e.changedTouches[0], q = toCanvasXY(t.clientX, t.clientY);
+  if(!screenTap(q.x, q.y)) startOrRetry();
+}, {passive:false});
+cv.addEventListener('mousedown', e=>{
+  if(game.state==='play') return;
+  const q = toCanvasXY(e.clientX, e.clientY);
+  if(!screenTap(q.x, q.y)) startOrRetry();
+});
+addEventListener('keydown', e=>{
+  if(game.state==='play') return;
+  if(game.state==='title'){
+    if(e.code==='ArrowLeft' || e.code==='KeyA'){ moveSel(-1); return; }
+    if(e.code==='ArrowRight'|| e.code==='KeyD'){ moveSel(1);  return; }
+  }
+  if((game.state==='over'||game.state==='clear') && (e.code==='ArrowDown'||e.code==='KeyS')){ goTitle(); return; }
+  if(e.code==='Space' || e.code==='Enter') startOrRetry();
+});
 addEventListener('keydown', e=>{ if(game.state!=='play' && (e.code==='Space'||e.code==='Enter')) startOrRetry(); });  
   
 // ---------- サウンド(チップチューン) ----------  
@@ -319,9 +354,34 @@ const STAGES = [
     ],
     boss:{ type:'king', x:4350 } },
 ];
+
+// いまプレイ中のステージ配列(ストーリー or ボスラッシュ)
+let stageList = STAGES;
+
+// ---------- ボスラッシュ(ストーリー全クリで解放) ----------
+// 出番のなかった おやぶん豆・こおりの大ぐま・マグマりゅう もここで登場。
+// 短いアリーナで4体を連戦する。
+const RUSH_ORDER = ['bean','frost','magma','king'];
+const BOSS_RUSH = RUSH_ORDER.map((bt, i) => {
+  const th = STAGES[i];
+  return {
+    name: BOSS_TYPES[bt].name + 'の間',
+    sky: th.sky, hill: th.hill, dirt: th.dirt, grass: th.grass, grass2: th.grass2,
+    levelW: 1800, goalX: 1720,
+    platforms: [
+      { x:0, y:GROUND_Y, w:1800, h:80 },
+      { x:300,  y:360, w:150, h:24 },
+      { x:820,  y:300, w:160, h:24 },
+      { x:1380, y:360, w:150, h:24 },
+    ],
+    // 能力をコピーできるよう雑魚を少しだけ置く
+    spawns: [ { t:'chili', x:240 }, { t:'bee', x:660, y:270 }, { t:'slime', x:980 } ],
+    boss: { type: bt, x: 1320 },
+  };
+});
   
 function loadStage(i){  
-  const st = STAGES[i];  
+  const st = stageList[i];
   LEVEL_W = st.levelW; GOAL_X = st.goalX;  
   platforms = st.platforms;  
   enemies = st.spawns.map(s=>{  
@@ -349,26 +409,53 @@ function loadStage(i){
 }  
   
 // ---------- ゲーム状態 ----------  
-const game = { state:'title', cam:0, time:0, score:0, frame:0 };  
+const game = { state:'title', cam:0, time:0, score:0, frame:0, mode:'story', sel:0 };
 let player, enemies, bullets, particles, popups, seeds, items, boss;
 
 // ---------- きろく(ハイスコア・最高到達) ----------
 const REC_KEY = 'hamster_record_v1';
-let record = { best:0, stage:0, clears:0, plays:0 };
+let record = { best:0, bestRush:0, stage:0, clears:0, rushClears:0, plays:0 };
 try{ const raw = localStorage.getItem(REC_KEY); if(raw) record = Object.assign(record, JSON.parse(raw)); }
 catch(e){}
 // ゲーム終了時に呼ぶ。ハイスコア更新なら true を返す
 function submitRecord(cleared){
+  const rush = game.mode === 'rush';
   record.plays++;
-  if(cleared) record.clears++;
-  if(game.stage > record.stage) record.stage = game.stage;
-  const isNew = game.score > record.best;
-  if(isNew) record.best = game.score;
+  if(cleared){ if(rush) record.rushClears++; else record.clears++; }
+  // 到達ステージはストーリーのみ記録(ここがステージセレクトの解放条件)
+  if(!rush && game.stage > record.stage) record.stage = game.stage;
+  const key = rush ? 'bestRush' : 'best';
+  const isNew = game.score > (record[key]|0);
+  if(isNew) record[key] = game.score;
   try{ localStorage.setItem(REC_KEY, JSON.stringify(record)); }catch(e){}
   return isNew;
 }
+
+// ---------- タイトルのモード選択 ----------
+// 到達ずみのステージから始められる。全クリでボスラッシュが解放。
+function titleOptions(){
+  const opts = [];
+  const maxS = Math.min(record.stage|0, STAGES.length-1);
+  for(let i=0;i<=maxS;i++)
+    opts.push({ mode:'story', stage:i, label:'STAGE '+(i+1)+'  '+STAGES[i].name });
+  if((record.clears|0) > 0)
+    opts.push({ mode:'rush', stage:0, label:'★ ボスラッシュ 4体れんせん ★' });
+  return opts;
+}
+function clampSel(){
+  const n = titleOptions().length;
+  game.sel = Math.max(0, Math.min(game.sel|0, n-1));
+}
+function moveSel(d){
+  const n = titleOptions().length;
+  if(n <= 1) return;
+  game.sel = (game.sel + d + n) % n;
+  audio(); SFX.seed();
+}
   
-function resetGame(){  
+function resetGame(mode, startStage){
+  game.mode = (mode === 'rush') ? 'rush' : 'story';
+  stageList = game.mode === 'rush' ? BOSS_RUSH : STAGES;
   player = {  
     x:100, y:GROUND_Y-40, w:40, h:38, vx:0, vy:0,  
     dir:1, onGround:false, hp:5, maxHp:8, inv:0,  
@@ -379,19 +466,30 @@ function resetGame(){
     anim:0, squash:1, frozenSpit:0,  
   };  
   game.cam = 0; game.score = 0; game.time = 0; game.frame = 0;  
-  game.stage = 0; game.banner = 0; game.seedCount = 0;
+  game.stage = Math.max(0, Math.min(startStage|0, stageList.length-1));
+  game.banner = 0; game.seedCount = 0;
   game.newRecord = false;
-  loadStage(0);  
+  loadStage(game.stage);
 }  
   
-function startOrRetry(){  
-  audio(); // iOSオーディオ解禁  
-  if(game.state==='title' || game.state==='over' || game.state==='clear'){  
-    resetGame(); game.state = 'play';  
-    document.body.classList.add('playing');  
-    playBGM();  
-  }  
-}  
+function startOrRetry(){
+  audio(); // iOSオーディオ解禁
+  if(game.state==='title' || game.state==='over' || game.state==='clear'){
+    clampSel();
+    const opt = titleOptions()[game.sel] || { mode:'story', stage:0 };
+    resetGame(opt.mode, opt.stage);
+    game.state = 'play';
+    document.body.classList.add('playing');
+    playBGM();
+  }
+}
+// タイトルへ戻る(ステージを選びなおす時)
+function goTitle(){
+  game.state = 'title';
+  document.body.classList.remove('playing');
+  stopBGM();
+  clampSel();
+}
   
 // ---------- ユーティリティ ----------  
 const hit = (a,b)=> a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;  
@@ -862,7 +960,7 @@ function update(){
   if(player.x + player.w > GOAL_X && (!game.bossActive || game.bossDefeated)){
     SFX.goal();
     game.score += Math.max(0, 5000 - Math.floor(game.time/6)*10);  
-    if(game.stage >= STAGES.length - 1){  
+    if(game.stage >= stageList.length - 1){
       game.state = 'clear';
       game.newRecord = submitRecord(true);
       document.body.classList.remove('playing');
@@ -875,7 +973,7 @@ function update(){
   
 // ---------- 描画 ----------  
 function draw(){  
-  const th = STAGES[Math.min(game.stage, STAGES.length-1)];  
+  const th = stageList[Math.min(game.stage, stageList.length-1)];
   const sky = ctx.createLinearGradient(0,0,0,H);  
   sky.addColorStop(0, th.sky[0]); sky.addColorStop(0.7, th.sky[1]); sky.addColorStop(1, th.sky[2]);  
   ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);  
@@ -1285,7 +1383,8 @@ function drawHUD(){
   ctx.fillStyle='rgba(0,0,0,.25)'; rounded(W/2-150, 14, 300, 10, 5); ctx.fill();  
   ctx.fillStyle='#ffb300'; rounded(W/2-150, 14, Math.max(8, 300*Math.min(1,player.x/GOAL_X)), 10, 5); ctx.fill();  
   ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';  
-  const stLabel = 'STAGE ' + (game.stage+1) + '/' + STAGES.length + ' ' + STAGES[Math.min(game.stage,STAGES.length-1)].name;  
+  const stLabel = (game.mode==='rush' ? 'BOSS ' : 'STAGE ') + (game.stage+1) + '/' + stageList.length
+    + ' ' + stageList[Math.min(game.stage,stageList.length-1)].name;
   ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=3;  
   ctx.strokeText(stLabel, W/2, 42);  
   ctx.fillStyle = '#fff'; ctx.fillText(stLabel, W/2, 42);  
@@ -1312,59 +1411,103 @@ function drawHUD(){
 }
 
 function overlay(){ ctx.fillStyle='rgba(40,25,60,.72)'; ctx.fillRect(0,0,W,H); }
-function bigText(t, y, size=46, color='#fff'){  
-  ctx.font = 'bold '+size+'px sans-serif'; ctx.textAlign='center';  
-  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=8;  
-  ctx.strokeText(t, W/2, y); ctx.fillStyle=color; ctx.fillText(t, W/2, y);  
+function bigText(t, y, size=46, color='#fff'){
+  ctx.font = 'bold '+size+'px sans-serif'; ctx.textAlign='center';
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=Math.max(3, Math.min(8, size*0.22));
+  ctx.strokeText(t, W/2, y); ctx.fillStyle=color; ctx.fillText(t, W/2, y);
 }  
 // きろく表示: 更新した時はおいわい、ふだんはハイスコア
 function drawRecordLine(y){
+  const rush = game.mode === 'rush';
+  const label = rush ? 'ボスラッシュ最高' : 'ハイスコア';
+  const best = rush ? (record.bestRush|0) : (record.best|0);
   if(game.newRecord){
     if(Math.floor(performance.now()/300)%2===0)
-      bigText('★ ハイスコア こうしん!! ★', y, 26, '#fff176');
-  } else if(record.best > 0){
-    bigText('ハイスコア ' + record.best.toLocaleString(), y, 22, '#ffcc80');
+      bigText('★ ' + label + ' こうしん!! ★', y, 26, '#fff176');
+  } else if(best > 0){
+    bigText(label + ' ' + best.toLocaleString(), y, 22, '#ffcc80');
   }
 }
 function drawTitleRecord(){
-  if(record.plays <= 0) return;
-  const parts = ['ハイスコア ' + record.best.toLocaleString(),
-                 '最高到達 STAGE ' + (record.stage+1)];
-  if(record.clears > 0) parts.push('クリア ' + record.clears + 'かい');
-  bigText(parts.join('  /  '), 505, 17, '#ce93d8');
+  if((record.plays|0) <= 0) return;
+  let l1 = 'ハイスコア ' + (record.best|0).toLocaleString()
+    + '   /   最高到達 STAGE ' + Math.min((record.stage|0)+1, STAGES.length);
+  if((record.clears|0) > 0) l1 += '   /   クリア ' + record.clears + 'かい';
+  bigText(l1, 438, 15, '#ce93d8');
+  if((record.bestRush|0) > 0 || (record.rushClears|0) > 0){
+    let l2 = 'ボスラッシュ 最高 ' + (record.bestRush|0).toLocaleString();
+    if((record.rushClears|0) > 0) l2 += '   /   せいは ' + record.rushClears + 'かい';
+    bigText(l2, 460, 15, '#ffab91');
+  }
+}
+// タイトルの選択ボックス位置 / 終了画面の「もどる」判定ライン
+const SEL_BOX = { x: W/2-250, y: 296, w: 500, h: 52 };
+const SEL_L = { x: SEL_BOX.x+6, y: SEL_BOX.y+4, w: 52, h: 44 };
+const SEL_R = { x: SEL_BOX.x+SEL_BOX.w-58, y: SEL_BOX.y+4, w: 52, h: 44 };
+const BACK_Y = 470;
+function bigTextAt(t, x, y, size=24, color='#fff'){
+  ctx.font = 'bold '+size+'px sans-serif'; ctx.textAlign='center';
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=Math.max(3, Math.min(8, size*0.22));
+  ctx.strokeText(t, x, y); ctx.fillStyle=color; ctx.fillText(t, x, y);
+}
+function drawSelectBox(){
+  const opts = titleOptions();
+  clampSel();
+  const opt = opts[game.sel];
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  rounded(SEL_BOX.x, SEL_BOX.y, SEL_BOX.w, SEL_BOX.h, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2;
+  rounded(SEL_BOX.x, SEL_BOX.y, SEL_BOX.w, SEL_BOX.h, 14); ctx.stroke();
+  bigText(opt.label, SEL_BOX.y + 34, 23, opt.mode==='rush' ? '#ff8a80' : '#fff');
+  if(opts.length > 1){
+    const c = Math.floor(performance.now()/400)%2===0 ? '#fff176' : '#ffffff';
+    bigTextAt('◀', SEL_L.x + SEL_L.w/2, SEL_L.y + 33, 28, c);
+    bigTextAt('▶', SEL_R.x + SEL_R.w/2, SEL_R.y + 33, 28, c);
+    bigText('◀ ▶ タップ / ←→キー で えらぶ', 368, 14, '#b3e5fc');
+  }
 }
 function drawTitle(){
   overlay();
-  bigText('ほおばりハムスター', 140, 52, '#ffd54f');  
-  bigText('モグモグ大冒険', 205, 52, '#ffd54f');  
-  bigText('全4ステージ! てきを すいこんで ほおばろう!', 280, 24);
-  bigText('のみこむと能力コピー / はきだすと星アタック!', 320, 20, '#ffcc80');
-  bigText('さいごのステージで ボスとたいけつ!', 350, 19, '#ff8a80');
-  bigText('わざ:とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 378, 16, '#aed581');
-  bigText('PC: ←→移動 Space ジャンプ(空中れんだで ぷくぷく滞空) X 吸う/はく ↓ のみこむ', 408, 16, '#b3e5fc');
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 465, 28, '#fff176');
+  bigText('ほおばりハムスター', 118, 48, '#ffd54f');
+  bigText('モグモグ大冒険', 168, 48, '#ffd54f');
+  bigText('全4ステージ! てきを すいこんで ほおばろう!', 206, 21);
+  bigText('のみこむと能力コピー / はきだすと星アタック!', 232, 17, '#ffcc80');
+  bigText('わざ:とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 256, 15, '#aed581');
+  bigText('PC: ←→移動 Space ジャンプ(空中れんだで ぷくぷく滞空) X 吸う/はく ↓ のみこむ', 278, 14, '#b3e5fc');
+  drawSelectBox();
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 406, 26, '#fff176');
   drawTitleRecord();
 }
-function drawOver(){  
-  overlay();  
-  bigText('やられた…', 220, 56, '#ef9a9a');  
-  bigText('SCORE: '+game.score, 300, 32);
-  drawRecordLine(350);
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど!', 405, 26, '#fff176');
+// いま選ばれている内容(リトライ先の表示に使う)
+function retryLabel(){
+  const o = titleOptions()[game.sel];
+  return o ? o.label : 'STAGE 1';
+}
+function drawOver(){
+  overlay();
+  bigText('やられた…', 208, 54, '#ef9a9a');
+  bigText('SCORE: '+game.score, 286, 32);
+  drawRecordLine(336);
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど!', 396, 26, '#fff176');
+  bigText('(' + retryLabel() + ' から)', 428, 16, '#ffcc80');
+  bigText('したをタップ / ↓キー で タイトル(ステージせんたく)へ', 500, 15, '#b3e5fc');
 }  
 function drawNext(){  
   ctx.fillStyle='rgba(40,25,60,.55)'; ctx.fillRect(0,0,W,H);  
-  bigText('STAGE ' + (game.stage+1) + ' クリア!', 220, 48, '#ffd54f');  
-  bigText('つぎは「' + STAGES[game.stage+1].name + '」!', 295, 28, '#fff');  
+  bigText((game.mode==='rush' ? 'BOSS ' : 'STAGE ') + (game.stage+1) + ' クリア!', 220, 48, '#ffd54f');
+  bigText('つぎは「' + stageList[game.stage+1].name + '」!', 295, 28, '#fff');
   bigText('HP +1 かいふく!', 345, 22, '#ef9a9a');  
 }  
-function drawClear(){  
-  overlay();  
-  bigText('全ステージクリア!!', 200, 56, '#ffd54f');  
-  bigText('SCORE: '+game.score, 285, 36);  
-  bigText('ほっぺもおなかも いっぱい だいまんぞく!', 340, 24, '#ffcc80');
-  drawRecordLine(383);
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど あそぶ', 430, 24, '#fff176');
+function drawClear(){
+  overlay();
+  const rush = game.mode === 'rush';
+  bigText(rush ? 'ボスラッシュ せいは!!' : '全ステージクリア!!', 188, 52, '#ffd54f');
+  bigText('SCORE: '+game.score, 260, 34);
+  bigText(rush ? '4体ぜんぶ たおした! つよい!' : 'ほっぺもおなかも いっぱい だいまんぞく!', 308, 22, '#ffcc80');
+  drawRecordLine(352);
+  if(!rush) bigText('★ ボスラッシュ かいほう! タイトルからあそべるよ ★', 396, 18, '#ff8a80');
+  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど あそぶ', 436, 24, '#fff176');
+  bigText('したをタップ / ↓キー で タイトルへ', 500, 15, '#b3e5fc');
 }  
   
 // ---------- ループ ----------  
