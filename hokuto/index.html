@@ -9,11 +9,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>株式会社ほくと給食｜札幌の給食受託・食材販売</title>
-<meta name="description" content="株式会社ほくと給食は、札幌を拠点に障がい者施設・保育園・高齢者施設・学校寄宿舎などへの給食受託と、グループホーム向けの食材販売を行っています。衛生管理委員会による徹底した衛生管理と、管理栄養士の献立設計で「おいしい」を毎日お届けします。" />
+<meta name="description" content="株式会社ほくと給食は、1997年から札幌で給食受託と食材販売を行っています。厨房ごとの受託でも、食材の仕入れだけでも。障がい者施設・保育園・高齢者施設・学校寄宿舎など、その施設のやり方に合わせて毎日の食事を組み立てます。" />
 <meta name="theme-color" content="#0f2e22" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="株式会社ほくと給食｜札幌の給食受託・食材販売" />
-<meta property="og:description" content="毎日の食事を、施設の力に。札幌・厚別区から、福祉施設と保育の現場へ。" />
+<meta property="og:description" content="札幌の現場と、いっしょにつくる給食。まるごとでも、食材だけでも。1997年創業・札幌市厚別区。" />
 <meta property="og:locale" content="ja_JP" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f2e22'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23e8b055' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23e8b055'/%3E%3C/svg%3E" />
 
@@ -230,8 +230,8 @@ body.lock{ overflow:hidden; }
 
 .hero h1{
   font-family:var(--serif);
-  font-size:clamp(32px,5.4vw,56px);
-  line-height:1.38; letter-spacing:.04em;
+  font-size:clamp(29px,3.9vw,48px);
+  line-height:1.42; letter-spacing:.04em;
   margin-top:26px;
 }
 .hero h1 .em{
@@ -371,6 +371,30 @@ body.lock{ overflow:hidden; }
   font-size:12px; letter-spacing:.06em; font-weight:600;
   background:var(--green-soft); color:var(--green);
   padding:.42em .9em; border-radius:999px;
+}
+
+/* ============================================================
+   Local / why us
+   ============================================================ */
+.local{ background:var(--cream-2); }
+.local__grid{ display:grid; grid-template-columns:.86fr 1.14fr; gap:clamp(28px,4vw,60px); }
+@media (max-width:900px){ .local__grid{ grid-template-columns:1fr; } }
+.local__list{ display:grid; }
+.local__item{
+  display:grid; grid-template-columns:auto 1fr; gap:clamp(16px,2.4vw,28px);
+  padding-block:clamp(22px,3vw,30px); border-top:1px solid rgba(15,46,34,.14);
+}
+.local__item:last-child{ border-bottom:1px solid rgba(15,46,34,.14); }
+.local__no{
+  font-family:var(--serif); font-size:clamp(22px,3vw,30px); color:var(--accent);
+  line-height:1.2; letter-spacing:.04em;
+}
+.local__item h3{ font-family:var(--serif); font-size:clamp(17px,2vw,21px); letter-spacing:.05em; }
+.local__item p{ margin-top:11px; font-size:14.4px; color:var(--ink-2); }
+.local__note{
+  margin-top:26px; padding:18px 20px; border-radius:14px;
+  background:rgba(255,255,255,.7); border:1px solid var(--line);
+  font-size:13.4px; color:var(--ink-2);
 }
 
 /* ============================================================
@@ -578,6 +602,7 @@ body.lock{ overflow:hidden; }
 
     <nav class="nav" aria-label="メインナビゲーション">
       <a href="#business">事業内容</a>
+      <a href="#local">選ぶ理由</a>
       <a href="#facilities">対応施設</a>
       <a href="#strength">私たちの強み</a>
       <a href="#ingredients">食材販売</a>
@@ -594,6 +619,7 @@ body.lock{ overflow:hidden; }
 
 <nav class="drawer" id="drawer" aria-label="モバイルナビゲーション">
   <a href="#business">事業内容<small>OUR BUSINESS</small></a>
+  <a href="#local">選ぶ理由<small>WHY LOCAL</small></a>
   <a href="#facilities">対応施設<small>FACILITIES</small></a>
   <a href="#strength">私たちの強み<small>OUR STRENGTH</small></a>
   <a href="#ingredients">食材販売<small>FOOD SUPPLY</small></a>
@@ -606,22 +632,23 @@ body.lock{ overflow:hidden; }
 <section class="hero">
   <div class="wrap hero__grid">
     <div>
-      <span class="hero__tag rv in"><i></i>札幌市厚別区・創業1997年</span>
+      <span class="hero__tag rv in"><i></i>札幌市厚別区・1997年創業</span>
 
       <h1 class="rv rv-d1">
-        毎日の食事を、<br>
-        施設の<span class="em">力</span>に変える。
+        札幌の現場と、<br>
+        <span class="em">いっしょに</span>つくる、<br>
+        毎日の給食。
       </h1>
 
       <p class="hero__sub rv rv-d2">
-        障がい者施設、保育園、高齢者施設、学校寄宿舎。<br>
-        ほくと給食は、食べる人の毎日に寄り添う給食受託と食材販売で、
-        「おいしい」と「安心」を札幌の現場へお届けしています。
+        全国一律のやり方を、そのまま持ち込むことはしません。
+        障がい者施設、保育園、高齢者施設、学校寄宿舎。
+        その施設のやり方に合わせて、毎日の食事を一緒に組み立てていく会社です。
       </p>
 
       <div class="hero__cta rv rv-d3">
-        <a class="btn btn--fill btn--lg" href="#contact">給食委託を相談する</a>
-        <a class="btn btn--line btn--lg" href="#business">事業内容を見る</a>
+        <a class="btn btn--fill btn--lg" href="#contact">まずは相談してみる</a>
+        <a class="btn btn--line btn--lg" href="#business">できることを見る</a>
       </div>
 
       <p class="hero__en rv rv-d4">MEAL SERVICE &amp; FOOD SUPPLY — SAPPORO, HOKKAIDO</p>
@@ -732,10 +759,10 @@ body.lock{ overflow:hidden; }
 <!-- ticker -->
 <div class="strip" aria-hidden="true">
   <div class="strip__row">
-    <span>給食受託業務</span><span>食材販売</span><span>管理栄養士による献立設計</span>
-    <span>衛生管理委員会</span><span>食育の推進</span><span>産地までさかのぼる食材管理</span>
-    <span>給食受託業務</span><span>食材販売</span><span>管理栄養士による献立設計</span>
-    <span>衛生管理委員会</span><span>食育の推進</span><span>産地までさかのぼる食材管理</span>
+    <span>厨房ごとの給食受託</span><span>食材だけの販売も可</span><span>管理栄養士による献立設計</span>
+    <span>衛生管理委員会</span><span>食育の推進</span><span>1997年から札幌で</span>
+    <span>厨房ごとの給食受託</span><span>食材だけの販売も可</span><span>管理栄養士による献立設計</span>
+    <span>衛生管理委員会</span><span>食育の推進</span><span>1997年から札幌で</span>
   </div>
 </div>
 
@@ -755,8 +782,8 @@ body.lock{ overflow:hidden; }
       <div class="stat__lb">対応する施設ジャンル</div>
     </div>
     <div class="stat rv rv-d3">
-      <div class="stat__num"><span data-count="365">365</span><small>日</small></div>
-      <div class="stat__lb">止まらない食の現場</div>
+      <div class="stat__num"><span id="years" data-count="29">29</span><small>年</small></div>
+      <div class="stat__lb">札幌で事業を続けて</div>
     </div>
   </div>
 </section>
@@ -765,10 +792,11 @@ body.lock{ overflow:hidden; }
 <section class="sec" id="business">
   <div class="wrap">
     <span class="eyebrow rv">Our Business</span>
-    <h2 class="sec-title rv rv-d1">「食べる」を任せていただく、<br>ふたつの事業。</h2>
+    <h2 class="sec-title rv rv-d1">まるごとでも、一部だけでも。<br>選べるふたつのかたち。</h2>
     <p class="sec-lead rv rv-d2">
-      調理から提供までを一括で担う給食受託業務と、忙しい現場を支える食材販売。
-      施設の規模や運営体制にあわせて、必要なかたちで食を支えます。
+      厨房ごと引き受ける給食受託業務と、食材だけをお届けする食材販売。
+      「全部お願いするほどではないけれど、ここだけ手伝ってほしい」——
+      そういう相談から始められます。
     </p>
 
     <div class="biz">
@@ -780,7 +808,8 @@ body.lock{ overflow:hidden; }
         <h3 class="card__ttl">給食受託業務</h3>
         <p class="card__txt">
           施設内の厨房で、朝・昼・夕の食事を調理してお届けします。管理栄養士が栄養価とバランスを考えた献立を作成し、
-          一人ひとりの状態に合わせた食事形態にも対応。見た目の彩りや季節感まで含めて、「食べる時間が楽しみになる給食」を設計します。
+          一人ひとりの状態に合わせた食事形態にも対応。決めた献立を押しつけるのではなく、
+          「これは食べにくそうだった」という現場の声を聞きながら、少しずつ直していきます。
         </p>
         <div class="tags">
           <span class="tag">献立作成</span><span class="tag">調理・盛付</span>
@@ -795,15 +824,66 @@ body.lock{ overflow:hidden; }
         <div class="card__no">02 — FOOD SUPPLY</div>
         <h3 class="card__ttl">食材販売</h3>
         <p class="card__txt">
-          グループホームをはじめとした施設向けに、必要な食材をまとめてお届けします。
-          買い出しの時間が取れない、調理に不慣れなスタッフが多い、食材費の変動が読めない——
-          そんな現場の悩みに、仕入れごと引き受けるかたちでお応えします。
+          調理はこれまで通り自分たちで。買い出しと仕入れの部分だけを、こちらで引き受けます。
+          グループホームをはじめとした施設向けに、必要な食材をまとめてお届け。
+          厨房の運営はそのままに、いちばん手間のかかるところだけを外に出せるかたちです。
         </p>
         <div class="tags">
           <span class="tag">グループホーム</span><span class="tag">高齢者施設</span>
           <span class="tag">仕入れ代行</span><span class="tag">コスト平準化</span>
         </div>
       </article>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= LOCAL ========================= -->
+<section class="sec local" id="local">
+  <div class="wrap local__grid">
+    <div>
+      <span class="eyebrow rv">Why Local</span>
+      <h2 class="sec-title rv rv-d1">札幌の会社に、<br>頼む意味。</h2>
+      <p class="sec-lead rv rv-d2">
+        給食会社を選ぶとき、大きさで決めることもできます。
+        それでも地元の会社を選ぶ理由が、たしかにあると考えています。
+      </p>
+      <div class="local__note rv rv-d3">
+        ほくと給食は1997年の創業から札幌で事業を続け、現在180名の従業員が働いています。
+        本社は厚別区大谷地西。相談先も、つくる人も、同じ街にいます。
+      </div>
+    </div>
+
+    <div class="local__list">
+      <div class="local__item rv rv-d1">
+        <span class="local__no">01</span>
+        <div>
+          <h3>ひな形ではなく、その施設のかたちで</h3>
+          <p>
+            決まったパッケージを当てはめるのではなく、いまの運営に合わせて献立や提供のしかたを組み立てます。
+            施設ごとに事情が違うことを、前提にして考えます。
+          </p>
+        </div>
+      </div>
+      <div class="local__item rv rv-d2">
+        <span class="local__no">02</span>
+        <div>
+          <h3>必要なところだけ、頼める</h3>
+          <p>
+            厨房ごとの受託でも、食材の仕入れだけでも構いません。
+            全部を切り替える決断をしなくても、困っている部分から始められます。
+          </p>
+        </div>
+      </div>
+      <div class="local__item rv rv-d3">
+        <span class="local__no">03</span>
+        <div>
+          <h3>話が、そのまま届く距離で</h3>
+          <p>
+            「今日のあれ、食べにくそうだった」という現場のひとことが、
+            そのまま次の献立に反映される。同じ札幌にいるからこその近さを、いちばんの強みだと思っています。
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -942,10 +1022,10 @@ body.lock{ overflow:hidden; }
   <div class="wrap ing__grid">
     <div>
       <span class="eyebrow rv">Food Supply</span>
-      <h2 class="sec-title rv rv-d1">食材の手配ごと、<br>お任せください。</h2>
+      <h2 class="sec-title rv rv-d1">食材だけ、<br>頼むこともできます。</h2>
       <p class="sec-lead rv rv-d2">
-        食材販売はグループホームを基本にご提供しています。
-        買い出しにかかっていた時間を、利用者さんと向き合う時間へ。現場の負担をまるごと軽くする選択肢です。
+        食材販売はグループホームを基本にご提供しています。調理はこれまで通り自分たちで、
+        買い出しにかかっていた時間だけを、利用者さんと向き合う時間に回す。そういう使い方ができます。
       </p>
       <div class="hero__cta rv rv-d3" style="margin-top:30px">
         <a class="btn btn--fill" href="#contact">食材販売について問い合わせる</a>
@@ -1008,10 +1088,11 @@ body.lock{ overflow:hidden; }
       <div class="cta__grid">
         <div>
           <span class="eyebrow" style="color:var(--accent-2)">Contact</span>
-          <h2>給食のこと、<br>まずは話してみませんか。</h2>
+          <h2>まだ決めていない<br>段階で、けっこうです。</h2>
           <p>
-            現在の運営体制のお悩み、切り替えのご相談、食材販売のご案内まで。
-            施設の規模や状況をお聞きしたうえで、できることをご提案します。お気軽にご連絡ください。
+            「いまのやり方の、ここだけ困っている」——その一点からで大丈夫です。
+            全部を切り替える話でなくても構いません。施設の状況をお聞きしたうえで、
+            できることとできないことを、正直にお伝えします。
           </p>
         </div>
 
@@ -1060,6 +1141,7 @@ body.lock{ overflow:hidden; }
         <h4>SERVICE</h4>
         <ul>
           <li><a href="#business">事業内容</a></li>
+          <li><a href="#local">札幌の会社を選ぶ理由</a></li>
           <li><a href="#facilities">対応施設</a></li>
           <li><a href="#ingredients">食材販売</a></li>
           <li><a href="#strength">私たちの強み</a></li>
@@ -1091,6 +1173,14 @@ body.lock{ overflow:hidden; }
 (function(){
   'use strict';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- 創業からの年数（1997年7月創業）--- */
+  var yrs = document.getElementById('years');
+  if (yrs){
+    var now = new Date();
+    var n = now.getFullYear() - 1997 - (now.getMonth() < 6 ? 1 : 0);
+    yrs.dataset.count = n; yrs.textContent = n;
+  }
 
   /* --- scroll reveal --- */
   var targets = document.querySelectorAll('.rv');
