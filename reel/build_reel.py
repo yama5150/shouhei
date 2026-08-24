@@ -23,7 +23,7 @@ OUT = ROOT / "out"
 TEXTDIR = ROOT / "text"
 
 SHOP = os.environ.get("SHOP", "")          # 例: SHOP="鮨 ○○" で最後にクレジット表示
-CTA = os.environ.get("CTA", "ご予約 おまちしてます")
+CTA = os.environ.get("CTA", "貴方様を おまちしております")
 
 W, H, FPS = 1080, 1920, 30
 
@@ -37,6 +37,9 @@ SOURCES = {
     "tai_v":    SRC / "086b18c5-IMG_1749.mov",   # 真鯛の仕込み 20.43s
     "chef_p":   SRC / "01d4f250-image.jpg",      # 職人 + サーモントラウト (EXIF 回転あり)
     "basket_p": SRC / "adad3a16-image.jpg",      # 盛り籠 寄り (EXIF 回転あり)
+    "fish3_p":  SRC / "d06c975f-image.jpg",      # ブリ + サクラマス 2本 (EXIF 回転あり)
+    "don_p":    SRC / "6a30fbb1-image.jpg",      # 海鮮丼
+    "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦
 }
 
 # 文字色まわり
@@ -51,41 +54,44 @@ GOLD = "0xF0C071"             # CTA のアクセント
 # lines:  [(文字列, フォントサイズ, 色), ...] 下寄せで積む
 
 SEGMENTS = [
-    # フック: 職人が抱えたサーモントラウトの頭に寄る
-    dict(key="chef_p", kind="photo", dur=2.60, zoom=(1.32, 1.46), focus=(0.72, 0.16),
+    # --- フック ---------------------------------------------------------
+    dict(key="chef_p", kind="photo", dur=2.40, zoom=(1.32, 1.46), focus=(0.72, 0.16),
          lines=[("今日、こんなん", 76, INK), ("入りました。", 76, INK)]),
 
-    # 盛り籠のパン
-    dict(key="basket_v", kind="video", start=0.00, dur=2.20,
-         lines=[("魚も 貝も、本日入荷。", 64, INK)]),
+    # --- 仕入れ ---------------------------------------------------------
+    dict(key="fish3_p", kind="photo", dur=2.20, zoom=(1.00, 1.10), focus=(0.42, 0.45),
+         lines=[("魚は その日のぶんだけ。", 64, INK)]),
 
-    # 真鯛 一本 (全身を見せる)
-    dict(key="tai_v", kind="video", start=9.60, dur=2.80, zoom=1.18, focus=(0.42, 0.58),
-         lines=[("まずは 真鯛、一本もの。", 64, INK)]),
+    dict(key="basket_v", kind="video", start=0.00, dur=2.00,
+         lines=[("貝も いいのが入ってます。", 62, INK)]),
 
-    # 鱗を引く (包丁の寄り)
+    # --- 仕込み ---------------------------------------------------------
+    dict(key="tai_v", kind="video", start=9.60, dur=2.60, zoom=1.18, focus=(0.42, 0.58),
+         lines=[("真鯛は 一本もの。", 64, INK)]),
+
     dict(key="tai_v", kind="video", start=17.20, dur=2.00, zoom=1.45, focus=(0.05, 0.10),
-         lines=[("一尾ずつ、手で仕込む。", 64, INK)]),
+         lines=[("一尾ずつ、手で。", 64, INK)]),
 
-    # 貝に包丁を入れる
-    dict(key="clam_v", kind="video", start=0.30, dur=2.30, zoom=1.10, focus=(0.50, 0.45),
+    dict(key="clam_v", kind="video", start=0.30, dur=2.20, zoom=1.10, focus=(0.50, 0.45),
          lines=[("貝は、目の前で開ける。", 64, INK)]),
 
-    # 開いた身が出てくる (山場)
     dict(key="clam_v", kind="video", start=6.60, dur=2.40, zoom=1.16, focus=(0.45, 0.62),
          lines=[("開けたてが、", 72, INK), ("いちばん旨い。", 72, INK)]),
 
-    # 盛り籠の寄り (ホタテ・つぶ貝)
-    dict(key="basket_v", kind="video", start=2.70, dur=1.90,
+    dict(key="basket_v", kind="video", start=2.70, dur=1.60,
          lines=[("ぜんぶ 今日のネタです。", 62, INK)]),
 
-    dict(key="basket_p", kind="photo", dur=2.60, zoom=(1.02, 1.14), focus=(0.50, 0.50),
-         lines=[("握れるうちに、どうぞ。", 64, INK)]),
+    # --- 出来上がり -----------------------------------------------------
+    dict(key="don_p", kind="photo", dur=2.80, zoom=(1.00, 1.09), focus=(0.50, 0.48),
+         lines=[("その日入荷した、", 66, INK), ("旬の魚介で。", 66, INK)]),
 
-    # 締め: 写真を全部見せて CTA (背景はぼかし埋め)
+    dict(key="uni_p", kind="photo", dur=2.40, zoom=(1.08, 1.22), focus=(0.48, 0.46),
+         lines=[("今日の一貫、どうぞ。", 64, INK)]),
+
+    # --- 締め -----------------------------------------------------------
     dict(key="chef_p", kind="photo", dur=3.20, zoom=(1.10, 1.00), focus=(0.50, 0.50),
          fit="blur",
-         lines=([(SHOP, 52, INK)] if SHOP else []) + [(CTA, 68, GOLD)]),
+         lines=([(SHOP, 52, INK)] if SHOP else []) + [(CTA, 64, GOLD)]),
 ]
 
 # ---------------------------------------------------------------- 組み立て
