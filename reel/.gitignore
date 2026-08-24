@@ -1,0 +1,8 @@
+
+out/_video.mp4
+out/_audio_*.m4a
+out/filtergraph_*.txt
+out/bgm.wav
+out/sushi_reel_bgm.mp4
+out/sushi_reel_muted.mp4
+__pycache__/

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-寿司・魚介リール動画ビルダー (1080x1920 / 30fps / 約23秒)
+寿司・魚介リール動画ビルダー (1080x1920 / 30fps / 約27秒)
 
 使い方:
     SRC=/path/to/素材ディレクトリ python3 reel/build_reel.py
 
-素材ファイル名は SOURCES で定義。SHOP に店名を入れるとラストにクレジットが入る。
+映像は 1 回だけエンコードして、音声違いの 3 本を差し替えで書き出す。
 ffmpeg 6.x 以降 + 日本語フォント (Noto Sans CJK JP) が必要。
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -22,7 +23,7 @@ SRC = Path(os.environ.get("SRC", "/root/.claude/uploads/ebdc904f-5340-54cd-b0d4-
 OUT = ROOT / "out"
 TEXTDIR = ROOT / "text"
 
-SHOP = os.environ.get("SHOP", "")          # 例: SHOP="鮨 ○○" で最後にクレジット表示
+SHOP = os.environ.get("SHOP", "")          # 例: SHOP="ススキノデパート" で CTA の上に出る
 CTA = os.environ.get("CTA", "貴方様を おまちしております")
 
 W, H, FPS = 1080, 1920, 30
@@ -40,7 +41,11 @@ SOURCES = {
     "fish3_p":  SRC / "d06c975f-image.jpg",      # ブリ + サクラマス 2本 (EXIF 回転あり)
     "don_p":    SRC / "6a30fbb1-image.jpg",      # 海鮮丼
     "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦
+    "sting_v":  SRC / "60522e38-DopVl3SCneao9y70kOk0dgISllqQ9S1lyIWkKfA8vKg.mp4",  # ロゴ 2s
 }
+
+# 環境音のベッドに使うクリップ（静止画パートで無音にならないように敷く）
+AMBIENT_BED = "tai_v"
 
 # 文字色まわり
 INK = "white"
@@ -51,6 +56,8 @@ GOLD = "0xF0C071"             # CTA のアクセント
 # kind:   "video" = 動画から切り出し / "photo" = 静止画 + ケンバーンズ
 # zoom:   静止画は (開始倍率, 終了倍率)、動画は固定倍率。1.0 = 等倍
 # focus:  どこに寄るか 0.0=左/上 0.5=中央 1.0=右/下
+# fit:    "blur" で写真を切らずに全部見せる（余白は同じ写真のぼかし）
+# plain:  True なら色調整もテロップも入れない（ロゴなど完成済みの素材用）
 # lines:  [(文字列, フォントサイズ, 色), ...] 下寄せで積む
 
 SEGMENTS = [
@@ -89,16 +96,34 @@ SEGMENTS = [
          lines=[("今日の一貫、どうぞ。", 64, INK)]),
 
     # --- 締め -----------------------------------------------------------
-    dict(key="chef_p", kind="photo", dur=3.20, zoom=(1.10, 1.00), focus=(0.50, 0.50),
+    dict(key="chef_p", kind="photo", dur=2.60, zoom=(1.10, 1.00), focus=(0.50, 0.50),
          fit="blur",
          lines=([(SHOP, 52, INK)] if SHOP else []) + [(CTA, 64, GOLD)]),
+
+    # 店のロゴテンプレ。素材のまま出す
+    dict(key="sting_v", kind="video", start=0.00, dur=2.00, plain=True, lines=[]),
 ]
 
-# ---------------------------------------------------------------- 組み立て
+TOTAL = sum(s["dur"] for s in SEGMENTS)
+
+# ---------------------------------------------------------------- 見た目
 
 CAPTION_BOTTOM = 1410      # キャプション下端 (Instagram の UI を避ける)
 LINE_STEP = 118            # 行送り
 TEXT_IN = 0.18             # キャプション表示開始 (秒)
+
+# 書き出しの音量。SNS 向けに -16 LUFS / 真ピーク -1.5dBFS
+TARGET_LUFS = -16.0
+TARGET_TP = -1.5
+PEAK_CEILING = 0.84        # -1.5dBFS。リミッターの頭打ち
+
+# BGM 版のバランス。包丁や貝の音を上に、BGM はその下に敷く
+CLIP_LUFS = -18.0
+BGM_LUFS = -23.5
+
+FADE_IN = 0.30
+FADE_OUT = 0.20            # ロゴテンプレ側にもフェードがあるので短め
+AUDIO_TAIL = 2.00          # ロゴが出ている間に音を引く
 
 
 def font():
@@ -106,6 +131,15 @@ def font():
         if Path(f).exists():
             return f
     sys.exit("日本語フォントが見つかりません (fonts-noto-cjk を入れてください)")
+
+
+def has_audio(path):
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a:0",
+         "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True,
+    )
+    return "audio" in out.stdout
 
 
 def grade():
@@ -133,8 +167,7 @@ def kenburns(z0, z1, dur, fx, fy):
 def kenburns_fit(z0, z1, dur):
     """写真を切らずに全部見せる。余白は同じ写真のぼかしで埋める。
 
-    手前の写真は固定、背景のぼかしだけをゆっくり動かす。締めのカットなど
-    「写真そのものを見せたい」ところで使う。
+    手前の写真は固定、背景のぼかしだけをゆっくり動かす。
     """
     frames = max(int(round(dur * FPS)) - 1, 1)
     return (
@@ -181,15 +214,54 @@ def captions(seg, idx, fontfile):
     return "," + ",".join(parts)
 
 
-def build(with_audio=True, outfile="sushi_reel.mp4"):
+def measure_gain(inputs, chains, kind):
+    """一度流して測り、目標ラウドネスに合わせる静的ゲインを返す。
+
+    loudnorm を書き出しにそのまま使うと、狙いどおりに寄らなかったときに
+    動的モードへ落ちて音が暴れる。測った値からゲインを決めて、
+    はみ出す瞬間だけリミッターで止めるほうが結果が読める。
+    """
+    graph = ";\n".join(chains + [
+        f"[mix]loudnorm=I={TARGET_LUFS}:TP={TARGET_TP}:LRA=11:print_format=json[aout]"
+    ])
+    script = OUT / f"filtergraph_measure_{kind}.txt"
+    script.write_text(graph, encoding="utf-8")
+
+    proc = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-y"] + inputs +
+        ["-filter_complex_script", str(script), "-map", "[aout]", "-vn",
+         "-t", f"{TOTAL:.3f}", "-f", "null", "-"],
+        stderr=subprocess.PIPE, text=True,
+    )
+    if proc.returncode != 0:
+        print(proc.stderr[-4000:], file=sys.stderr)
+        sys.exit(f"ffmpeg が失敗しました (音量測定 {kind})")
+
+    start = proc.stderr.rfind("{")
+    data = json.loads(proc.stderr[start:proc.stderr.rfind("}") + 1])
+    measured_i = float(data["input_i"])
+    gain = TARGET_LUFS - measured_i
+    print(f"   測定: {measured_i:.1f} LUFS / TP {float(data['input_tp']):.1f} dBFS"
+          f" → {gain:+.1f}dB")
+    return gain
+
+
+def run(cmd, what):
+    proc = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
+    if proc.returncode != 0:
+        print(proc.stderr[-4000:], file=sys.stderr)
+        sys.exit(f"ffmpeg が失敗しました ({what})")
+
+
+# ---------------------------------------------------------------- 映像
+
+def render_video():
+    """映像だけを 1 回エンコードする。音声はあとから差し替える。"""
     fontfile = font()
     TEXTDIR.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
 
-    total = sum(s["dur"] for s in SEGMENTS)
-
-    inputs, chains, vlabels, alabels = [], [], [], []
-
+    inputs, chains, labels = [], [], []
     for i, seg in enumerate(SEGMENTS):
         path = SOURCES[seg["key"]]
         if not path.exists():
@@ -209,85 +281,148 @@ def build(with_audio=True, outfile="sushi_reel.mp4"):
                 f"{grade()},fps={FPS},setsar=1,format=yuv420p"
                 f"{captions(seg, i, fontfile)}[v{i}]"
             )
-            if with_audio:
-                chains.append(
-                    f"anullsrc=channel_layout=stereo:sample_rate=48000,"
-                    f"atrim=duration={dur},asetpts=PTS-STARTPTS[a{i}]"
-                )
         else:
-            start = seg["start"]
-            inputs += ["-ss", f"{start}", "-t", f"{dur}", "-i", str(path)]
+            inputs += ["-ss", f"{seg['start']}", "-t", f"{dur}", "-i", str(path)]
             # .mov は回転メタデータ付き。ffmpeg が自動で起こすので縦のまま扱える
-            zoom = seg.get("zoom", 1.0)
-            fx, fy = seg.get("focus", (0.5, 0.5))
-            chains.append(
-                f"[{i}:v]fps={FPS},scale={W}:{H}:force_original_aspect_ratio=increase,"
-                f"crop={W}:{H}{punch_in(zoom, fx, fy)},"
-                f"{grade()},setsar=1,format=yuv420p,"
-                f"trim=duration={dur},setpts=PTS-STARTPTS"
-                f"{captions(seg, i, fontfile)}[v{i}]"
-            )
-            if with_audio:
-                chains.append(
-                    f"[{i}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
-                    f"atrim=duration={dur},asetpts=PTS-STARTPTS,"
-                    f"afade=t=in:st=0:d=0.08,afade=t=out:st={dur - 0.08:.3f}:d=0.08[a{i}]"
+            if seg.get("plain"):
+                # ロゴなど完成済みの素材。色もテロップも足さない
+                look = f"scale={W}:{H}:flags=lanczos,setsar=1,format=yuv420p"
+                caption = ""
+            else:
+                zoom = seg.get("zoom", 1.0)
+                fx, fy = seg.get("focus", (0.5, 0.5))
+                look = (
+                    f"scale={W}:{H}:force_original_aspect_ratio=increase,"
+                    f"crop={W}:{H}{punch_in(zoom, fx, fy)},"
+                    f"{grade()},setsar=1,format=yuv420p"
                 )
+                caption = captions(seg, i, fontfile)
+            chains.append(
+                f"[{i}:v]fps={FPS},{look},"
+                f"trim=duration={dur},setpts=PTS-STARTPTS{caption}[v{i}]"
+            )
+        labels.append(f"[v{i}]")
 
-        vlabels.append(f"[v{i}]")
-        alabels.append(f"[a{i}]")
+    chains.append("".join(labels) + f"concat=n={len(SEGMENTS)}:v=1:a=0[vcat]")
+    chains.append(
+        f"[vcat]fade=t=in:st=0:d={FADE_IN},"
+        f"fade=t=out:st={TOTAL - FADE_OUT:.3f}:d={FADE_OUT}[vout]"
+    )
+
+    script = OUT / "filtergraph_video.txt"
+    script.write_text(";\n".join(chains), encoding="utf-8")
+    dest = OUT / "_video.mp4"
+
+    print(f"→ 映像 ({TOTAL:.1f}秒) をエンコード中…")
+    run(
+        ["ffmpeg", "-hide_banner", "-y"] + inputs +
+        ["-filter_complex_script", str(script), "-map", "[vout]", "-an",
+         "-c:v", "libx264", "-profile:v", "high", "-level", "4.1",
+         "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p",
+         "-r", str(FPS), "-g", str(FPS * 2), "-movflags", "+faststart",
+         "-t", f"{TOTAL:.3f}", str(dest)],
+        "映像",
+    )
+    return dest
+
+
+# ---------------------------------------------------------------- 音声
+
+def render_audio(with_bgm):
+    """クリップの環境音（+ BGM）をつないで書き出す。"""
+    inputs, chains, labels = [], [], []
+
+    for i, seg in enumerate(SEGMENTS):
+        path = SOURCES[seg["key"]]
+        dur = seg["dur"]
+        if seg["kind"] == "video" and has_audio(path):
+            inputs += ["-ss", f"{seg['start']}", "-t", f"{dur}", "-i", str(path)]
+            chains.append(
+                f"[{i}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+                f"atrim=duration={dur},asetpts=PTS-STARTPTS,"
+                f"afade=t=in:st=0:d=0.08,afade=t=out:st={dur - 0.08:.3f}:d=0.08[a{i}]"
+            )
+        else:
+            # 静止画とロゴには音がないので無音を挟む
+            inputs += ["-f", "lavfi", "-t", f"{dur}",
+                       "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"]
+            chains.append(f"[{i}:a]atrim=duration={dur},asetpts=PTS-STARTPTS[a{i}]")
+        labels.append(f"[a{i}]")
 
     n = len(SEGMENTS)
-    chains.append("".join(vlabels) + f"concat=n={n}:v=1:a=0[vcat]")
-    if with_audio:
-        chains.append("".join(alabels) + f"concat=n={n}:v=0:a=1[acat]")
+    chains.append("".join(labels) + f"concat=n={n}:v=0:a=1[acat]")
 
-    # 頭と尻をフェード（ループしても違和感が出ないように）
-    chains.append(
-        f"[vcat]fade=t=in:st=0:d=0.30,"
-        f"fade=t=out:st={total - 0.45:.3f}:d=0.45[vout]"
-    )
-
-    if with_audio:
-        # 静止画パートで無音にならないよう、厨房の環境音を薄く敷く
-        bed_idx = n
-        inputs += ["-stream_loop", "-1", "-t", f"{total}", "-i", str(SOURCES["tai_v"])]
+    if with_bgm:
+        bgm = OUT / "bgm.wav"
+        if not bgm.exists():
+            sys.exit(f"BGM がありません。先に make_bgm.py を流してください: {bgm}")
+        inputs += ["-i", str(bgm)]
+        # 各系統を先に測って揃えてから混ぜる。まとめてから正規化すると、
+        # ずっと鳴っている BGM に引っぱられて包丁や貝の音が埋もれる
+        chains.append(f"[acat]loudnorm=I={CLIP_LUFS}:TP=-3:LRA=14[clips]")
         chains.append(
-            f"[{bed_idx}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
-            f"atrim=duration={total},asetpts=PTS-STARTPTS,volume=0.10[bed]"
+            f"[{n}:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+            f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,"
+            f"loudnorm=I={BGM_LUFS}:TP=-6:LRA=5[bgmout]"
         )
-        chains.append(
-            "[acat][bed]amix=inputs=2:duration=first:normalize=0,"
-            "loudnorm=I=-16:TP=-1.5:LRA=11,"
-            f"afade=t=in:st=0:d=0.25,afade=t=out:st={total - 0.5:.3f}:d=0.5[aout]"
-        )
-        amap = ["-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
+        chains.append("[clips][bgmout]amix=inputs=2:duration=first:normalize=0[mix]")
     else:
-        amap = ["-an"]
+        # 静止画パートで無音にならないよう、厨房の環境音を薄く敷く
+        inputs += ["-stream_loop", "-1", "-t", f"{TOTAL}", "-i", str(SOURCES[AMBIENT_BED])]
+        chains.append(
+            f"[{n}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+            f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,volume=0.10[bedout]"
+        )
+        chains.append(
+            "[acat][bedout]amix=inputs=2:duration=first:normalize=0,"
+            "loudnorm=I=-16:TP=-1.5:LRA=11,"
+            "alimiter=limit=0.89[mix]"
+        )
 
-    script = OUT / ("filtergraph_sound.txt" if with_audio else "filtergraph_silent.txt")
-    script.write_text(";\n".join(chains), encoding="utf-8")
+    kind = "bgm" if with_bgm else "ambient"
+    print(f"→ 音声 ({kind}) を書き出し中…")
 
-    dest = OUT / outfile
-    cmd = (
-        ["ffmpeg", "-hide_banner", "-y"] + inputs +
-        ["-filter_complex_script", str(script), "-map", "[vout]"] + amap +
-        [
-            "-c:v", "libx264", "-profile:v", "high", "-level", "4.1",
-            "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p",
-            "-r", str(FPS), "-g", str(FPS * 2), "-movflags", "+faststart",
-            "-t", f"{total:.3f}", str(dest),
-        ]
+    gain = measure_gain(inputs, chains, kind)
+    chains.append(
+        f"[mix]volume={gain:+.2f}dB,"
+        f"alimiter=limit={PEAK_CEILING:.3f}:level=disabled:attack=5:release=60,"
+        f"afade=t=in:st=0:d=0.25,"
+        f"afade=t=out:st={TOTAL - AUDIO_TAIL:.3f}:d={AUDIO_TAIL}[aout]"
     )
-    print(f"→ {dest.name} ({total:.1f}秒) をエンコード中…")
-    proc = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
-    if proc.returncode != 0:
-        print(proc.stderr[-4000:], file=sys.stderr)
-        sys.exit(f"ffmpeg が失敗しました ({dest.name})")
+
+    script = OUT / f"filtergraph_audio_{kind}.txt"
+    script.write_text(";\n".join(chains), encoding="utf-8")
+    dest = OUT / f"_audio_{kind}.m4a"
+
+    run(
+        ["ffmpeg", "-hide_banner", "-y"] + inputs +
+        ["-filter_complex_script", str(script), "-map", "[aout]", "-vn",
+         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
+         "-t", f"{TOTAL:.3f}", str(dest)],
+        f"音声 {kind}",
+    )
+    return dest
+
+
+def mux(video, audio, outfile):
+    dest = OUT / outfile
+    args = ["ffmpeg", "-hide_banner", "-y", "-i", str(video)]
+    if audio:
+        args += ["-i", str(audio), "-map", "0:v:0", "-map", "1:a:0", "-c", "copy"]
+    else:
+        args += ["-map", "0:v:0", "-an", "-c", "copy"]
+    run(args + ["-movflags", "+faststart", str(dest)], outfile)
     print(f"   完成: {dest}  {dest.stat().st_size / 1e6:.1f}MB")
     return dest
 
 
 if __name__ == "__main__":
-    build(with_audio=True, outfile="sushi_reel.mp4")
-    build(with_audio=False, outfile="sushi_reel_muted.mp4")
+    cached = OUT / "_video.mp4"
+    if "--audio-only" in sys.argv and cached.exists():
+        print(f"→ 映像は既存のものを使う: {cached.name}")
+        video = cached
+    else:
+        video = render_video()
+    mux(video, render_audio(with_bgm=False), "sushi_reel.mp4")
+    mux(video, render_audio(with_bgm=True), "sushi_reel_bgm.mp4")
+    mux(video, None, "sushi_reel_muted.mp4")
