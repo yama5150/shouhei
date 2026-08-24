@@ -23,8 +23,16 @@ SRC = Path(os.environ.get("SRC", "/root/.claude/uploads/ebdc904f-5340-54cd-b0d4-
 OUT = ROOT / "out"
 TEXTDIR = ROOT / "text"
 
-SHOP = os.environ.get("SHOP", "")          # 例: SHOP="ススキノデパート" で CTA の上に出る
 CTA = os.environ.get("CTA", "貴方様を おまちしております")
+
+# 秋祭りフェアの締めカード（企画書より）
+FAIR_LEAD = os.environ.get("FAIR_LEAD", "熟成赤酢で喰らう")
+FAIR_TITLE = os.environ.get("FAIR_TITLE", "蟹とお寿司の ススデパ秋祭り")
+FAIR_DATES = os.environ.get("FAIR_DATES", "9/1(火) 〜 10/31(土)")
+
+# 音楽。MUSIC_START は曲のどこから使うか（秒）
+MUSIC = Path(os.environ.get("MUSIC", str(SRC / "33e8d767-_shun.mp3")))
+MUSIC_START = float(os.environ.get("MUSIC_START", "153"))
 
 W, H, FPS = 1080, 1920, 30
 
@@ -63,14 +71,16 @@ GOLD = "0xF0C071"             # CTA のアクセント
 SEGMENTS = [
     # --- フック ---------------------------------------------------------
     dict(key="chef_p", kind="photo", dur=2.40, zoom=(1.32, 1.46), focus=(0.72, 0.16),
+         lift=1.45,
          lines=[("今日、こんなん", 76, INK), ("入りました。", 76, INK)]),
 
     # --- 仕入れ ---------------------------------------------------------
     dict(key="fish3_p", kind="photo", dur=2.20, zoom=(1.00, 1.10), focus=(0.42, 0.45),
+         lift=1.25,
          lines=[("魚は その日のぶんだけ。", 64, INK)]),
 
     dict(key="basket_v", kind="video", start=0.00, dur=2.00,
-         lines=[("貝も いいのが入ってます。", 62, INK)]),
+         lines=[("本日の地魚と、貝。", 64, INK)]),
 
     # --- 仕込み ---------------------------------------------------------
     dict(key="tai_v", kind="video", start=9.60, dur=2.60, zoom=1.18, focus=(0.42, 0.58),
@@ -90,15 +100,17 @@ SEGMENTS = [
 
     # --- 出来上がり -----------------------------------------------------
     dict(key="don_p", kind="photo", dur=2.80, zoom=(1.00, 1.09), focus=(0.50, 0.48),
+         lift=1.15,
          lines=[("その日入荷した、", 66, INK), ("旬の魚介で。", 66, INK)]),
 
     dict(key="uni_p", kind="photo", dur=2.40, zoom=(1.08, 1.22), focus=(0.48, 0.46),
-         lines=[("今日の一貫、どうぞ。", 64, INK)]),
+         lift=1.20,
+         lines=[(CTA, 62, GOLD)]),
 
-    # --- 締め -----------------------------------------------------------
-    dict(key="chef_p", kind="photo", dur=2.60, zoom=(1.10, 1.00), focus=(0.50, 0.50),
-         fit="blur",
-         lines=([(SHOP, 52, INK)] if SHOP else []) + [(CTA, 64, GOLD)]),
+    # --- 締め: フェアの告知 ---------------------------------------------
+    dict(key="chef_p", kind="photo", dur=3.20, zoom=(1.10, 1.00), focus=(0.50, 0.50),
+         fit="blur", lift=1.40,
+         lines=[(FAIR_LEAD, 48, INK), (FAIR_TITLE, 54, INK), (FAIR_DATES, 58, GOLD)]),
 
     # 店のロゴテンプレ。素材のまま出す
     dict(key="sting_v", kind="video", start=0.00, dur=2.00, plain=True, lines=[]),
@@ -117,9 +129,9 @@ TARGET_LUFS = -16.0
 TARGET_TP = -1.5
 PEAK_CEILING = 0.84        # -1.5dBFS。リミッターの頭打ち
 
-# BGM 版のバランス。包丁や貝の音を上に、BGM はその下に敷く
-CLIP_LUFS = -18.0
-BGM_LUFS = -23.5
+# 音楽版のバランス。曲を主役にして、包丁や貝の音を上に効かせる
+MUSIC_LUFS = -18.0
+CLIP_LUFS = -22.0
 
 FADE_IN = 0.30
 FADE_OUT = 0.20            # ロゴテンプレ側にもフェードがあるので短め
@@ -142,9 +154,16 @@ def has_audio(path):
     return "audio" in out.stdout
 
 
-def grade():
-    """食材が旨そうに見える程度の軽い色調整。"""
-    return "eq=contrast=1.06:saturation=1.14:gamma=1.02,unsharp=5:5:0.45:5:5:0.0"
+def grade(lift=1.0):
+    """食材が旨そうに見える程度の色調整。
+
+    lift は暗いカットを持ち上げるためのガンマ。写真素材は厨房が暗いぶん
+    沈むので、カットごとに指定して 110〜150 (0-255) あたりに揃える。
+    ガンマだけ上げると平坦になるので、少しコントラストを足し戻す。
+    """
+    base = "eq=contrast=1.05:saturation=1.16:gamma=1.06"
+    extra = f",eq=gamma={lift:.2f}:contrast=1.03" if lift > 1.0 else ""
+    return f"{base}{extra},unsharp=5:5:0.45:5:5:0.0"
 
 
 def kenburns(z0, z1, dur, fx, fy):
@@ -176,7 +195,7 @@ def kenburns_fit(z0, z1, dur):
         f"crop={W * 2}:{H * 2},"
         f"zoompan=z='{z0}+({z1}-{z0})*on/{frames}':"
         f"x='(iw-iw/zoom)/2':y='(ih-ih/zoom)/2':d=1:s={W}x{H}:fps={FPS},"
-        f"gblur=sigma=40,eq=brightness=-0.14:saturation=0.60[bg];"
+        f"gblur=sigma=40,eq=brightness=-0.06:saturation=0.62[bg];"
         f"[fgsrc]scale={W}:-2,fps={FPS}[fg];"
         f"[bg][fg]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:shortest=1"
     )
@@ -278,7 +297,7 @@ def render_video():
                 shaper = kenburns(*seg["zoom"], dur, *seg["focus"])
             chains.append(
                 f"[{i}:v]{shaper},"
-                f"{grade()},fps={FPS},setsar=1,format=yuv420p"
+                f"{grade(seg.get('lift', 1.0))},fps={FPS},setsar=1,format=yuv420p"
                 f"{captions(seg, i, fontfile)}[v{i}]"
             )
         else:
@@ -294,7 +313,7 @@ def render_video():
                 look = (
                     f"scale={W}:{H}:force_original_aspect_ratio=increase,"
                     f"crop={W}:{H}{punch_in(zoom, fx, fy)},"
-                    f"{grade()},setsar=1,format=yuv420p"
+                    f"{grade(seg.get('lift', 1.0))},setsar=1,format=yuv420p"
                 )
                 caption = captions(seg, i, fontfile)
             chains.append(
@@ -328,7 +347,7 @@ def render_video():
 
 # ---------------------------------------------------------------- 音声
 
-def render_audio(with_bgm):
+def render_audio(with_music):
     """クリップの環境音（+ BGM）をつないで書き出す。"""
     inputs, chains, labels = [], [], []
 
@@ -352,20 +371,19 @@ def render_audio(with_bgm):
     n = len(SEGMENTS)
     chains.append("".join(labels) + f"concat=n={n}:v=0:a=1[acat]")
 
-    if with_bgm:
-        bgm = OUT / "bgm.wav"
-        if not bgm.exists():
-            sys.exit(f"BGM がありません。先に make_bgm.py を流してください: {bgm}")
-        inputs += ["-i", str(bgm)]
+    if with_music:
+        if not MUSIC.exists():
+            sys.exit(f"音源が見つかりません: {MUSIC}")
+        inputs += ["-ss", f"{MUSIC_START}", "-t", f"{TOTAL}", "-i", str(MUSIC)]
         # 各系統を先に測って揃えてから混ぜる。まとめてから正規化すると、
-        # ずっと鳴っている BGM に引っぱられて包丁や貝の音が埋もれる
-        chains.append(f"[acat]loudnorm=I={CLIP_LUFS}:TP=-3:LRA=14[clips]")
+        # ずっと鳴っている曲に引っぱられて包丁や貝の音が埋もれる
+        chains.append(f"[acat]loudnorm=I={CLIP_LUFS}:TP=-6:LRA=14[clips]")
         chains.append(
-            f"[{n}:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+            f"[{n}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,"
-            f"loudnorm=I={BGM_LUFS}:TP=-6:LRA=5[bgmout]"
+            f"loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=8[musicout]"
         )
-        chains.append("[clips][bgmout]amix=inputs=2:duration=first:normalize=0[mix]")
+        chains.append("[clips][musicout]amix=inputs=2:duration=first:normalize=0[mix]")
     else:
         # 静止画パートで無音にならないよう、厨房の環境音を薄く敷く
         inputs += ["-stream_loop", "-1", "-t", f"{TOTAL}", "-i", str(SOURCES[AMBIENT_BED])]
@@ -379,7 +397,7 @@ def render_audio(with_bgm):
             "alimiter=limit=0.89[mix]"
         )
 
-    kind = "bgm" if with_bgm else "ambient"
+    kind = "music" if with_music else "ambient"
     print(f"→ 音声 ({kind}) を書き出し中…")
 
     gain = measure_gain(inputs, chains, kind)
@@ -423,6 +441,6 @@ if __name__ == "__main__":
         video = cached
     else:
         video = render_video()
-    mux(video, render_audio(with_bgm=False), "sushi_reel.mp4")
-    mux(video, render_audio(with_bgm=True), "sushi_reel_bgm.mp4")
+    mux(video, render_audio(with_music=True), "sushi_reel.mp4")
+    mux(video, render_audio(with_music=False), "sushi_reel_ambient.mp4")
     mux(video, None, "sushi_reel_muted.mp4")
