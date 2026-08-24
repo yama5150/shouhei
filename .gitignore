@@ -3,3 +3,8 @@ node_modules/
 .DS_Store
 npm-debug.log*
 # dist/ は raw.githack 配信のため、あえてコミットします（ビルド成果物）
+
+# リール動画のビルド中間物（build_reel.py で再生成できる）
+reel/out/filtergraph_*.txt
+reel/out/*_muted.mp4
+reel/text/
