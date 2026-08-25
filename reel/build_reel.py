@@ -53,6 +53,7 @@ SOURCES = {
     "don_p":    SRC / "6a30fbb1-image.jpg",      # 海鮮丼
     "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦
     "sting_v":  SRC / "60522e38-DopVl3SCneao9y70kOk0dgISllqQ9S1lyIWkKfA8vKg.mp4",  # ロゴ 2s
+    "cover_p":  SRC / "4dcd4b9d-image.jpg",      # 握り3貫。カバー画像用
 }
 
 # 環境音のベッドに使うクリップ（静止画パートで無音にならないように敷く）
@@ -269,6 +270,66 @@ def measure_gain(inputs, chains, kind):
     return gain
 
 
+# ---------------------------------------------------------------- カバー画像
+# Instagram はプロフィールのグリッドでカバーの中央 1:1 を切り出す。
+# 9:16 の 1080x1920 なら y=420〜1500 がその範囲なので、写真も文字もここに収める。
+GRID_TOP, GRID_BOTTOM = 420, 1500
+
+COVER_PHOTO_Y = 440        # 写真の上端
+COVER_LINES = [            # (文字列, フォントサイズ, 色, 上端 y)
+    (FAIR_LEAD, 44, INK, 350),
+    (FAIR_TITLE, 54, INK, 1285),
+    (FAIR_DATES, 60, GOLD, 1398),
+]
+
+
+def build_cover(outfile="cover.jpg"):
+    """リールのカバー画像を作る。動画と同じ色調整・同じ文言で揃える。"""
+    fontfile = font()
+    TEXTDIR.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+
+    src = SOURCES["cover_p"]
+    if not src.exists():
+        sys.exit(f"素材が見つかりません: {src}")
+
+    parts = []
+    for i, (txt, size, color, y) in enumerate(COVER_LINES):
+        if not txt:
+            continue
+        tf = TEXTDIR / f"cover_{i}.txt"
+        tf.write_text(txt, encoding="utf-8")
+        parts.append(
+            f"drawtext=fontfile='{fontfile}':textfile='{tf}':"
+            f"fontsize={size}:fontcolor={color}:"
+            f"box=1:boxcolor={CHIP}:boxborderw=24:"
+            f"shadowcolor=black@0.5:shadowx=0:shadowy=3:"
+            f"x='(w-text_w)/2':y={y}"
+        )
+
+    graph = (
+        f"[0:v]split=2[bg][fg];"
+        f"[bg]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+        f"gblur=sigma=45,eq=brightness=-0.10:saturation=0.55[bgo];"
+        f"[fg]scale={W}:-2,{grade(1.20)}[fgo];"
+        f"[bgo][fgo]overlay=x=0:y={COVER_PHOTO_Y},"
+        + ",".join(parts) + "[out]"
+    )
+    script = OUT / "filtergraph_cover.txt"
+    script.write_text(graph, encoding="utf-8")
+
+    dest = OUT / outfile
+    print("→ カバー画像を書き出し中…")
+    run(
+        ["ffmpeg", "-hide_banner", "-y", "-i", str(src),
+         "-filter_complex_script", str(script), "-map", "[out]",
+         "-frames:v", "1", "-q:v", "2", str(dest)],
+        "カバー画像",
+    )
+    print(f"   完成: {dest}  {dest.stat().st_size / 1e3:.0f}KB")
+    return dest
+
+
 def run(cmd, what):
     proc = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
     if proc.returncode != 0:
@@ -439,6 +500,10 @@ def mux(video, audio, outfile):
 
 
 if __name__ == "__main__":
+    if "--cover-only" in sys.argv:
+        build_cover()
+        sys.exit(0)
+
     cached = OUT / "_video.mp4"
     if "--audio-only" in sys.argv and cached.exists():
         print(f"→ 映像は既存のものを使う: {cached.name}")
@@ -448,3 +513,4 @@ if __name__ == "__main__":
     mux(video, render_audio(with_music=True), "sushi_reel.mp4")
     mux(video, render_audio(with_music=False), "sushi_reel_ambient.mp4")
     mux(video, None, "sushi_reel_muted.mp4")
+    build_cover()

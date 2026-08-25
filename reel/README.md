@@ -14,6 +14,7 @@
 | `out/sushi_reel.mp4` | 本番用。「旬 shun」+ 厨房の音 |
 | `out/sushi_reel_ambient.mp4` | 厨房の音のみ。包丁・貝を開ける音がそのまま入る |
 | `out/sushi_reel_muted.mp4` | 無音版。アプリ側で音楽を乗せたいとき用 |
+| `out/cover.jpg` | リールのカバー画像（1080×1920）。握り3貫 |
 
 映像は 1 回だけエンコードして、音声だけ差し替えて 3 本に muxing している。
 テロップやカットを触っていないときは `--audio-only` を付ければ映像を作り直さない。
@@ -157,6 +158,21 @@ python3 reel/make_bgm.py 27.8      # -> out/bgm.wav
 
 `sushi_reel_muted.mp4` を使う。Instagram はアプリ内の音源を使ったほうが
 リーチ面で有利なので、リールに出すならこちらという選択肢もある。
+
+## カバー画像
+
+`out/cover.jpg`。リールの投稿画面で「カバーを編集」→ カメラロールから選ぶ。
+
+Instagram はプロフィールのグリッドでカバーの**中央 1:1 だけ**を切り出すので、
+1080×1920 なら y=420〜1500 に収まっているものしか一覧では見えない。
+写真も文言もこの範囲に置いてある（`GRID_TOP` / `GRID_BOTTOM`）。
+
+文言は動画の締めカードと同じ `FAIR_LEAD` / `FAIR_TITLE` / `FAIR_DATES` を使うので、
+日程を差し替えればカバーも一緒に変わる。カバーだけ作り直すなら:
+
+```bash
+python3 reel/build_reel.py --cover-only
+```
 
 ## 告知の段階
 
