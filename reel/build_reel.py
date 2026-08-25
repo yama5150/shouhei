@@ -28,7 +28,10 @@ CTA = os.environ.get("CTA", "貴方様を おまちしております")
 # 秋祭りフェアの締めカード（企画書より）
 FAIR_LEAD = os.environ.get("FAIR_LEAD", "熟成赤酢で喰らう")
 FAIR_TITLE = os.environ.get("FAIR_TITLE", "蟹とお寿司の ススデパ秋祭り")
-FAIR_DATES = os.environ.get("FAIR_DATES", "9/1(火) 〜 10/31(土)")
+# 日程が固まるまでは「近日開催」で先に回す。決まったら
+#   FAIR_DATES="9/1(火) 〜 10/31(土)" FAIR_NOTE="" python3 reel/build_reel.py
+FAIR_DATES = os.environ.get("FAIR_DATES", "近日開催")
+FAIR_NOTE = os.environ.get("FAIR_NOTE", "詳しくはプロフィールから")
 
 # 音楽。MUSIC_START は曲のどこから使うか（秒）
 MUSIC = Path(os.environ.get("MUSIC", str(SRC / "33e8d767-_shun.mp3")))
@@ -108,9 +111,10 @@ SEGMENTS = [
          lines=[(CTA, 62, GOLD)]),
 
     # --- 締め: フェアの告知 ---------------------------------------------
-    dict(key="chef_p", kind="photo", dur=3.20, zoom=(1.10, 1.00), focus=(0.50, 0.50),
+    dict(key="chef_p", kind="photo", dur=3.60, zoom=(1.10, 1.00), focus=(0.50, 0.50),
          fit="blur", lift=1.40,
-         lines=[(FAIR_LEAD, 48, INK), (FAIR_TITLE, 54, INK), (FAIR_DATES, 58, GOLD)]),
+         lines=[(FAIR_LEAD, 46, INK), (FAIR_TITLE, 54, INK),
+                (FAIR_DATES, 58, GOLD), (FAIR_NOTE, 42, INK)]),
 
     # 店のロゴテンプレ。素材のまま出す
     dict(key="sting_v", kind="video", start=0.00, dur=2.00, plain=True, lines=[]),
