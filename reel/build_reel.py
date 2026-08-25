@@ -73,6 +73,11 @@ GOLD = "0xF0C071"             # CTA のアクセント
 # lines:  [(文字列, フォントサイズ, 色), ...] 下寄せで積む
 
 SEGMENTS = [
+    # --- 頭に握りを一枚。カバーと同じ絵を出して「何の動画か」を最初に見せる。
+    #     1.1 秒しかないので文字は乗せない
+    dict(key="cover_p", kind="photo", dur=1.10, zoom=(1.02, 1.09), focus=(0.50, 0.50),
+         fit="blur", lift=1.20, lines=[]),
+
     # --- フック ---------------------------------------------------------
     dict(key="chef_p", kind="photo", dur=2.40, zoom=(1.32, 1.46), focus=(0.72, 0.16),
          lift=1.45,
@@ -138,7 +143,8 @@ PEAK_CEILING = 0.84        # -1.5dBFS。リミッターの頭打ち
 MUSIC_LUFS = -18.0
 CLIP_LUFS = -22.0
 
-FADE_IN = 0.30
+FADE_IN = 0.0              # 1フレーム目から握りを見せたいのでフェードなし
+                           # (フェードを入れると先頭フレームが黒く、ポスター画像に拾われる)
 FADE_OUT = 0.20            # ロゴテンプレ側にもフェードがあるので短め
 AUDIO_TAIL = 2.00          # ロゴが出ている間に音を引く
 
@@ -388,8 +394,9 @@ def render_video():
         labels.append(f"[v{i}]")
 
     chains.append("".join(labels) + f"concat=n={len(SEGMENTS)}:v=1:a=0[vcat]")
+    fade_in = f"fade=t=in:st=0:d={FADE_IN}," if FADE_IN > 0 else ""
     chains.append(
-        f"[vcat]fade=t=in:st=0:d={FADE_IN},"
+        f"[vcat]{fade_in}"
         f"fade=t=out:st={TOTAL - FADE_OUT:.3f}:d={FADE_OUT}[vout]"
     )
 
