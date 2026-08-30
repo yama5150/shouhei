@@ -54,6 +54,8 @@ SOURCES = {
     "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦
     "sting_v":  SRC / "60522e38-DopVl3SCneao9y70kOk0dgISllqQ9S1lyIWkKfA8vKg.mp4",  # ロゴ 2s
     "cover_p":  SRC / "4dcd4b9d-image.jpg",      # 握り3貫。カバー画像用
+    "sanma_p":  SRC / "4543b8ee-image.jpg",      # 秋刀魚の握り (EXIF 回転あり)
+    "kai_p":    SRC / "ed83ecc7-image.jpg",      # 貝の軍艦 (EXIF 回転あり)
 }
 
 # 環境音のベッドに使うクリップ（静止画パートで無音にならないように敷く）
@@ -108,13 +110,19 @@ SEGMENTS = [
          lines=[("ぜんぶ 今日のネタです。", 62, INK)]),
 
     # --- 出来上がり -----------------------------------------------------
-    dict(key="don_p", kind="photo", dur=2.80, zoom=(1.00, 1.09), focus=(0.50, 0.48),
+    dict(key="don_p", kind="photo", dur=2.40, zoom=(1.00, 1.09), focus=(0.50, 0.48),
          lift=1.15,
          lines=[("その日入荷した、", 66, INK), ("旬の魚介で。", 66, INK)]),
 
-    dict(key="uni_p", kind="photo", dur=2.40, zoom=(1.08, 1.22), focus=(0.48, 0.46),
-         lift=1.20,
-         lines=[(CTA, 62, GOLD)]),
+    # 雲丹は季節が終わったので外した。日替わりで替わるネタに寄せて、
+    # 品名を言い切らずぼかしてある
+    dict(key="sanma_p", kind="photo", dur=2.30, zoom=(1.18, 1.30), focus=(0.50, 0.45),
+         lift=1.25,
+         lines=[("旬の 秋刀魚。", 64, INK)]),
+
+    dict(key="kai_p", kind="photo", dur=2.30, zoom=(1.18, 1.30), focus=(0.26, 0.08),
+         lift=1.25,
+         lines=[("その日 入った貝。", 62, INK), (CTA, 52, GOLD)]),
 
     # --- 締め: フェアの告知 ---------------------------------------------
     dict(key="chef_p", kind="photo", dur=3.60, zoom=(1.10, 1.00), focus=(0.50, 0.50),
@@ -124,6 +132,9 @@ SEGMENTS = [
 
     # 店のロゴテンプレ。素材のまま出す
     dict(key="sting_v", kind="video", start=0.00, dur=2.00, plain=True, lines=[]),
+
+    # 音楽を引き切るための黒。ここがないとロゴの終わりで曲が切られる
+    dict(key=None, kind="black", dur=0.60, lines=[]),
 ]
 
 TOTAL = sum(s["dur"] for s in SEGMENTS)
@@ -146,7 +157,8 @@ CLIP_LUFS = -22.0
 FADE_IN = 0.0              # 1フレーム目から握りを見せたいのでフェードなし
                            # (フェードを入れると先頭フレームが黒く、ポスター画像に拾われる)
 FADE_OUT = 0.20            # ロゴテンプレ側にもフェードがあるので短め
-AUDIO_TAIL = 2.00          # ロゴが出ている間に音を引く
+AUDIO_TAIL = 4.50          # 締めのカードから引きはじめて、最後の黒で鳴り終わる
+AUDIO_CURVE = "qsin"       # 直線だと終わり際が急に感じるので四分の一サイン
 
 
 def font():
@@ -244,36 +256,44 @@ def captions(seg, idx, fontfile):
     return "," + ",".join(parts)
 
 
-def measure_gain(inputs, chains, kind):
-    """一度流して測り、目標ラウドネスに合わせる静的ゲインを返す。
-
-    loudnorm を書き出しにそのまま使うと、狙いどおりに寄らなかったときに
-    動的モードへ落ちて音が暴れる。測った値からゲインを決めて、
-    はみ出す瞬間だけリミッターで止めるほうが結果が読める。
-    """
-    graph = ";\n".join(chains + [
-        f"[mix]loudnorm=I={TARGET_LUFS}:TP={TARGET_TP}:LRA=11:print_format=json[aout]"
-    ])
-    script = OUT / f"filtergraph_measure_{kind}.txt"
-    script.write_text(graph, encoding="utf-8")
-
-    proc = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-nostats", "-y"] + inputs +
-        ["-filter_complex_script", str(script), "-map", "[aout]", "-vn",
-         "-t", f"{TOTAL:.3f}", "-f", "null", "-"],
-        stderr=subprocess.PIPE, text=True,
-    )
+def _loudnorm_json(cmd, what):
+    """loudnorm の測定モードを流して JSON を取り出す。"""
+    proc = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
     if proc.returncode != 0:
         print(proc.stderr[-4000:], file=sys.stderr)
-        sys.exit(f"ffmpeg が失敗しました (音量測定 {kind})")
-
+        sys.exit(f"ffmpeg が失敗しました (音量測定 {what})")
     start = proc.stderr.rfind("{")
-    data = json.loads(proc.stderr[start:proc.stderr.rfind("}") + 1])
-    measured_i = float(data["input_i"])
-    gain = TARGET_LUFS - measured_i
-    print(f"   測定: {measured_i:.1f} LUFS / TP {float(data['input_tp']):.1f} dBFS"
-          f" → {gain:+.1f}dB")
-    return gain
+    return json.loads(proc.stderr[start:proc.stderr.rfind("}") + 1])
+
+
+def measure_lufs(inputs, chains, label, what):
+    """フィルタグラフの途中のラベルの統合ラウドネスを測る。
+
+    loudnorm は測定にだけ使い、書き出しには通さない。書き出しに挟むと
+    動的モードで音が暴れるうえ、先読み 3 秒ぶん末尾が落ちることがある
+    （実際に音楽版の音声が 31.7 秒のはずが 28.8 秒になった）。
+    """
+    graph = ";\n".join(chains + [f"[{label}]loudnorm=print_format=json[probe]"])
+    script = OUT / f"filtergraph_measure_{what}.txt"
+    script.write_text(graph, encoding="utf-8")
+    data = _loudnorm_json(
+        ["ffmpeg", "-hide_banner", "-nostats", "-y"] + inputs +
+        ["-filter_complex_script", str(script), "-map", "[probe]", "-vn",
+         "-t", f"{TOTAL:.3f}", "-f", "null", "-"],
+        what,
+    )
+    return float(data["input_i"])
+
+
+def measure_music_lufs():
+    """音源の使う区間だけを単体で測る。"""
+    data = _loudnorm_json(
+        ["ffmpeg", "-hide_banner", "-nostats", "-y",
+         "-ss", f"{MUSIC_START}", "-t", f"{TOTAL:.3f}", "-i", str(MUSIC),
+         "-af", "loudnorm=print_format=json", "-f", "null", "-"],
+        "music",
+    )
+    return float(data["input_i"])
 
 
 # ---------------------------------------------------------------- カバー画像
@@ -353,12 +373,19 @@ def render_video():
 
     inputs, chains, labels = [], [], []
     for i, seg in enumerate(SEGMENTS):
-        path = SOURCES[seg["key"]]
-        if not path.exists():
-            sys.exit(f"素材が見つかりません: {path}")
         dur = seg["dur"]
+        path = SOURCES.get(seg["key"]) if seg["key"] else None
+        if path is not None and not path.exists():
+            sys.exit(f"素材が見つかりません: {path}")
 
-        if seg["kind"] == "photo":
+        if seg["kind"] == "black":
+            inputs += ["-f", "lavfi", "-t", f"{dur}",
+                       "-i", f"color=c=black:s={W}x{H}:r={FPS}"]
+            chains.append(
+                f"[{i}:v]trim=duration={dur},setpts=PTS-STARTPTS,"
+                f"setsar=1,format=yuv420p[v{i}]"
+            )
+        elif seg["kind"] == "photo":
             inputs += ["-loop", "1", "-framerate", str(FPS), "-t", f"{dur}", "-i", str(path)]
             # iPhone の JPEG は EXIF Orientation=6。ffmpeg が自動で起こすので
             # ここで transpose をかけると二重回転になる
@@ -420,13 +447,16 @@ def render_video():
 # ---------------------------------------------------------------- 音声
 
 def render_audio(with_music):
-    """クリップの環境音（+ BGM）をつないで書き出す。"""
+    """クリップの環境音（+ 音楽）をつないで書き出す。"""
+    kind = "music" if with_music else "ambient"
+    print(f"→ 音声 ({kind}) を書き出し中…")
+
     inputs, chains, labels = [], [], []
 
     for i, seg in enumerate(SEGMENTS):
-        path = SOURCES[seg["key"]]
         dur = seg["dur"]
-        if seg["kind"] == "video" and has_audio(path):
+        path = SOURCES.get(seg["key"]) if seg["key"] else None
+        if seg["kind"] == "video" and path is not None and has_audio(path):
             inputs += ["-ss", f"{seg['start']}", "-t", f"{dur}", "-i", str(path)]
             chains.append(
                 f"[{i}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
@@ -434,7 +464,7 @@ def render_audio(with_music):
                 f"afade=t=in:st=0:d=0.08,afade=t=out:st={dur - 0.08:.3f}:d=0.08[a{i}]"
             )
         else:
-            # 静止画とロゴには音がないので無音を挟む
+            # 静止画・ロゴ・黒には音がないので無音を挟む
             inputs += ["-f", "lavfi", "-t", f"{dur}",
                        "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"]
             chains.append(f"[{i}:a]atrim=duration={dur},asetpts=PTS-STARTPTS[a{i}]")
@@ -446,14 +476,19 @@ def render_audio(with_music):
     if with_music:
         if not MUSIC.exists():
             sys.exit(f"音源が見つかりません: {MUSIC}")
+        # 混ぜる前に各系統を測って揃える。まとめてから正規化すると、ずっと
+        # 鳴っている曲に引っぱられて包丁や貝の音が埋もれる
+        clips_i = measure_lufs(inputs, chains, "acat", f"{kind}_clips")
+        music_i = measure_music_lufs()
+        print(f"   クリップ {clips_i:.1f} → {CLIP_LUFS} LUFS / "
+              f"音楽 {music_i:.1f} → {MUSIC_LUFS} LUFS")
+
         inputs += ["-ss", f"{MUSIC_START}", "-t", f"{TOTAL}", "-i", str(MUSIC)]
-        # 各系統を先に測って揃えてから混ぜる。まとめてから正規化すると、
-        # ずっと鳴っている曲に引っぱられて包丁や貝の音が埋もれる
-        chains.append(f"[acat]loudnorm=I={CLIP_LUFS}:TP=-6:LRA=14[clips]")
+        chains.append(f"[acat]volume={CLIP_LUFS - clips_i:+.2f}dB[clips]")
         chains.append(
             f"[{n}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,"
-            f"loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=8[musicout]"
+            f"volume={MUSIC_LUFS - music_i:+.2f}dB[musicout]"
         )
         chains.append("[clips][musicout]amix=inputs=2:duration=first:normalize=0[mix]")
     else:
@@ -463,21 +498,17 @@ def render_audio(with_music):
             f"[{n}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,volume=0.10[bedout]"
         )
-        chains.append(
-            "[acat][bedout]amix=inputs=2:duration=first:normalize=0,"
-            "loudnorm=I=-16:TP=-1.5:LRA=11,"
-            "alimiter=limit=0.89[mix]"
-        )
+        chains.append("[acat][bedout]amix=inputs=2:duration=first:normalize=0[mix]")
 
-    kind = "music" if with_music else "ambient"
-    print(f"→ 音声 ({kind}) を書き出し中…")
+    mix_i = measure_lufs(inputs, chains, "mix", kind)
+    gain = TARGET_LUFS - mix_i
+    print(f"   全体 {mix_i:.1f} LUFS → {gain:+.1f}dB")
 
-    gain = measure_gain(inputs, chains, kind)
     chains.append(
         f"[mix]volume={gain:+.2f}dB,"
         f"alimiter=limit={PEAK_CEILING:.3f}:level=disabled:attack=5:release=60,"
         f"afade=t=in:st=0:d=0.25,"
-        f"afade=t=out:st={TOTAL - AUDIO_TAIL:.3f}:d={AUDIO_TAIL}[aout]"
+        f"afade=t=out:st={TOTAL - AUDIO_TAIL:.3f}:d={AUDIO_TAIL}:curve={AUDIO_CURVE}[aout]"
     )
 
     script = OUT / f"filtergraph_audio_{kind}.txt"
