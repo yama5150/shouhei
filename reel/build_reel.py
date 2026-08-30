@@ -51,7 +51,7 @@ SOURCES = {
     "basket_p": SRC / "adad3a16-image.jpg",      # 盛り籠 寄り (EXIF 回転あり)
     "fish3_p":  SRC / "d06c975f-image.jpg",      # ブリ + サクラマス 2本 (EXIF 回転あり)
     "don_p":    SRC / "6a30fbb1-image.jpg",      # 海鮮丼
-    "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦
+    "uni_p":    SRC / "eccff8b3-image.jpg",      # うに軍艦。季節外につき現在未使用
     "sting_v":  SRC / "60522e38-DopVl3SCneao9y70kOk0dgISllqQ9S1lyIWkKfA8vKg.mp4",  # ロゴ 2s
     "cover_p":  SRC / "4dcd4b9d-image.jpg",      # 握り3貫。カバー画像用
     "sanma_p":  SRC / "4543b8ee-image.jpg",      # 秋刀魚の握り (EXIF 回転あり)
