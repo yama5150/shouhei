@@ -34,6 +34,8 @@ FAIR_DATES = os.environ.get("FAIR_DATES", "近日開催")
 FAIR_NOTE = os.environ.get("FAIR_NOTE", "詳しくはプロフィールから")
 
 # 音楽。MUSIC_START は曲のどこから使うか（秒）
+# 153 秒から最後のサビ。188 秒あたりで静かになるので、全体の尺が 35 秒を
+# 超えるなら開始位置を選び直すこと
 MUSIC = Path(os.environ.get("MUSIC", str(SRC / "33e8d767-_shun.mp3")))
 MUSIC_START = float(os.environ.get("MUSIC_START", "153"))
 
@@ -56,6 +58,7 @@ SOURCES = {
     "cover_p":  SRC / "4dcd4b9d-image.jpg",      # 握り3貫。カバー画像用
     "sanma_p":  SRC / "4543b8ee-image.jpg",      # 秋刀魚の握り (EXIF 回転あり)
     "kai_p":    SRC / "ed83ecc7-image.jpg",      # 貝の軍艦 (EXIF 回転あり)
+    "sanma_v":  SRC / "2f4c810a-video_629144185210929154oxHUIHo5.mp4",  # 生秋刀魚の箱 8.23s
 }
 
 # 環境音のベッドに使うクリップ（静止画パートで無音にならないように敷く）
@@ -90,6 +93,11 @@ SEGMENTS = [
          lift=1.25,
          lines=[("魚は その日のぶんだけ。", 64, INK)]),
 
+    # 生の秋刀魚。後半の秋刀魚の握りとつながって、仕入れ→握りの流れになる。
+    # 720x1280 なので 1.5 倍に伸ばしている
+    dict(key="sanma_v", kind="video", start=3.60, dur=2.20, lift=1.30,
+         lines=[("秋刀魚は これから脂がのる。", 60, INK)]),
+
     dict(key="basket_v", kind="video", start=0.00, dur=2.00,
          lines=[("本日の地魚と、貝。", 64, INK)]),
 
@@ -106,11 +114,11 @@ SEGMENTS = [
     dict(key="clam_v", kind="video", start=6.60, dur=2.40, zoom=1.16, focus=(0.45, 0.62),
          lines=[("開けたてが、", 72, INK), ("いちばん旨い。", 72, INK)]),
 
-    dict(key="basket_v", kind="video", start=2.70, dur=1.60,
+    dict(key="basket_v", kind="video", start=2.70, dur=1.20,
          lines=[("ぜんぶ 今日のネタです。", 62, INK)]),
 
     # --- 出来上がり -----------------------------------------------------
-    dict(key="don_p", kind="photo", dur=2.40, zoom=(1.00, 1.09), focus=(0.50, 0.48),
+    dict(key="don_p", kind="photo", dur=2.20, zoom=(1.00, 1.09), focus=(0.50, 0.48),
          lift=1.15,
          lines=[("その日入荷した、", 66, INK), ("旬の魚介で。", 66, INK)]),
 
