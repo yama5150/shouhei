@@ -1,6 +1,6 @@
 # Cyber Rose Crimson — 設定集(正史)
 
-最終更新: v59 / 全16章・本文 35,232字
+最終更新: v60 / 全16章・本文 35,232字 / PWA構成
 
 > この文書が正典。本文と食い違ったら**本文が正しい**。気づいたらここを直す。
 
@@ -327,10 +327,49 @@ node tools/verify.cjs crc/index.html
 | v57 | 第一話に名乗り返しを追加(隠し章・第十話との整合を回復)/ 第一話に「慣れた開錠」/ 第二話に真空管アンプ初出 / 第三話に桃色のリボン / 幕間m1に糖分の理屈 |
 | v58 | 第四話にユウジの姓を明示(月島源三の孫、母方の姓で結城) |
 | v59 | 第十一話 Bluerose を増築(4人のセッションを1人ずつ / 潮のためらい / 青い薔薇の花言葉)1,242→1,979字 |
+| v60 | PWA化(manifest / Service Worker / アイコン / スプラッシュ)。**ライナーノーツを翔平版に差し替え**。Claude のノートは「■ 共犯者より」として下部に収録 |
 
-## 14. 積み残し
+## 14. PWA構成(v60〜)
 
-- ライナーノーツ(**翔平の手書き**。原稿待ち)
+```
+crc/
+├── index.html              本体(v60・29.3MB)
+├── manifest.json           name / short_name "CRC" / standalone / portrait
+├── sw.js                   Service Worker
+├── icon-180.png            apple-touch-icon
+├── icon-192.png / 512      any
+├── icon-maskable-192/512   maskable
+├── splash.png              apple-touch-startup-image
+└── _headers                Netlify 用キャッシュ制御
+```
+
+### Service Worker の方針(重要)
+
+**巨大な index.html はキャッシュしない。** iOS の容量制限でキャッシュが破損するため。
+
+```js
+// HTMLは常にネットワークから取る
+if (e.request.mode === 'navigate' || url.endsWith('.html') || url.endsWith('/')) return;
+```
+
+キャッシュするのはアイコンなどの小物のみ。`activate` で旧キャッシュを全削除し、
+`skipWaiting` + `clients.claim` で即座に新版へ入れ替わる。
+
+この設計のおかげで「古い版が永久に出続ける」という Service Worker 定番の事故が起きない。
+**触るときはこの方針を壊さないこと。**
+
+`scope` は `./` なので crc/ 配下のみ。ルートの焼肉ロス管理アプリには影響しない。
+
+### PWA として使うなら
+
+「ホーム画面に追加」でフルスクリーン起動する。ただし Service Worker を確実に動かすには
+GitHub Pages のような通常のホスティングが望ましい(raw.githack 経由では Content-Type と
+スコープの扱いが保証されない)。
+
+---
+
+## 15. 積み残し
+
 - 第七話 壊れた歌姫が薄い(1,751字)
 - 第六話 守られる側の話に**選択肢がゼロ**
 - 表情差分の追加生成(照れ/不機嫌/困り/呆れ/驚き/泣き)
