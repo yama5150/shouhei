@@ -2,12 +2,14 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Calculator, Database, ListOrdered, Share2, Plus, Trash2, Search, Upload,
   Download, AlertTriangle, Copy, Check, X, ChevronDown, ChevronRight, Pencil,
+  ArrowRightLeft, RotateCcw,
 } from 'lucide-react';
 
 import { unitPack, num } from './lib/units.js';
 import { importInfomart, decodeCp932 } from './lib/infomart.js';
 import { calcRecipe, itemUnitPrice, findDuplicates } from './lib/cost.js';
 import { lineTextSimple, lineTextDetail, markdownTable, recipesCsv, masterCsv, CSV_BOM } from './lib/share.js';
+import { readLossMenu, flattenMenu, autoMatch, applyPlan, LOSS_KEYS, BACKUP_KEY } from './lib/bridge.js';
 import { load, save, newId } from './store.js';
 
 // ==========================================
@@ -704,6 +706,221 @@ function ShareTab({ recipe, itemsById }) {
 }
 
 // ==========================================
+// ロス管理アプリへの反映タブ
+// ==========================================
+function BridgeTab({ recipes, itemsById }) {
+  const [loss, setLoss] = useState(() => readLossMenu());
+  const [plan, setPlan] = useState({});      // recipeId -> 'cat|item' | 'new:catId' | ''
+  const [force, setForce] = useState({});    // recipeId -> 未確定でも反映する
+  const [result, setResult] = useState(null);
+  const [hasBackup, setHasBackup] = useState(() => !!localStorage.getItem(BACKUP_KEY));
+
+  const rows = useMemo(() => recipes.map((r) => {
+    const calc = calcRecipe(r, itemsById);
+    return { recipe: r, calc, cost: calc['1個原価'] };
+  }).filter((x) => x.recipe.料理名), [recipes, itemsById]);
+
+  const flat = useMemo(() => (loss.menu ? flattenMenu(loss.menu) : []), [loss]);
+
+  // 初回に自動で当てておく。曖昧なものは当てない。
+  useEffect(() => {
+    if (!loss.menu) return;
+    setPlan((prev) => {
+      const next = { ...prev };
+      for (const { recipe } of rows) {
+        if (next[recipe.id] !== undefined) continue;
+        const m = autoMatch(recipe.料理名, loss.menu);
+        next[recipe.id] = m ? m.categoryId + '|' + m.item.id : '';
+      }
+      return next;
+    });
+  }, [loss, rows]);
+
+  if (loss.error) {
+    return (
+      <div className="space-y-3 p-3 pb-28">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="flex items-start gap-1.5 text-xs text-amber-900">
+            <AlertTriangle size={14} className="mt-px shrink-0" />
+            {loss.error}
+          </p>
+          <p className="mt-2 text-[10px] leading-relaxed text-amber-800">
+            ロス管理アプリと原価出しツールは、同じドメインから開いたときだけデータを共有できます。
+            片方を raw.githack、もう片方をローカルのファイルで開いていると繋がりません。
+          </p>
+          <button onClick={() => setLoss(readLossMenu())}
+            className="mt-2 rounded-lg bg-amber-700 px-3 py-1.5 text-xs text-white active:opacity-80">
+            もう一度さがす
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const decide = (row) => {
+    const sel = plan[row.recipe.id] ?? '';
+    const blocked = row.calc.未確定件数 > 0 && !force[row.recipe.id];
+    if (!sel || row.cost === null || blocked) return null;
+    if (sel.startsWith('new:')) return { target: { categoryId: sel.slice(4), newName: row.recipe.料理名 }, cost: row.cost };
+    const [categoryId, itemId] = sel.split('|');
+    return { target: { categoryId, itemId }, cost: row.cost };
+  };
+
+  const entries = rows.map((r) => ({ row: r, entry: decide(r) })).filter((x) => x.entry);
+
+  const apply = () => {
+    const { menu: next, updated, added } = applyPlan(loss.menu, entries.map((e) => e.entry));
+    try {
+      // 直前の状態を残す。取り消せるようにしておく。
+      localStorage.setItem(BACKUP_KEY, JSON.stringify({ at: new Date().toISOString(), menu: loss.menu }));
+      localStorage.setItem(LOSS_KEYS.menu, JSON.stringify(next));
+      // bl_menu_ver には触らない。触るとロス管理側がメニューを初期化する。
+      setLoss({ menu: next, ver: loss.ver });
+      setHasBackup(true);
+      setResult({ ok: true, text: '原価を書き換えました（更新 ' + updated + '件 / 新規 ' + added + '件）。ロス管理アプリを開き直すと反映されています。' });
+    } catch (e) {
+      setResult({ ok: false, text: '書き込めませんでした（' + (e?.message || e) + '）' });
+    }
+  };
+
+  const undo = () => {
+    try {
+      const b = JSON.parse(localStorage.getItem(BACKUP_KEY));
+      if (!b?.menu) return;
+      localStorage.setItem(LOSS_KEYS.menu, JSON.stringify(b.menu));
+      localStorage.removeItem(BACKUP_KEY);
+      setLoss({ menu: b.menu, ver: loss.ver });
+      setHasBackup(false);
+      setResult({ ok: true, text: '反映前の状態に戻しました。' });
+    } catch {
+      setResult({ ok: false, text: '戻せませんでした' });
+    }
+  };
+
+  return (
+    <div className="space-y-3 p-3 pb-28">
+      <section className="rounded-xl border border-slate-200 bg-white p-3">
+        <h2 className="text-sm font-semibold text-slate-700">焼肉ロス管理アプリへ原価を送る</h2>
+        <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+          ここで出した<strong className="text-slate-600">1個(1皿)あたり原価</strong>を、ロス管理アプリの「原価¥」に書き込みます。
+          あちらのメニュー{flat.length}品目を読み込み済み。書き込む前の状態は自動で控えるので、あとから戻せます。
+        </p>
+      </section>
+
+      {rows.length === 0 && (
+        <p className="rounded-xl border border-slate-200 bg-white px-3 py-8 text-center text-xs text-slate-400">
+          料理名の付いた料理がまだありません。
+        </p>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        {rows.map(({ recipe, calc, cost }) => {
+          const sel = plan[recipe.id] ?? '';
+          const blocked = calc.未確定件数 > 0 && !force[recipe.id];
+          const current = sel && !sel.startsWith('new:')
+            ? flat.find((f) => f.item.id === sel.split('|')[1])?.item.cost
+            : null;
+          const willWrite = !!decide({ recipe, calc, cost });
+          return (
+            <div key={recipe.id} className="border-b border-slate-100 p-3 last:border-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-800">{recipe.料理名}</p>
+                  <p className="text-[10px] text-slate-400">
+                    {recipe.カテゴリ || '未分類'}{recipe.仕込み単位 ? ' / ' + recipe.仕込み単位 : ''}
+                  </p>
+                </div>
+                {/* 未確定を含む金額を確定値のように見せない。合計が0なら金額を出さない。 */}
+                <span className="shrink-0 text-right">
+                  {cost === null || (calc.未確定件数 > 0 && calc.仕込み原価 === 0) ? (
+                    <span className="text-sm font-semibold text-amber-600">未確定</span>
+                  ) : (
+                    <>
+                      <span className={'text-sm font-semibold tabular ' + (calc.未確定件数 > 0 ? 'text-amber-600' : 'text-slate-800')}>
+                        {yen(cost)}
+                      </span>
+                      {calc.未確定件数 > 0 && (
+                        <span className="block text-[10px] text-amber-600">＋未確定{calc.未確定件数}件</span>
+                      )}
+                    </>
+                  )}
+                </span>
+              </div>
+
+              <select
+                value={sel} onChange={(e) => setPlan({ ...plan, [recipe.id]: e.target.value })}
+                className={inputCls + ' mt-2'}
+              >
+                <option value="">反映しない</option>
+                {loss.menu.map((c) => (
+                  <optgroup key={c.id} label={c.category}>
+                    {(c.items ?? []).map((it) => (
+                      <option key={it.id} value={c.id + '|' + it.id}>
+                        {it.name}（現在 {it.cost}円）
+                      </option>
+                    ))}
+                    <option value={'new:' + c.id}>＋ {c.category} に新規追加</option>
+                  </optgroup>
+                ))}
+              </select>
+
+              {calc.未確定件数 > 0 && (
+                <label className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 p-2">
+                  <input type="checkbox" checked={!!force[recipe.id]} className="mt-0.5"
+                    onChange={(e) => setForce({ ...force, [recipe.id]: e.target.checked })} />
+                  <span className="text-[10px] leading-relaxed text-amber-800">
+                    単価が確定していない材料が{calc.未確定件数}件あります。いま出ている金額は
+                    <strong>その分を含んでいません</strong>。既定では送りません。
+                    時価品なら「原価計算」で当日単価を入れてから戻ってきてください。
+                  </span>
+                </label>
+              )}
+
+              {willWrite && (
+                <p className="mt-1.5 text-[10px] text-emerald-700">
+                  {sel.startsWith('new:')
+                    ? '新しい品目として追加します'
+                    : current === Math.round(cost)
+                      ? '同じ金額なので変わりません'
+                      : '原価 ' + current + '円 → ' + Math.round(cost) + '円 に書き換えます'}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {result && (
+        <p className={'rounded-lg p-2.5 text-[11px] ' + (result.ok ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700')}>
+          {result.text}
+        </p>
+      )}
+
+      <button
+        onClick={apply} disabled={entries.length === 0}
+        className={'inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-3 text-sm font-medium text-white '
+          + (entries.length === 0 ? 'bg-slate-300' : 'bg-[#8C2E1B] active:opacity-80')}
+      >
+        <ArrowRightLeft size={15} />
+        {entries.length === 0 ? '送る料理を選んでください' : entries.length + '品をロス管理アプリに反映'}
+      </button>
+
+      {hasBackup && (
+        <button onClick={undo}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 active:bg-slate-50">
+          <RotateCcw size={15} />反映前に戻す
+        </button>
+      )}
+
+      <p className="px-1 text-[10px] leading-relaxed text-slate-400">
+        ロス管理アプリを開いたままここで反映すると、あちらの画面は古いままです。
+        向こうを開き直してから確認してください。
+      </p>
+    </div>
+  );
+}
+
+// ==========================================
 // ルート
 // ==========================================
 const TABS = [
@@ -711,6 +928,7 @@ const TABS = [
   { k: 'list', label: '一覧', Icon: ListOrdered },
   { k: 'master', label: '単価マスター', Icon: Database },
   { k: 'share', label: '共有', Icon: Share2 },
+  { k: 'bridge', label: 'ロス連携', Icon: ArrowRightLeft },
 ];
 
 export default function App() {
@@ -765,6 +983,7 @@ export default function App() {
         )}
         {tab === 'master' && <MasterTab items={items} setItems={setItems} />}
         {tab === 'share' && active && <ShareTab recipe={active} itemsById={itemsById} />}
+        {tab === 'bridge' && <BridgeTab recipes={recipes} itemsById={itemsById} />}
       </main>
 
       <nav className="shrink-0 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
