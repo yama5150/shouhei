@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && cp dist/app.html index.html && cp dist/app.html yakiniku.html",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:genka": "vite --config vite.genka.config.js",
+    "build:genka": "vite build --config vite.genka.config.js && mkdir -p genka && cp dist-genka/genka-app.html genka/index.html",
+    "test": "node --test src/genka/lib/__tests__/*.test.js"
   },
   "dependencies": {
     "lucide-react": "^0.460.0",
