@@ -2,14 +2,16 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Calculator, Database, ListOrdered, Share2, Plus, Trash2, Search, Upload,
   Download, AlertTriangle, Copy, Check, X, ChevronDown, ChevronRight, Pencil,
-  ArrowRightLeft, RotateCcw,
+  ArrowRightLeft, RotateCcw, Scale, FileText, ClipboardPaste,
 } from 'lucide-react';
 
 import { unitPack, num } from './lib/units.js';
 import { importInfomart, decodeCp932 } from './lib/infomart.js';
 import { calcRecipe, itemUnitPrice, findDuplicates } from './lib/cost.js';
 import { lineTextSimple, lineTextDetail, markdownTable, recipesCsv, masterCsv, CSV_BOM } from './lib/share.js';
-import { readLossMenu, flattenMenu, autoMatch, applyPlan, LOSS_KEYS, BACKUP_KEY } from './lib/bridge.js';
+import { readLossMenu, flattenMenu, autoMatch, applyPlan, normName, LOSS_KEYS, BACKUP_KEY } from './lib/bridge.js';
+import { yieldRate, summarize, byHandler } from './lib/yields.js';
+import { parseReceiptText, matchToMaster, applyReceipt } from './lib/receipt.js';
 import { load, save, newId } from './store.js';
 
 // ==========================================
@@ -424,6 +426,11 @@ function MasterTab({ items, setItems }) {
           </p>
         )}
       </section>
+
+      {items.length > 0 && (
+        <ReceiptImport items={items} setItems={setItems}
+          onDone={(n) => setStatus({ ok: true, text: n + '件の仕入単価を納品書の値に入れ替えました。' })} />
+      )}
 
       {items.length > 0 && (
         <section className="grid grid-cols-3 gap-2">
@@ -921,12 +928,268 @@ function BridgeTab({ recipes, itemsById }) {
 }
 
 // ==========================================
+// 歩留まり記録タブ
+// ==========================================
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+function YieldTab({ logs, setLogs, items, setItems }) {
+  const [draft, setDraft] = useState(() => ({
+    日付: todayStr(), 食材名: '', itemId: null, 担当者: '', ラウンド重量: '', 可食部重量: '', メモ: '',
+  }));
+  const [picking, setPicking] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const calc = yieldRate(draft.ラウンド重量, draft.可食部重量);
+  const groups = useMemo(() => summarize(logs), [logs]);
+
+  const add = () => {
+    if (calc.error) return;
+    setLogs([...logs, { ...draft, id: newId() }]);
+    setDraft({ ...draft, 食材名: '', itemId: null, ラウンド重量: '', 可食部重量: '', メモ: '' });
+    setMsg({ ok: true, text: '記録しました。' });
+  };
+
+  // 平均をマスターの歩留まりに入れる。押したときだけ書き換える。
+  const applyToMaster = (g) => {
+    const target = g.itemId
+      ? items.find((i) => i.id === g.itemId)
+      : items.find((i) => normName(i.食材名称) === normName(g.食材名));
+    if (!target) { setMsg({ ok: false, text: '「' + g.食材名 + '」に対応する単価マスターが見つかりません。' }); return; }
+    setItems(items.map((i) => (i.id === target.id ? { ...i, 歩留まり: g.平均 } : i)));
+    setMsg({ ok: true, text: target.食材名称 + ' の歩留まりを ' + Math.round(g.平均 * 1000) / 10 + '% にしました（' + g.件数 + '件の平均）。' });
+  };
+
+  return (
+    <div className="space-y-3 p-3 pb-28">
+      <section className="rounded-xl border border-slate-200 bg-white p-3">
+        <h2 className="text-sm font-semibold text-slate-700">丸一本の歩留まりを記録</h2>
+        <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+          歩留まりは卸し手で変わります。<strong className="text-slate-600">誰が捌いたか・ラウンド重量・柵の総重量</strong>を
+          1本ごとに残すと、推定ではなく実測で原価が出せます。
+        </p>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Field label="日付">
+            <input type="date" className={inputCls} value={draft.日付}
+              onChange={(e) => setDraft({ ...draft, 日付: e.target.value })} />
+          </Field>
+          <Field label="誰が捌いたか">
+            <input className={inputCls} value={draft.担当者}
+              onChange={(e) => setDraft({ ...draft, 担当者: e.target.value })} placeholder="名前" />
+          </Field>
+        </div>
+
+        <div className="mt-3">
+          <Field label="食材">
+            <div className="flex gap-1.5">
+              <input className={inputCls} value={draft.食材名}
+                onChange={(e) => setDraft({ ...draft, 食材名: e.target.value, itemId: null })} placeholder="本鮪" />
+              <button onClick={() => setPicking(true)}
+                className="shrink-0 rounded-lg border border-slate-200 px-2 text-[11px] text-slate-500 active:bg-slate-50">
+                マスターから
+              </button>
+            </div>
+          </Field>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Field label="ラウンド重量 (g)" hint="仕入れたままの重さ">
+            <input className={inputCls + ' text-right'} inputMode="decimal" value={draft.ラウンド重量}
+              onChange={(e) => setDraft({ ...draft, ラウンド重量: e.target.value })} placeholder="30000" />
+          </Field>
+          <Field label="柵の総重量 (g)" hint="使える状態にしたあと">
+            <input className={inputCls + ' text-right'} inputMode="decimal" value={draft.可食部重量}
+              onChange={(e) => setDraft({ ...draft, 可食部重量: e.target.value })} placeholder="18000" />
+          </Field>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+          <span className="text-xs text-slate-500">歩留まり</span>
+          <span className={'text-lg font-bold tabular ' + (calc.error ? 'text-slate-300' : 'text-[#8C2E1B]')}>
+            {calc.error ? '—' : Math.round(calc.rate * 1000) / 10 + '%'}
+          </span>
+        </div>
+        {calc.error && draft.ラウンド重量 !== '' && draft.可食部重量 !== '' && (
+          <p className="mt-1.5 rounded-lg bg-amber-50 p-2 text-[10px] text-amber-800">{calc.error}</p>
+        )}
+
+        <button onClick={add} disabled={!!calc.error}
+          className={'mt-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-white '
+            + (calc.error ? 'bg-slate-300' : 'bg-[#8C2E1B] active:opacity-80')}>
+          この1本を記録する
+        </button>
+        {msg && (
+          <p className={'mt-2 rounded-lg p-2 text-[11px] ' + (msg.ok ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700')}>
+            {msg.text}
+          </p>
+        )}
+      </section>
+
+      {groups.map((g) => {
+        const handlers = byHandler(g.logs);
+        return (
+          <section key={g.食材名} className="rounded-xl border border-slate-200 bg-white p-3">
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-sm font-medium text-slate-800">{g.食材名}</h3>
+              <span className="text-lg font-bold tabular text-[#8C2E1B]">{Math.round(g.平均 * 1000) / 10}%</span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {g.件数}本の平均
+              {g.件数 > 1 && '（' + Math.round(g.最小 * 1000) / 10 + '% 〜 ' + Math.round(g.最大 * 1000) / 10 + '%）'}
+              {g.件数 === 1 && '・1本だけなので平均とは言えません'}
+            </p>
+
+            {handlers.length > 1 && (
+              <div className="mt-2 space-y-0.5 rounded-lg bg-slate-50 p-2">
+                {handlers.map((h) => (
+                  <div key={h.担当者} className="flex justify-between text-[11px] tabular">
+                    <span className="text-slate-500">{h.担当者}（{h.件数}本）</span>
+                    <span className="text-slate-700">{Math.round(h.平均 * 1000) / 10}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => applyToMaster(g)}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 active:bg-slate-50">
+              この平均を単価マスターの歩留まりに入れる
+            </button>
+
+            <div className="mt-2 space-y-0.5">
+              {g.logs.slice().reverse().slice(0, 5).map((l) => (
+                <div key={l.id} className="flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{l.日付} {l.担当者 || '記録なし'}</span>
+                  <span className="tabular">
+                    {Number(l.ラウンド重量).toLocaleString()}g → {Number(l.可食部重量).toLocaleString()}g
+                    <span className="ml-1.5 text-slate-600">{Math.round(l.rate * 1000) / 10}%</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+
+      {logs.length > 0 && (
+        <button onClick={() => { if (confirm('記録をすべて消します。よろしいですか？')) setLogs([]); }}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-400">
+          記録をすべて消す
+        </button>
+      )}
+
+      {picking && (
+        <ItemPicker items={items} onClose={() => setPicking(false)}
+          onPick={(it) => { setDraft({ ...draft, 食材名: it.食材名称, itemId: it.id }); setPicking(false); }} />
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// 納品書の取り込み（単価マスタータブ内で使う）
+// ==========================================
+function ReceiptImport({ items, setItems, onDone }) {
+  const [text, setText] = useState('');
+  const [日付, set日付] = useState(todayStr());
+  const [override, setOverride] = useState({}); // 行index -> itemId
+  const rows = useMemo(() => (text.trim() ? matchToMaster(parseReceiptText(text), items) : []), [text, items]);
+
+  const plan = rows.map((r, i) => ({
+    itemId: override[i] ?? r.match?.id ?? null,
+    単価: r.ok ? r.単価 : null,
+  }));
+  const count = plan.filter((p) => p.itemId && p.単価 !== null && p.単価 !== undefined).length;
+  const 要確認 = rows.filter((r, i) => !r.header && (!r.ok || !plan[i].itemId));
+
+  return (
+    <section className="rounded-xl border border-slate-200 bg-white p-3">
+      <h2 className="text-sm font-semibold text-slate-700">納品書から当日単価を入れる</h2>
+      <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+        品名・数量・単価の並びを貼り付けてください。タブ / カンマ / スペース区切りに対応します。
+        写真しかない場合は、こちらで表に起こしたものを貼ってください。
+        <strong className="text-slate-600">読めない行は推測で埋めず、下に確認事項として出します。</strong>
+      </p>
+
+      <textarea
+        value={text} onChange={(e) => setText(e.target.value)} rows={5}
+        placeholder={'真鱈フィーレ\t2\t1400\n本鮪 1 12000'}
+        className={inputCls + ' mt-2 font-mono text-xs'}
+      />
+
+      <div className="mt-2">
+        <Field label="納品日">
+          <input type="date" className={inputCls} value={日付} onChange={(e) => set日付(e.target.value)} />
+        </Field>
+      </div>
+
+      {rows.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          {rows.map((r, i) => {
+            if (r.header) return null;
+            const chosen = override[i] ?? r.match?.id ?? '';
+            return (
+              <div key={i} className={'rounded-lg p-2 ' + (r.ok ? 'bg-slate-50' : 'bg-amber-50')}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="min-w-0 truncate text-xs text-slate-700">{r.品名 || r.raw}</span>
+                  <span className="shrink-0 text-xs tabular text-slate-800">
+                    {r.ok ? Number(r.単価).toLocaleString() + '円' : '—'}
+                  </span>
+                </div>
+                {r.ok ? (
+                  <select value={chosen} onChange={(e) => setOverride({ ...override, [i]: e.target.value || null })}
+                    className={inputCls + ' mt-1.5 text-xs'}>
+                    <option value="">入れない{r.matchNote ? '（' + r.matchNote + '）' : ''}</option>
+                    {items.map((it) => (
+                      <option key={it.id} value={it.id}>
+                        {it.食材名称}{it.仕入先 ? '（' + it.仕入先 + '）' : ''}
+                        {it.仕入単価 !== null && it.仕入単価 !== undefined ? ' 現在 ' + it.仕入単価 + '円' : ' 現在 未設定'}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="mt-0.5 text-[10px] text-amber-800">{r.reason}</p>
+                )}
+                {r.note && <p className="mt-0.5 text-[10px] text-slate-400">{r.note}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {要確認.length > 0 && (
+        <p className="mt-2 rounded-lg bg-amber-50 p-2 text-[10px] leading-relaxed text-amber-800">
+          確認事項 {要確認.length}件。上の一覧で理由を出しています。推測では埋めていません。
+        </p>
+      )}
+
+      {rows.length > 0 && (
+        <button
+          onClick={() => {
+            const { items: next, applied } = applyReceipt(items, plan, 日付);
+            setItems(next);
+            setText('');
+            setOverride({});
+            onDone(applied);
+          }}
+          disabled={count === 0}
+          className={'mt-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-white '
+            + (count === 0 ? 'bg-slate-300' : 'bg-[#8C2E1B] active:opacity-80')}
+        >
+          {count === 0 ? '入れる行がありません' : count + '件の単価を入れる'}
+        </button>
+      )}
+    </section>
+  );
+}
+
+// ==========================================
 // ルート
 // ==========================================
 const TABS = [
-  { k: 'calc', label: '原価計算', Icon: Calculator },
+  { k: 'calc', label: '原価', Icon: Calculator },
   { k: 'list', label: '一覧', Icon: ListOrdered },
-  { k: 'master', label: '単価マスター', Icon: Database },
+  { k: 'master', label: '単価', Icon: Database },
+  { k: 'yield', label: '歩留まり', Icon: Scale },
   { k: 'share', label: '共有', Icon: Share2 },
   { k: 'bridge', label: 'ロス連携', Icon: ArrowRightLeft },
 ];
@@ -938,11 +1201,13 @@ export default function App() {
     return r.length ? r : [emptyRecipe()];
   });
   const [activeId, setActiveId] = useState(() => load('active', null));
+  const [yieldLogs, setYieldLogs] = useState(() => load('gk_yields', []));
   const [tab, setTab] = useState('calc');
 
   useEffect(() => { save('items', items); }, [items]);
   useEffect(() => { save('recipes', recipes); }, [recipes]);
   useEffect(() => { save('active', activeId); }, [activeId]);
+  useEffect(() => { save('gk_yields', yieldLogs); }, [yieldLogs]);
 
   const itemsById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
   const active = recipes.find((r) => r.id === activeId) ?? recipes[0];
@@ -966,9 +1231,9 @@ export default function App() {
       <header className="shrink-0 bg-[#8C2E1B] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-white">
         <h1 className="text-base font-semibold">ススデパ 原価出し</h1>
         <p className="text-[11px] opacity-70">
-          {tab === 'master'
-            ? '単価マスター ' + items.length + '件'
-            : (active?.料理名 || '料理名未設定') + (active?.仕込み単位 ? ' / ' + active.仕込み単位 : '')}
+          {tab === 'master' ? '単価マスター ' + items.length + '件'
+            : tab === 'yield' ? '歩留まり記録 ' + yieldLogs.length + '本'
+              : (active?.料理名 || '料理名未設定') + (active?.仕込み単位 ? ' / ' + active.仕込み単位 : '')}
         </p>
       </header>
 
@@ -982,6 +1247,9 @@ export default function App() {
             onAdd={addRecipe} onDelete={deleteRecipe} />
         )}
         {tab === 'master' && <MasterTab items={items} setItems={setItems} />}
+        {tab === 'yield' && (
+          <YieldTab logs={yieldLogs} setLogs={setYieldLogs} items={items} setItems={setItems} />
+        )}
         {tab === 'share' && active && <ShareTab recipe={active} itemsById={itemsById} />}
         {tab === 'bridge' && <BridgeTab recipes={recipes} itemsById={itemsById} />}
       </main>
