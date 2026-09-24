@@ -1,6 +1,6 @@
 # Cyber Rose Crimson — 設定集(正史)
 
-最終更新: v60 / 全16章・本文 35,232字 / PWA構成
+最終更新: v61 / 全16章・本文 35,232字 / PWA構成
 
 > この文書が正典。本文と食い違ったら**本文が正しい**。気づいたらここを直す。
 
@@ -231,6 +231,31 @@ EP_ORDER = ["1","2","m1","en1","3","4","en4","m2","en2","5","6","7","en3","8","m
 
 ## 9. 楽曲(11トラック)
 
+### MUSIC ROOM のジャケット割り当て(v61〜)
+
+`MR_ART` で曲キー → ASSETS の画像キーを対応させている。**既存画像の流用なので容量は増えない。**
+
+| Track | 曲 | ジャケット |
+|---|---|---|
+| 01 | obscure | `imgKako` |
+| 02 | carrot-hoofbeats | `imgKobo` |
+| 03 | 薔薇の涙 | `imgElza` |
+| 04 | 慟哭グラデーション | `imgKasa` |
+| 05 | 電脳の熱 | `imgMic` |
+| 06 | Cyber Rose Crimson | `imgCore` |
+| 07 | Ephemeral Cyber Rose | `imgAsa` |
+| 08 | 電脳の痛 (Remastered) | `imgBattle` |
+| 09 | 鼓動 | `imgKishin` |
+| 10 | 逆転 | `imgAoi` |
+| 11 | 秒 慟哭 紅い月 | `imgYoin` |
+
+⚠️ **曲を追加したら `srcMap` にも必ず登録すること。** v60 までは `obscure` が
+`srcMap` から漏れており、MUSIC ROOM の Track 01 が無音だった。`obscure` は
+`startAmbient()` が `ASSETS.bgmObscure` を直接読んでいるため本編では鳴っており、
+それが発覚を遅らせた。`tools/verify.cjs` はシナリオ中の `bgm:` しか検査しないので、
+TRACKS と srcMap の突き合わせは別途必要。
+
+
 | キー | 曲名 | 位置づけ |
 |---|---|---|
 | `obscure` | obscure | 常に鳴っている世界の呼吸。正体は Track 08 |
@@ -328,6 +353,7 @@ node tools/verify.cjs crc/index.html
 | v58 | 第四話にユウジの姓を明示(月島源三の孫、母方の姓で結城) |
 | v59 | 第十一話 Bluerose を増築(4人のセッションを1人ずつ / 潮のためらい / 青い薔薇の花言葉)1,242→1,979字 |
 | v60 | PWA化(manifest / Service Worker / アイコン / スプラッシュ)。**ライナーノーツを翔平版に差し替え**。Claude のノートは「■ 共犯者より」として下部に収録 |
+| v61 | MUSIC ROOM をジャケット中心のプレイヤーに刷新(2,597px → 844px の1画面)。**Track 01 obscure が鳴らなかったバグを修正**(srcMap に登録漏れ) |
 
 ## 14. PWA構成(v60〜)
 
