@@ -56,6 +56,10 @@ for(const ep of ORDER){
     if(c.spr !==undefined && !sprOK.has(c.spr)) err.push(`${at} spr:"${c.spr}" が SPMAP に無い`);
     if(c.bgm !==undefined && !bgmOK.has(c.bgm)) err.push(`${at} bgm:"${c.bgm}" が srcMap に無い`);
     if(c.yu  !==undefined && !yuOK.has(c.yu))   err.push(`${at} yu:"${c.yu}" が アバターMap に無い`);
+    if(c.bgv){                                   // 動画背景: ASSETS.vid<Key> が要る
+      const vk = "vid"+c.bgv.charAt(0).toUpperCase()+c.bgv.slice(1);
+      if(!(vk in A)) err.push(`${at} bgv:"${c.bgv}" に対応する ASSETS.${vk} が無い`);
+    }
     if(c.yu !==undefined && c.n!==X.YU)       warn.push(`${at} yu指定だが話者がユウジでない(表示されない)`);
     if(c.label!==undefined){ if(labels.has(c.label)) err.push(`${at} label '${c.label}' が重複`); labels.add(c.label); }
     if(c.jump!==undefined) jumps.push([at,c.jump]);
