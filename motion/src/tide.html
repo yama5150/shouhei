@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0612">
+<title>月潮 — Motion</title>
+<style>
+  :root { --ink:#f3e6ee; --dim:#b89aae; --accent:#c2185b; --bg:#07040b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif; overflow:hidden;
+    -webkit-user-select:none; user-select:none; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #view { height:100%; width:auto; max-width:100%; aspect-ratio:9/16; object-fit:contain; display:block; }
+  @media (max-aspect-ratio: 9/16) { #view { width:100%; height:auto; } }
+  #ui { position:fixed; left:0; right:0; bottom:0; padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    background:linear-gradient(transparent, rgba(7,4,11,.85)); transition:opacity .4s; }
+  #ui.hidden { opacity:0; pointer-events:none; }
+  button { font:inherit; font-size:14px; color:var(--ink); background:rgba(40,16,36,.7);
+    border:1px solid rgba(194,24,91,.55); border-radius:999px; padding:10px 16px; min-height:44px;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  button:active { background:rgba(194,24,91,.45); }
+  button[disabled] { opacity:.5; }
+  #status { position:fixed; top:calc(12px + env(safe-area-inset-top)); left:0; right:0; text-align:center;
+    font-size:13px; color:var(--dim); letter-spacing:.1em; pointer-events:none; transition:opacity .4s; }
+  #status a { color:var(--ink); pointer-events:auto; }
+  #status.hidden { opacity:0; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="view" width="1080" height="1920"></canvas></div>
+<div id="status">画面をタップで操作パネルを隠す</div>
+<div id="ui">
+  <button id="play">一時停止</button>
+  <button id="rec">1ループ書き出し(12秒)</button>
+  <button id="fs">全画面</button>
+</div>
+<img id="src" alt="" hidden src="__BASE_IMAGE__">
+<script>
+(() => {
+'use strict';
+const W = 1080, H = 1920;
+const LOOP = 12;              // 秒。すべての動きはこの周期で継ぎ目なく繋がる
+const TAU = Math.PI * 2;
+
+const view = document.getElementById('view');
+const ctx = view.getContext('2d');
+const BPM = 120;              // ステージの拍。12秒で24拍ちょうど
+
+// ---------- WebGL: 下絵の揺らぎ(海・船・鴉・魔法陣・ステージ・灯り) ----------
+const glc = document.createElement('canvas');
+glc.width = W; glc.height = H;
+const gl = glc.getContext('webgl', { preserveDrawingBuffer:true, premultipliedAlpha:false });
+
+const VS = `attribute vec2 p; varying vec2 v;
+void main(){ v = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }`;
+
+// 座標は画像を 0..1 に正規化(左上原点)。部位の範囲は下絵に合わせて手で決めている
+const FS = `precision highp float;
+varying vec2 v;
+uniform sampler2D img;
+uniform float ph;        // ループ位相 0..1
+uniform float beat;      // ステージの拍 0..1
+const float TAU = 6.2831853;
+const float ASP = W_/H_;
+const vec2 MOON = vec2(.405,.145);
+
+float box(vec2 u, vec2 a, vec2 b, float s){
+  vec2 lo = smoothstep(a-s, a+s, u);
+  vec2 hi = 1.-smoothstep(b-s, b+s, u);
+  return lo.x*lo.y*hi.x*hi.y;
+}
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
+}
+// 楕円(遠近で潰れた円)の中心まわりに回す
+vec2 swirl(vec2 u, vec2 c, vec2 r, float ang){
+  vec2 d = (u - c)/r;
+  float k = 1. - smoothstep(.55, 1., length(d));
+  float a = ang*k;
+  float cs = cos(a), sn = sin(a);
+  return c + vec2(cs*d.x - sn*d.y, sn*d.x + cs*d.y)*r;
+}
+float glow(vec2 u, vec2 c, vec2 r){ vec2 d = (u - c)/r; return exp(-dot(d,d)); }
+
+void main(){
+  // カメラ:ゆっくり寄って引く呼吸
+  float z = 1.03 + .010*sin(TAU*ph);
+  vec2 c = vec2(.5 + .005*sin(TAU*ph + .8), .5 + .003*cos(TAU*ph));
+  vec2 u = (v - .5)/z + c;
+
+  // 天井の魔法陣と足元の魔法陣:ゆっくり行きつ戻りつ回る
+  u = swirl(u, vec2(.82,.085), vec2(.20,.070), .10*sin(TAU*ph));
+  u = swirl(u, vec2(.47,.785), vec2(.14,.040), -.12*sin(TAU*ph + 1.));
+
+  vec2 off = vec2(0.);
+
+  // 髪:左側に流れる房
+  float hm = box(u, vec2(-.02,.20), vec2(.26,.62), .04) * (1. - box(u, vec2(.14,.26), vec2(.36,.46), .03));
+  off.x += hm*.0030*sin(TAU*(2.*ph) - u.y*12.);
+  off.y += hm*.0020*sin(TAU*(3.*ph) + u.x*10.);
+
+  // 海:水平線に近いほど細かい波
+  float sea = box(u, vec2(.36,.245), vec2(.64,.46), .015);
+  float depth = clamp((u.y - .245)/.2, .02, 1.);
+  float f = 1./(depth + .08);
+  off.x += sea*.0022*sin(u.y*f*55. + TAU*6.*ph)*depth;
+  off.y += sea*.0012*sin(u.x*f*20. - TAU*4.*ph);
+
+  // 船:波に揺られる
+  float sm = box(u, vec2(.415,.205), vec2(.50,.272), .006);
+  float bob = sin(TAU*3.*ph);
+  off.y += sm*.0022*bob;
+  off.x += sm*(u.y - .245)*.05*sin(TAU*3.*ph + 1.2);   // 横揺れ
+
+  // 鴉:羽ばたき(翼の先ほど上下する)
+  float cm = box(u, vec2(.45,.38), vec2(.58,.462), .008);
+  float wing = smoothstep(.005, .06, abs(u.x - .508));
+  off.y += cm*(.0035*sin(TAU*8.*ph)*wing + .0020*sin(TAU*2.*ph));
+
+  // 右の薔薇・左下の薔薇:風にそよぐ
+  float rm = max(box(u, vec2(.80,.58), vec2(1.02,.71), .02), box(u, vec2(.05,.83), vec2(.26,.95), .02));
+  off += rm*vec2(.0025*sin(TAU*2.*ph + u.y*30.), .0015*sin(TAU*3.*ph + u.x*25.));
+
+  vec3 col = texture2D(img, clamp(u - off, .001, .999)).rgb;
+  float lum = dot(col, vec3(.3,.5,.2));
+
+  // 紅い月:脈動と光輪、雲の縁が照らされる
+  vec2 md = (u - MOON)*vec2(ASP,1.);
+  float mr = length(md);
+  float pulse = .5 + .5*sin(TAU*ph);
+  float mm = 1. - smoothstep(.068, .076, mr);
+  col *= 1. + mm*(.08 + .10*pulse);
+  col += exp(-max(mr - .072, 0.)*14.)*(1. - mm)*vec3(1.,.18,.14)*(.10 + .10*pulse);
+  float cloud = box(u, vec2(.12,.05), vec2(.62,.24), .03) * (1. - mm);
+  col *= 1. + cloud*smoothstep(.25,.6,col.r - col.b)*.25*sin(TAU*2.*ph + u.x*8.);
+
+  // 海の電脳の稲妻:青い網目を光が伝っていく
+  float blue = smoothstep(.02, .20, col.b - col.r);
+  float wave = pow(.5 + .5*sin(u.x*40. - u.y*25. - TAU*3.*ph + noise(u*30.)*4.), 6.);
+  col += sea*blue*wave*vec3(.35,.45,1.)*.9;
+  // 月の照り返しのきらめき
+  float sparkle = step(.994, hash(floor(u*vec2(300.,700.)) + floor(ph*60.)));
+  col += sea*sparkle*smoothstep(.2,.5,col.r)*vec3(1.,.5,.45)*.7;
+
+  // ステージ:拍に合わせて照明が明滅
+  float stage = box(u, vec2(.58,.43), vec2(.88,.56), .02);
+  col *= 1. + stage*smoothstep(.2,.55,lum)*(.10 + .35*beat);
+  col += glow(u, vec2(.752,.533), vec2(.065,.018))*vec3(1.,.25,.45)*(.10 + .30*beat);
+  // 大型ビジョンのちらつき
+  float scr = box(u, vec2(.895,.385), vec2(.935,.435), .004);
+  col *= 1. + scr*(.25*sin(TAU*24.*ph) + .15*sin(TAU*37.*ph));
+
+  // 魔法陣の芯
+  col += glow(u, vec2(.822,.086), vec2(.03,.012))*vec3(.7,.5,1.)*(.35 + .25*sin(TAU*3.*ph));
+  col += glow(u, vec2(.47,.785), vec2(.05,.012))*vec3(.6,.75,1.)*(.25 + .20*sin(TAU*2.*ph + 2.));
+  // 足元の光柱:ゆらぐ
+  float beam = box(u, vec2(.40,.79), vec2(.56,.92), .03);
+  col *= 1. + beam*(.15*sin(u.x*90. + TAU*4.*ph) + .10);
+
+  // 提灯と蝋燭:明るい赤い灯りだけがゆらめく
+  float warm = smoothstep(.35, .7, col.r) * smoothstep(.10, .35, col.r - col.b);
+  float flick = sin(TAU*5.*ph + noise(u*18.)*TAU*2.) * sin(TAU*7.*ph + noise(u*18. + 9.)*TAU);
+  col *= 1. + warm*(1. - sea)*(1. - mm)*flick*.30;
+
+  // 街の灯:窓ごとにまたたく
+  float city = box(u, vec2(.55,.22), vec2(1.02,.78), .03) * (1. - stage);
+  float tw = sin(TAU*2.*ph + noise(u*vec2(140.,260.))*TAU*3.);
+  col *= 1. + city*smoothstep(.30,.65,lum)*tw*.25;
+
+  // 周辺減光と粒子感
+  vec2 q = v - .5;
+  col *= 1. - dot(q,q)*.5;
+  col += (hash(v*vec2(W_,H_) + ph*97.) - .5)*.025;
+
+  gl_FragColor = vec4(col, 1.);
+}`.replace(/W_/g, W.toFixed(1)).replace(/H_/g, H.toFixed(1));
+
+function sh(type, src){
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aP = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(aP);
+gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(prog, n);
+const uPh = U('ph'), uBeat = U('beat');
+
+// ---------- 決定的な乱数 ----------
+function rng(seed){
+  return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const mod = (a, n) => ((a % n) + n) % n;
+
+// ---------- ステージのスポットライト ----------
+const SPOTS = [
+  { x:.632, y:.457, a:.35 }, { x:.679, y:.454, a:.10 }, { x:.724, y:.452, a:-.05 },
+  { x:.797, y:.455, a:.05 }, { x:.854, y:.468, a:-.30 },
+];
+function stageBeat(T){
+  // 拍の頭で強く、すぐ減衰
+  const b = mod(T * BPM / 60, 1);
+  return Math.exp(-b*5);
+}
+function drawSpots(T, beat){
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = 'blur(7px)';
+  SPOTS.forEach((s, i) => {
+    const ang = Math.PI/2 + s.a + .35*Math.sin(TAU*(i % 2 ? 1 : 2)*T/LOOP + i*1.7);   // 下向きを基準に振る
+    const len = .07*H, wid = .16;
+    const x = s.x*W, y = s.y*H;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, len);
+    const al = .10 + .30*beat;
+    g.addColorStop(0, `rgba(255,120,150,${al})`);
+    g.addColorStop(1, 'rgba(255,40,90,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(ang - wid)*len, y + Math.sin(ang - wid)*len);
+    ctx.lineTo(x + Math.cos(ang + wid)*len, y + Math.sin(ang + wid)*len);
+    ctx.closePath();
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+// ---------- 薔薇の花弁:ゆっくり舞い落ちる ----------
+const PETALS = [];
+{
+  const r = rng(314);
+  for (let i = 0; i < 26; i++) {
+    const depth = r();
+    PETALS.push({
+      o: r(), x0: r()*1.1 - .05, passes: depth > .8 ? 2 : 1,
+      amp: .02 + r()*.05, sw: 1 + (r()*3|0), sp: r()*TAU,
+      drift: .04 + r()*.12, spin: 1 + (r()*4|0), rot: r()*TAU,
+      size: 6 + depth*depth*24, depth,
+      hue: r() < .7 ? [210,20,50] : [255,80,110],
+    });
+  }
+  PETALS.sort((a, b) => a.depth - b.depth);
+}
+function drawPetals(ph){
+  for (const p of PETALS) {
+    const q = mod(p.o + ph*p.passes, 1);
+    const y = -.05 + q*1.1;
+    const x = p.x0 + p.drift*q + p.amp*Math.sin(TAU*p.sw*ph + p.sp);
+    const ang = p.rot + TAU*p.spin*ph;
+    const flip = Math.cos(TAU*p.spin*ph + p.sp);
+    const s = p.size;
+    ctx.save();
+    ctx.translate(x*W, y*H);
+    ctx.rotate(ang);
+    ctx.scale(Math.max(.15, Math.abs(flip)), 1);
+    const al = .35 + p.depth*.55;
+    const g = ctx.createRadialGradient(0, -s*.2, 0, 0, 0, s);
+    const [cr, cg, cb] = p.hue;
+    g.addColorStop(0, `rgba(255,150,165,${al})`);
+    g.addColorStop(.55, `rgba(${cr},${cg},${cb},${al*.9})`);
+    g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+    ctx.fillStyle = g;
+    if (p.depth > .85) ctx.filter = `blur(${((p.depth-.85)*30).toFixed(1)}px)`;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s*.8, -s*.5, s*.65, s*.6, 0, s);
+    ctx.bezierCurveTo(-s*.65, s*.6, -s*.8, -s*.5, 0, -s);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---------- 光の粒:足元の魔法陣から昇る青い粒と、紅い火の粉 ----------
+const MOTES = [];
+{
+  const r = rng(11);
+  for (let i = 0; i < 50; i++) {
+    const blue = i < 20;
+    MOTES.push({
+      o:r(), blue,
+      x: blue ? .40 + r()*.15 : r(),
+      y0: blue ? .80 + r()*.08 : .55 + r()*.45,
+      rise: blue ? .20 + r()*.25 : .20 + r()*.30,
+      tw:1 + (r()*5|0), sp:r()*TAU, s:1 + r()*2.2,
+    });
+  }
+}
+function drawMotes(ph){
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const m of MOTES) {
+    const q = mod(m.o + ph, 1);
+    const x = m.x + .012*Math.sin(TAU*2*ph + m.sp);
+    const y = m.y0 - m.rise*q;
+    const a = Math.sin(Math.PI*q) * (.5 + .5*Math.sin(TAU*m.tw*ph + m.sp));
+    const rr = m.s*5;
+    const g = ctx.createRadialGradient(x*W, y*H, 0, x*W, y*H, rr);
+    if (m.blue) { g.addColorStop(0, `rgba(170,200,255,${.8*a})`); g.addColorStop(1, 'rgba(90,120,255,0)'); }
+    else        { g.addColorStop(0, `rgba(255,150,150,${.8*a})`); g.addColorStop(1, 'rgba(255,40,60,0)'); }
+    ctx.fillStyle = g;
+    ctx.fillRect(x*W - rr, y*H - rr, rr*2, rr*2);
+  }
+  ctx.restore();
+}
+
+// ---------- 1フレーム描画 ----------
+function render(T){
+  const T2 = mod(T, LOOP), ph = T2 / LOOP;
+  const beat = stageBeat(T2);
+  ctx.clearRect(0, 0, W, H);
+  gl.uniform1f(uPh, ph);
+  gl.uniform1f(uBeat, beat);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  ctx.drawImage(glc, 0, 0);
+  drawSpots(T2, beat);
+  drawMotes(ph);
+  drawPetals(ph);
+}
+
+// ---------- 再生・UI ----------
+let playing = true, clock = 0, last = performance.now(), recorder = null;
+function tick(now){
+  const dt = Math.min(.1, (now - last)/1000); last = now;
+  if (playing) clock += dt;
+  render(clock);
+  requestAnimationFrame(tick);
+}
+
+const img = document.getElementById('src');
+function start(){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+  gl.viewport(0, 0, W, H);
+  requestAnimationFrame(tick);
+}
+if (img.complete && img.naturalWidth) start(); else img.onload = start;
+
+// 検証・静止画書き出し用
+window.__motion = { render, LOOP, setPlaying:v => { playing = v; }, setClock:t => { clock = t; } };
+
+const ui = document.getElementById('ui'), status = document.getElementById('status');
+const bPlay = document.getElementById('play'), bRec = document.getElementById('rec'), bFs = document.getElementById('fs');
+document.getElementById('stage').addEventListener('click', () => {
+  if (recorder) return;
+  ui.classList.toggle('hidden'); status.classList.add('hidden');
+});
+bPlay.onclick = () => { playing = !playing; bPlay.textContent = playing ? '一時停止' : '再生'; };
+bFs.onclick = () => {
+  const el = document.documentElement;
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else ui.classList.add('hidden');
+};
+
+function pickMime(){
+  const c = ['video/mp4;codecs=avc1.640028', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+  return window.MediaRecorder ? c.find(m => MediaRecorder.isTypeSupported(m)) : null;
+}
+if (!pickMime() || !view.captureStream) { bRec.disabled = true; bRec.textContent = '書き出し非対応のブラウザ'; }
+
+bRec.onclick = () => {
+  const mime = pickMime();
+  const stream = view.captureStream(30);
+  const chunks = [];
+  recorder = new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond:16e6 });
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type:mime });
+    const url = URL.createObjectURL(blob);
+    const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+    const a = document.createElement('a');
+    a.href = url; a.download = `tsukishio-motion.${ext}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    status.innerHTML = `書き出し完了 — <a href="${url}" download="tsukishio-motion.${ext}">保存し直す</a>`;
+    status.classList.remove('hidden');
+    ui.classList.remove('hidden');
+    bRec.disabled = false; recorder = null;
+  };
+  // ループの頭から12秒ちょうどを収める
+  clock = 0; playing = true; bPlay.textContent = '一時停止';
+  ui.classList.add('hidden');
+  status.textContent = '書き出し中…'; status.classList.remove('hidden');
+  bRec.disabled = true;
+  recorder.start();
+  setTimeout(() => recorder && recorder.stop(), LOOP*1000);
+};
+})();
+</script>
+</body>
+</html>

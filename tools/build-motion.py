@@ -5,6 +5,7 @@ root = pathlib.Path(__file__).resolve().parent.parent / 'motion'
 PAGES = {  # テンプレート: 下絵
     'index.html': 'base.jpg',   # 紅夜
     'moon.html': 'moon.jpg',    # 紅月
+    'tide.html': 'tide.jpg',    # 月潮
 }
 for page, image in PAGES.items():
     html = (root / 'src' / page).read_text(encoding='utf-8')

@@ -9,6 +9,7 @@
 | Cyber Rose Crimson | `crc/index.html` |
 | 紅夜モーション(一枚絵を動かしたループ映像) | `motion/index.html` |
 | 紅月モーション(同上・赤い月のカット) | `motion/moon.html` |
+| 月潮モーション(同上・紅い月の海とライブステージ) | `motion/tide.html` |
 
 ## 配信方法
 
@@ -73,6 +74,12 @@ node tools/verify.cjs crc/index.html
 
 - 書き出し済みの動画: `motion/kougetsu-motion.mp4`
 - 元のカットが 458×333px しかないため、拡大した分だけ細部は甘い。高解像度の元画像があれば `motion/src/moon.jpg` を差し替えるだけで良くなる
+
+### 月潮(`motion/tide.html`)
+
+紅い月の海と、眼下のライブステージ(1080×1920)。紅い月の脈動と照らされる雲、海のさざ波と青い電脳の稲妻を伝う光、揺れる船、羽ばたく鴉、行きつ戻りつ回る天井と足元の魔法陣、120BPM で明滅するステージ照明とスポットライト、提灯と蝋燭のゆらめき、舞い落ちる薔薇の花弁と昇る光の粒。
+
+- 書き出し済みの動画: `motion/tsukishio-motion.mp4`
 
 ### 編集
 
