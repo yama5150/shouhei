@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0612">
+<title>紅月 — Motion</title>
+<style>
+  :root { --ink:#f3e6ee; --dim:#b89aae; --accent:#c2185b; --bg:#07040b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif; overflow:hidden;
+    -webkit-user-select:none; user-select:none; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #view { width:100%; height:auto; max-height:100%; aspect-ratio:11/8; display:block; }
+  @media (min-aspect-ratio: 11/8) { #view { height:100%; width:auto; max-width:100%; } }
+  #ui { position:fixed; left:0; right:0; bottom:0; padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    background:linear-gradient(transparent, rgba(7,4,11,.85)); transition:opacity .4s; }
+  #ui.hidden { opacity:0; pointer-events:none; }
+  button { font:inherit; font-size:14px; color:var(--ink); background:rgba(40,16,36,.7);
+    border:1px solid rgba(194,24,91,.55); border-radius:999px; padding:10px 16px; min-height:44px;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  button:active { background:rgba(194,24,91,.45); }
+  button[disabled] { opacity:.5; }
+  #status { position:fixed; top:calc(12px + env(safe-area-inset-top)); left:0; right:0; text-align:center;
+    font-size:13px; color:var(--dim); letter-spacing:.1em; pointer-events:none; transition:opacity .4s; }
+  #status a { color:var(--ink); pointer-events:auto; }
+  #status.hidden { opacity:0; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="view" width="1320" height="960"></canvas></div>
+<div id="status">画面をタップで操作パネルを隠す</div>
+<div id="ui">
+  <button id="play">一時停止</button>
+  <button id="rec">1ループ書き出し(12秒)</button>
+  <button id="fs">全画面</button>
+</div>
+<img id="src" alt="" hidden src="__BASE_IMAGE__">
+<script>
+(() => {
+'use strict';
+const W = 1320, H = 960;
+const LOOP = 12;              // 秒。すべての動きはこの周期で継ぎ目なく繋がる
+const TAU = Math.PI * 2;
+const GLITCH_AT = 7.4, GLITCH_LEN = .45;   // 紅い月が脈打ち、画面が一瞬だけ乱れる
+
+const view = document.getElementById('view');
+const ctx = view.getContext('2d');
+
+// ---------- WebGL: 下絵の揺らぎ(髪・花弁・月・街の灯・雲・グリッチ) ----------
+const glc = document.createElement('canvas');
+glc.width = W; glc.height = H;
+const gl = glc.getContext('webgl', { preserveDrawingBuffer:true, premultipliedAlpha:false });
+
+const VS = `attribute vec2 p; varying vec2 v;
+void main(){ v = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }`;
+
+// 座標は画像を 0..1 に正規化(左上原点)。部位の範囲は下絵に合わせて手で決めている
+const FS = `precision highp float;
+varying vec2 v;
+uniform sampler2D img;
+uniform float ph;        // ループ位相 0..1
+uniform float glitch;    // 0..1
+uniform float seed;      // グリッチの切り方
+const float TAU = 6.2831853;
+const vec2 MOON = vec2(.403, .130);
+const float ASP = W_/H_;
+
+float box(vec2 u, vec2 a, vec2 b, float s){
+  vec2 lo = smoothstep(a-s, a+s, u);
+  vec2 hi = 1.-smoothstep(b-s, b+s, u);
+  return lo.x*lo.y*hi.x*hi.y;
+}
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
+}
+// 横方向に周期 P で継ぎ目なく繋がる fbm(雲をループさせるため)
+float pnoise(vec2 p, float P){
+  vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  float i0 = mod(i.x, P), i1 = mod(i.x+1., P);
+  return mix(mix(hash(vec2(i0,i.y)), hash(vec2(i1,i.y)), f.x),
+             mix(hash(vec2(i0,i.y+1.)), hash(vec2(i1,i.y+1.)), f.x), f.y);
+}
+float cloud(vec2 p){
+  float s = 0., a = .5, P = 6.;
+  for (int k = 0; k < 4; k++) { s += a*pnoise(p, P); p = p*2.; P *= 2.; a *= .5; }
+  return s;
+}
+
+void main(){
+  // カメラ:ゆっくり寄って引く呼吸
+  float z = 1.03 + .012*sin(TAU*ph);
+  vec2 c = vec2(.5 + .005*sin(TAU*ph + .8), .5 + .004*cos(TAU*ph));
+  vec2 u = (v - .5)/z + c;
+
+  // グリッチ:横の帯ごとにずれる
+  float band = floor(u.y*38. + seed*7.);
+  float gsh = glitch * step(.62, hash(vec2(band, seed))) * (hash(vec2(seed, band)) - .5) * .09;
+  u.x += gsh;
+
+  vec2 off = vec2(0.);
+
+  // 左へなびく髪:頭(右上)から離れるほど大きく
+  float hm = box(u, vec2(.10,.22), vec2(.58,1.02), .06);
+  float hw = smoothstep(.58,.15,u.x) * (.5 + .5*smoothstep(.25,.70,u.y));
+  off.x += hm*hw*.0070*sin(TAU*(2.*ph) + u.x*9. - u.y*6.);
+  off.y += hm*hw*.0050*sin(TAU*(3.*ph) + u.x*13.);
+
+  // 右側の髪と飾り紐:控えめに
+  float hr = box(u, vec2(.74,.08), vec2(1.02,.80), .05);
+  off.x += hr*.0030*sin(TAU*(2.*ph) - u.y*10. + 1.2);
+  off.y += hr*.0020*sin(TAU*(3.*ph) + u.x*8.);
+
+  // 左下の薔薇の花弁:風に震える
+  float pm = box(u, vec2(-.02,.62), vec2(.36,1.02), .04);
+  off += pm*vec2(.0040*sin(TAU*(3.*ph) + u.y*18.), .0030*sin(TAU*(4.*ph) + u.x*15.));
+
+  // 月面:ゆっくりたゆたう
+  vec2 md = (u - MOON)*vec2(ASP,1.);
+  float mr = length(md);
+  float mm = 1. - smoothstep(.090, .100, mr);
+  off += mm*.0020*vec2(sin(TAU*2.*ph + u.y*60.), cos(TAU*2.*ph + u.x*60.));
+
+  vec2 su = clamp(u - off, .001, .999);
+  vec3 col;
+  // グリッチ中は RGB がずれる
+  float ca = glitch*.008 + .0006;
+  col.r = texture2D(img, clamp(su + vec2(ca,0.), .001, .999)).r;
+  col.g = texture2D(img, su).g;
+  col.b = texture2D(img, clamp(su - vec2(ca,0.), .001, .999)).b;
+
+  // 紅い月の鼓動:二拍の脈
+  float beat = pow(max(0., sin(TAU*4.*ph)), 6.) + .6*pow(max(0., sin(TAU*4.*ph - .9)), 6.);
+  float pulse = .5 + .5*sin(TAU*ph) ;
+  float halo = exp(-max(mr-.095, 0.)*18.) * (1.-mm);
+  col += halo*vec3(1.,.28,.36)*(.10 + .10*pulse + .12*beat + .5*glitch);
+  col *= 1. + mm*(.10*beat + .06*pulse + .4*glitch);
+
+  // 月にかかる薄雲(空だけ。人物には掛けない)
+  float sky = box(u, vec2(-.02,-.02), vec2(.56,.30), .05) * (1. - box(u, vec2(.50,-.02), vec2(.70,.40), .03));
+  float cl = cloud(vec2(u.x*6. + ph*6., u.y*14.));
+  cl = smoothstep(.52, .78, cl);
+  vec3 cloudCol = mix(vec3(.25,.10,.25), vec3(1.,.45,.55), halo + mm*.8);
+  col = mix(col, col*.55 + cloudCol*.35, cl*sky*.6);
+
+  // 街の灯:窓がまたたく
+  // 窓ごとに位相の違う明滅。境目が四角く出ないよう滑らかなノイズで塗り分ける
+  float city = box(u, vec2(-.02,.20), vec2(.46,.60), .03) * smoothstep(.13, .17, mr);
+  float lum = dot(col, vec3(.3,.5,.2));
+  vec2 wp = u*vec2(160., 120.);
+  float tw = sin(TAU*2.*ph + noise(wp)*TAU*3.) * sin(TAU*3.*ph + noise(wp + 17.)*TAU*2.);
+  col *= 1. + city*smoothstep(.40,.75,lum)*tw*.35;
+
+  // 飾り輪のきらめき
+  vec2 rd = (u - vec2(.705,.155))*vec2(ASP,1.);
+  col += exp(-dot(rd,rd)*900.)*pow(max(0., sin(TAU*3.*ph + 1.)), 8.)*vec3(1.,.8,.6)*.6;
+
+  // グリッチの走査線
+  col += glitch*step(.97, hash(vec2(floor(u.y*300.), seed)))*vec3(.9,.2,.4)*.5;
+
+  // 周辺減光と粒子感
+  vec2 q = v - .5;
+  col *= 1. - dot(q,q)*.7;
+  col += (hash(v*vec2(W_,H_) + ph*97.) - .5)*.03;
+
+  gl_FragColor = vec4(col, 1.);
+}`.replace(/W_/g, W.toFixed(1)).replace(/H_/g, H.toFixed(1));
+
+function sh(type, src){
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aP = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(aP);
+gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(prog, n);
+const uPh = U('ph'), uGlitch = U('glitch'), uSeed = U('seed');
+
+// ---------- 決定的な乱数 ----------
+function rng(seed){
+  return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const mod = (a, n) => ((a % n) + n) % n;
+
+// ---------- 薔薇の花弁:右から左へ風に流れる(髪と同じ向き) ----------
+const PETALS = [];
+{
+  const r = rng(99);
+  for (let i = 0; i < 30; i++) {
+    const depth = r();
+    PETALS.push({
+      o: r(), y0: r()*1.05 - .05, passes: depth > .75 ? 2 : 1,
+      amp: .03 + r()*.06, sw: 1 + (r()*3|0), sp: r()*TAU,
+      fall: .10 + r()*.25, spin: 2 + (r()*4|0), rot: r()*TAU,
+      size: 6 + depth*depth*24, depth,
+      hue: r() < .6 ? [225,40,80] : [255,110,150],
+    });
+  }
+  PETALS.sort((a, b) => a.depth - b.depth);
+}
+function drawPetals(ph){
+  for (const p of PETALS) {
+    const q = mod(p.o + ph*p.passes, 1);
+    const x = 1.06 - q*1.12;
+    const y = p.y0 + p.fall*q + p.amp*Math.sin(TAU*p.sw*ph + p.sp);
+    const ang = p.rot + TAU*p.spin*ph;
+    const flip = Math.cos(TAU*p.spin*ph + p.sp);
+    const s = p.size;
+    ctx.save();
+    ctx.translate(x*W, y*H);
+    ctx.rotate(ang);
+    ctx.scale(Math.max(.15, Math.abs(flip)), 1);
+    const al = .35 + p.depth*.55;
+    const g = ctx.createRadialGradient(0, -s*.2, 0, 0, 0, s);
+    const [cr, cg, cb] = p.hue;
+    g.addColorStop(0, `rgba(255,190,205,${al})`);
+    g.addColorStop(.55, `rgba(${cr},${cg},${cb},${al*.9})`);
+    g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+    ctx.fillStyle = g;
+    if (p.depth > .85) ctx.filter = `blur(${((p.depth-.85)*30).toFixed(1)}px)`;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s*.8, -s*.5, s*.65, s*.6, 0, s);
+    ctx.bezierCurveTo(-s*.65, s*.6, -s*.8, -s*.5, 0, -s);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---------- 紅い火の粉:月へ向かって昇る ----------
+const EMBERS = [];
+{
+  const r = rng(5);
+  for (let i = 0; i < 46; i++) EMBERS.push({
+    o:r(), x:r()*1.0, y0:.6 + r()*.45, rise:.25 + r()*.35, drift:-.05 - r()*.10,
+    tw:1 + (r()*5|0), sp:r()*TAU, s:1 + r()*2.2,
+  });
+}
+function drawEmbers(ph, glitch){
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const m of EMBERS) {
+    const q = mod(m.o + ph, 1);
+    const x = m.x + m.drift*q + .012*Math.sin(TAU*2*ph + m.sp);
+    const y = m.y0 - m.rise*q;
+    const a = Math.sin(Math.PI*q) * (.5 + .5*Math.sin(TAU*m.tw*ph + m.sp)) * (1 + glitch);
+    const rr = m.s*5;
+    const g = ctx.createRadialGradient(x*W, y*H, 0, x*W, y*H, rr);
+    g.addColorStop(0, `rgba(255,150,170,${Math.min(1,.85*a)})`); g.addColorStop(1, 'rgba(255,40,90,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x*W - rr, y*H - rr, rr*2, rr*2);
+  }
+  ctx.restore();
+}
+
+// ---------- 1フレーム描画 ----------
+function glitchAt(T){
+  const a = mod(T - GLITCH_AT, LOOP);
+  if (a >= GLITCH_LEN) return [0, 0];
+  // 数回ぱらぱらと切り替わる
+  const step = Math.floor(a / .06);
+  const on = [1, .3, .9, 0, .7, .4, 1, .2][step % 8];
+  return [on * Math.sin(Math.PI * a / GLITCH_LEN), step + 1];
+}
+function render(T){
+  const T2 = mod(T, LOOP), ph = T2 / LOOP;
+  const [g, s] = glitchAt(T2);
+  ctx.clearRect(0, 0, W, H);
+  gl.uniform1f(uPh, ph);
+  gl.uniform1f(uGlitch, g);
+  gl.uniform1f(uSeed, s);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  ctx.drawImage(glc, 0, 0);
+  drawEmbers(ph, g);
+  drawPetals(ph);
+}
+
+// ---------- 再生・UI ----------
+let playing = true, clock = 0, last = performance.now(), recorder = null;
+function tick(now){
+  const dt = Math.min(.1, (now - last)/1000); last = now;
+  if (playing) clock += dt;
+  render(clock);
+  requestAnimationFrame(tick);
+}
+
+const img = document.getElementById('src');
+function start(){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+  gl.viewport(0, 0, W, H);
+  requestAnimationFrame(tick);
+}
+if (img.complete && img.naturalWidth) start(); else img.onload = start;
+
+// 検証・静止画書き出し用
+window.__motion = { render, LOOP, setPlaying:v => { playing = v; }, setClock:t => { clock = t; } };
+
+const ui = document.getElementById('ui'), status = document.getElementById('status');
+const bPlay = document.getElementById('play'), bRec = document.getElementById('rec'), bFs = document.getElementById('fs');
+document.getElementById('stage').addEventListener('click', () => {
+  if (recorder) return;
+  ui.classList.toggle('hidden'); status.classList.add('hidden');
+});
+bPlay.onclick = () => { playing = !playing; bPlay.textContent = playing ? '一時停止' : '再生'; };
+bFs.onclick = () => {
+  const el = document.documentElement;
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else ui.classList.add('hidden');
+};
+
+function pickMime(){
+  const c = ['video/mp4;codecs=avc1.640028', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+  return window.MediaRecorder ? c.find(m => MediaRecorder.isTypeSupported(m)) : null;
+}
+if (!pickMime() || !view.captureStream) { bRec.disabled = true; bRec.textContent = '書き出し非対応のブラウザ'; }
+
+bRec.onclick = () => {
+  const mime = pickMime();
+  const stream = view.captureStream(30);
+  const chunks = [];
+  recorder = new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond:16e6 });
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type:mime });
+    const url = URL.createObjectURL(blob);
+    const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+    const a = document.createElement('a');
+    a.href = url; a.download = `kougetsu-motion.${ext}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    status.innerHTML = `書き出し完了 — <a href="${url}" download="kougetsu-motion.${ext}">保存し直す</a>`;
+    status.classList.remove('hidden');
+    ui.classList.remove('hidden');
+    bRec.disabled = false; recorder = null;
+  };
+  // ループの頭から12秒ちょうどを収める
+  clock = 0; playing = true; bPlay.textContent = '一時停止';
+  ui.classList.add('hidden');
+  status.textContent = '書き出し中…'; status.classList.remove('hidden');
+  bRec.disabled = true;
+  recorder.start();
+  setTimeout(() => recorder && recorder.stop(), LOOP*1000);
+};
+})();
+</script>
+</body>
+</html>

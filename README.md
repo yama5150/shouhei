@@ -8,6 +8,7 @@
 | ハムスターゲーム | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
 | 紅夜モーション(一枚絵を動かしたループ映像) | `motion/index.html` |
+| 紅月モーション(同上・赤い月のカット) | `motion/moon.html` |
 
 ## 配信方法
 
@@ -66,4 +67,13 @@ node tools/verify.cjs crc/index.html
 
 - 書き出し済みの動画: `motion/koya-motion.mp4`
 - 画面の「1ループ書き出し」でも端末上で MP4/WebM を保存できる(継ぎ目なくループする)
+### 紅月(`motion/moon.html`)
+
+設定シートの赤い月のカットを切り出して拡大(1320×960)。紅い月の鼓動と光輪、月にかかる薄雲、街の灯のまたたき、左へなびく髪、右から左へ流れる薔薇の花弁、月へ昇る火の粉。7.4秒目に一瞬だけ画面が乱れる(紅い月＝データ嵐の予兆)。
+
+- 書き出し済みの動画: `motion/kougetsu-motion.mp4`
+- 元のカットが 458×333px しかないため、拡大した分だけ細部は甘い。高解像度の元画像があれば `motion/src/moon.jpg` を差し替えるだけで良くなる
+
+### 編集
+
 - 編集するのは `motion/src/`。`python3 tools/build-motion.py` で下絵を内包した `motion/index.html` を作る
