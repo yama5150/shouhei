@@ -7,6 +7,7 @@
 | 焼肉ロス管理アプリ | `index.html` |
 | ハムスターゲーム | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
+| 紅夜モーション(一枚絵を動かしたループ映像) | `motion/index.html` |
 
 ## 配信方法
 
@@ -58,3 +59,11 @@ node --check /tmp/c.js
 # 参照整合(bg/spr/bgm/yu の実在、label/jump、ifFlag、EP_ORDER 三者整合)
 node tools/verify.cjs crc/index.html
 ```
+
+## 紅夜モーション
+
+一枚絵をブラウザで動かす 12 秒ループ(1080×1920)。花火の打ち上げと照り返し、髪・袖・髪飾りの揺れ、水面のさざ波、提灯のゆらめき、舞う花びら。
+
+- 書き出し済みの動画: `motion/koya-motion.mp4`
+- 画面の「1ループ書き出し」でも端末上で MP4/WebM を保存できる(継ぎ目なくループする)
+- 編集するのは `motion/src/`。`python3 tools/build-motion.py` で下絵を内包した `motion/index.html` を作る
