@@ -2,12 +2,15 @@
 """Cyber Rose Crimson トレーラー(縦 1080x1920 / 30fps)を合成する。
 
 使い方:
-  python3 tools/build-trailer.py --music obscure.mp3 --sheet sheet-motion.mp4 \
+  python3 tools/build-trailer.py --cut 40 --music obscure.mp3 --sheet sheet-motion.mp4 \
       --fonts <フォントのあるディレクトリ> --out motion/trailer.mp4
+  python3 tools/build-trailer.py --cut 30 --music obscure.mp3 --sheet sheet-motion.mp4 \
+      --yuji yuji.png --fonts <フォントのあるディレクトリ> --out motion/trailer-30s.mp4
 
 素材:
   motion/koya-motion.mp4 / motion/tsukishio-motion.mp4  (12秒ループ。-stream_loop で延長して使う)
   --sheet   設定シートを動かした動画(448x672 / 24fps)
+  --yuji    30秒版のみ。雨の夜に手を取るユウジの一枚絵(正方形)
   --music   Track 01「obscure」
   --fonts   ShipporiMincho-Medium.ttf / ShipporiMincho-Bold.ttf / Cinzel[wght].ttf
 必要なもの: numpy, pillow, imageio-ffmpeg
@@ -24,38 +27,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # ---------- 曲の編集点 ----------
 # obscure は 169.92 BPM。拍の格子 g(k) = 0.122 + k*BEAT 上で切ってつなぐ
 BEAT = 60 / 169.92
-A = (0.0, 14.246)                     # イントロ。2.96秒で鳴り出し、9.5秒で一段上がる
-B = (91.930, 91.930 + 48 * BEAT)      # サビ 48拍
-C = (190.094 - 6 * BEAT, 197.2)       # 終盤。190.21秒の決めの一撃へ
+HIT_SONG = 190.21                     # 終盤の決めの一撃(曲の時刻)
 XF = 0.08                             # つなぎ目のクロスフェード
-TB = A[1] - A[0]                      # トレーラー上でサビが始まる時刻
-TC = TB + (B[1] - B[0])               # 終盤が始まる時刻
-HIT = TC + (190.21 - C[0])            # 決めの一撃
-TOTAL = TC + (C[1] - C[0])
-
-
-def beat(n):
-    """サビ頭から n 拍目のトレーラー時刻"""
-    return TB + n * BEAT
-
-
-# ---------- ショット ----------
-# rect = (中心x, 中心y, 高さの割合)。開始 → 終了へ補間(Ken Burns)
-KOYA, TIDE, SHEET = 'koya', 'tide', 'sheet'
+KOYA, TIDE, SHEET, YUJI = 'koya', 'tide', 'sheet', 'yuji'
 FIT = (.5, .5, 1.2)                   # 高さ割合が 1 を超えたら全体をぼかし背景に収める
 
 
-def shot(t0, t1, src, st, r0, r1=None, fx='cut', out=None):
-    return dict(t0=t0, t1=t1, src=src, st=st, r0=r0, r1=r1 or r0, fx=fx, out=out)
+def shot(t0, t1, src, st, r0, r1=None, fx='cut', dim=None, fadeout=False, rain=False):
+    """rect = (中心x, 中心y, 高さの割合)。開始 → 終了へ補間(Ken Burns)"""
+    return dict(t0=t0, t1=t1, src=src, st=st, r0=r0, r1=r1 or r0, fx=fx, dim=dim, fadeout=fadeout, rain=rain)
 
 
-SHOTS = [
-    # イントロ:紅夜に寄っていく → 月潮の月から海へ
-    shot(2.96, 10.30, KOYA, 0.0, (.5, .52, 1.0), (.52, .30, .55), fx='fade'),
-    shot(10.30, TB, TIDE, 0.0, (.42, .16, .40), (.47, .30, .62), fx='fade'),
-]
-# サビ:4拍 → 2拍 → 1拍と詰めていく
-chorus = [
+# サビのカット候補(素材, 素材の開始秒, 始めの枠, 終わりの枠)
+CHORUS = [
     (SHEET, 0.0, FIT, FIT),
     (TIDE, 2.0, (.73, .48, .20), (.73, .50, .15)),       # ステージ
     (KOYA, 4.0, (.52, .23, .30), (.52, .24, .24)),       # 紅夜の顔
@@ -75,25 +59,63 @@ chorus = [
     (KOYA, 10.0, (.52, .24, .22), (.52, .24, .18)),
     (SHEET, 5.6, FIT, FIT),
 ]
-lens = [4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 5]
-assert sum(lens) == 48 and len(lens) == len(chorus)
-n = 0
-for (src, st, r0, r1), L in zip(chorus, lens):
-    SHOTS.append(shot(beat(n), beat(n + L), src, st, r0, r1, fx='flash'))
-    n += L
-# 終盤:月潮を暗く引いて、一撃でタイトル
-SHOTS.append(shot(TC, HIT, TIDE, 6.0, (.45, .30, .55), (.45, .28, .75), fx='cut'))
-SHOTS.append(shot(HIT, TOTAL, TIDE, 8.2, (.5, .45, 1.0), (.5, .42, .92), fx='hit', out='title'))
 
-# ---------- 文字 ----------
-TEXTS = [
-    # (開始, 終了, 文言, 大きさ, y位置)
-    (0.35, 2.75, '薔薇は、愛か、呪いか。', 64, .50),
-    (3.40, 6.60, '音を奪われた世界で', 56, .80),
-    (6.90, 10.10, '七度、封じられた心がある。', 56, .80),
-    (11.00, 14.00, '――初めましてから、何回でも。', 52, .80),
-    (beat(24), beat(32), '揺らぎは、心だ。', 60, .82),
-]
+
+def chorus_shots(t0, picks, lens):
+    out, n = [], 0
+    for (src, st, r0, r1), L in zip(picks, lens):
+        out.append(shot(t0 + n * BEAT, t0 + (n + L) * BEAT, src, st, r0, r1, fx='flash'))
+        n += L
+    return out
+
+
+def plan(cut):
+    """曲の区間(曲の時刻), ショット, 文字, 一撃の時刻, 全長 を返す"""
+    if cut == 40:
+        segs = [(0.0, 14.246),                        # イントロ。2.96秒で鳴り出し、9.5秒で一段上がる
+                (91.930, 91.930 + 48 * BEAT),         # サビ 48拍
+                (HIT_SONG - .116 - 6 * BEAT, 197.2)]  # 終盤。一撃の6拍前から
+        TB = segs[0][1]
+        TC = TB + segs[1][1] - segs[1][0]
+        shots = [
+            shot(2.96, 10.30, KOYA, 0.0, (.5, .52, 1.0), (.52, .30, .55), fx='fade'),
+            shot(10.30, TB, TIDE, 0.0, (.42, .16, .40), (.47, .30, .62), fx='fade', fadeout=True),
+        ]
+        shots += chorus_shots(TB, CHORUS, [4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 5])
+        texts = [
+            (0.35, 2.75, '薔薇は、愛か、呪いか。', 64, .50),
+            (3.40, 6.60, '音を奪われた世界で', 56, .80),
+            (6.90, 10.10, '七度、封じられた心がある。', 56, .80),
+            (11.00, 14.00, '――初めましてから、何回でも。', 52, .80),
+            (TB + 24 * BEAT, TB + 32 * BEAT, '揺らぎは、心だ。', 60, .82),
+        ]
+    elif cut == 30:
+        segs = [(0.0, 0.122 + 19 * BEAT),             # イントロを短く
+                (91.930, 91.930 + 28 * BEAT),         # サビ 28拍
+                (112.060, 112.060 + 16 * BEAT),       # 曲が引く16拍 ― ユウジ
+                (HIT_SONG - .116 - 6 * BEAT, 195.4)]  # 終盤
+        TB = segs[0][1]
+        TD = TB + segs[1][1] - segs[1][0]
+        TC = TD + segs[2][1] - segs[2][0]
+        picks = [CHORUS[i] for i in (0, 1, 2, 3, 5, 4, 7, 12, 15, 8, 16)]  # ユウジはサビに出さず、曲が引いたところで初めて見せる
+        shots = [shot(2.96, TB, KOYA, 0.0, (.5, .52, 1.0), (.52, .32, .62), fx='fade')]
+        shots += chorus_shots(TB, picks, [4, 4, 4, 2, 2, 2, 2, 2, 1, 1, 4])
+        # 手を取る。繋いだ手から引いて、顔が見えたところで止まる
+        shots.append(shot(TD, TC, YUJI, 0, (.56, .74, .42), (.55, .50, .98), fx='fade', rain=True, fadeout=True))
+        texts = [
+            (0.35, 2.75, '薔薇は、愛か、呪いか。', 64, .50),
+            (3.30, 6.60, '音を奪われた世界で', 56, .80),
+            (TB + 12 * BEAT, TB + 20 * BEAT, '揺らぎは、心だ。', 60, .82),
+            (TD + 1.2, TC - .1, '――初めましてから、何回でも。', 52, .86),
+        ]
+    else:
+        raise SystemExit(f'--cut は 40 か 30: {cut}')
+    HIT = TC + (HIT_SONG - segs[-1][0])
+    TOTAL = TC + segs[-1][1] - segs[-1][0]
+    # 終盤:月潮を暗く引いて、一撃でタイトル
+    shots.append(shot(TC, HIT, TIDE, 6.0, (.45, .30, .55), (.45, .28, .75), dim=(.55, .30)))
+    shots.append(shot(HIT, TOTAL, TIDE, 8.2, (.5, .45, 1.0), (.5, .42, .92), fx='hit'))
+    return segs, shots, texts, HIT, TOTAL
 
 
 def font(p, size):
@@ -149,6 +171,26 @@ class Reader:
         self.p.stdout.close(); self.p.wait()
 
 
+class Still:
+    """一枚絵をショットの長さだけ返す"""
+    def __init__(self, img): self.img = img
+    def next(self): return self.img
+    def close(self): pass
+
+
+def rain_layer(seed=3):
+    """斜めに降る雨。縦に2画面ぶん作って、毎フレームずらして使う"""
+    r = np.random.default_rng(seed)
+    im = Image.new('L', (W, H * 2), 0)
+    d = ImageDraw.Draw(im)
+    for _ in range(900):
+        x, y = r.uniform(-200, W), r.uniform(0, H * 2)
+        L = r.uniform(30, 90)
+        d.line([(x, y), (x + L * .18, y + L)], fill=int(r.uniform(40, 120)), width=1 if r.random() < .8 else 2)
+    im = im.filter(ImageFilter.GaussianBlur(.6))
+    return np.asarray(im).astype(np.float32) / 255
+
+
 def ease(x):
     return x * x * (3 - 2 * x)
 
@@ -171,8 +213,10 @@ def frame_from(img, rect, src):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--cut', type=int, default=40, help='40 か 30(秒)')
     ap.add_argument('--music', required=True)
     ap.add_argument('--sheet', required=True)
+    ap.add_argument('--yuji', help='30秒版で使うユウジの一枚絵')
     ap.add_argument('--fonts', required=True)
     ap.add_argument('--out', default=str(ROOT / 'motion' / 'trailer.mp4'))
     ap.add_argument('--preview', type=float, nargs='*', help='この時刻の静止画だけ書き出す')
@@ -180,6 +224,10 @@ def main():
     fdir = pathlib.Path(a.fonts)
     MED, BOLD, CINZEL = fdir / 'ShipporiMincho-Medium.ttf', fdir / 'ShipporiMincho-Bold.ttf', fdir / 'Cinzel[wght].ttf'
 
+    segs, SHOTS, TEXTS, HIT, TOTAL = plan(a.cut)
+    if a.cut == 30 and not a.yuji: raise SystemExit('30秒版には --yuji が要る')
+    yuji = Image.open(a.yuji).convert('RGB') if a.yuji else None
+    rain = rain_layer()
     SRC = {KOYA: (ROOT / 'motion' / 'koya-motion.mp4', (1080, 1920)),
            TIDE: (ROOT / 'motion' / 'tsukishio-motion.mp4', (1080, 1920)),
            SHEET: (pathlib.Path(a.sheet), (448, 672))}
@@ -222,10 +270,13 @@ def main():
         else:
             if cur is not s or a.preview:
                 if reader: reader.close()
-                path, native = SRC[s['src']]
-                n = int((s['t1'] - s['t0']) * FPS) + 2
-                st = s['st'] + (t - s['t0']) if a.preview else s['st']
-                reader, cur = Reader(path, st, n, native), s
+                if s['src'] == YUJI:
+                    reader, cur = Still(yuji), s
+                else:
+                    path, native = SRC[s['src']]
+                    n = int((s['t1'] - s['t0']) * FPS) + 2
+                    st = s['st'] + (t - s['t0']) if a.preview else s['st']
+                    reader, cur = Reader(path, st, n, native), s
             img = reader.next()
             k = ease((t - s['t0']) / (s['t1'] - s['t0']))
             rect = tuple(p + (q - p) * k for p, q in zip(s['r0'], s['r1']))
@@ -239,9 +290,13 @@ def main():
             elif s['fx'] == 'hit':
                 f = np.exp(-dt * 5)
                 fr = fr * (.35 + .1 * min(1, dt)) + 255 * f * .9
-            if s['src'] == TIDE and s is SHOTS[-2]:
-                fr *= .55 - .25 * k
-            if dt > (s['t1'] - s['t0']) - .5 and s is SHOTS[1]:
+            if s['dim']:
+                fr *= s['dim'][0] + (s['dim'][1] - s['dim'][0]) * k
+            if s['rain']:  # 雨と、街灯に濡れた紅い照り返し
+                off = int(t * 1400) % H
+                rr = rain[H - off:2 * H - off, :, None]
+                fr = fr * (1 - rr * .35) + np.array([255, 205, 220], np.float32) * rr * .45
+            if s['fadeout'] and dt > (s['t1'] - s['t0']) - .5:
                 fr *= max(0, ((s['t1'] - s['t0']) - dt) / .5) * .7 + .3
         fr *= vign
         for t0, t1, L, y in texts:
@@ -267,11 +322,19 @@ def main():
     if a.preview: return
     enc.stdin.close(); enc.wait()
 
-    # 音:3区間を拍の上でつなぐ
-    fc = (f'[1:a]atrim={A[0]}:{A[1] + XF},asetpts=PTS-STARTPTS[a];'
-          f'[1:a]atrim={B[0] - XF}:{B[1] + XF},asetpts=PTS-STARTPTS[b];'
-          f'[1:a]atrim={C[0] - XF}:{C[1]},asetpts=PTS-STARTPTS,afade=t=out:st={C[1] - C[0] - 1.4}:d=1.4[c];'
-          f'[a][b]acrossfade=d={2 * XF}:c1=tri:c2=tri[ab];[ab][c]acrossfade=d={2 * XF}:c1=tri:c2=tri[m]')
+    # 音:区間を拍の上でつなぐ。つなぎ目の前後 XF ずつ重ねる
+    parts, n = [], len(segs)
+    for j, (s0, s1) in enumerate(segs):
+        lo = s0 - (XF if j else 0)
+        hi = s1 + (XF if j < n - 1 else 0)
+        tail = f',afade=t=out:st={hi - lo - 1.4}:d=1.4' if j == n - 1 else ''
+        parts.append(f'[1:a]atrim={lo}:{hi},asetpts=PTS-STARTPTS{tail}[s{j}]')
+    prev = 's0'
+    for j in range(1, n):
+        nxt = 'm' if j == n - 1 else f'x{j}'
+        parts.append(f'[{prev}][s{j}]acrossfade=d={2 * XF}:c1=tri:c2=tri[{nxt}]')
+        prev = nxt
+    fc = ';'.join(parts)
     subprocess.run([FF, '-y', '-loglevel', 'error', '-i', silent, '-i', a.music, '-filter_complex', fc,
                     '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
                     '-shortest', '-movflags', '+faststart', a.out], check=True)
