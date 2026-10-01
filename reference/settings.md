@@ -269,7 +269,7 @@ TRACKS と srcMap の突き合わせは別途必要。
 | `bara` | 薔薇の涙 | 泣かせ担当。BPM152 |
 | `doukoku` | 慟哭グラデーション | 悲劇の章(第五話〜第八話)のED |
 | `genkei` | 涙の赤、忘却の青、混ぜれば紫、電脳の熱 | **第一世代。源三の十八番。すべての封印を開ける鍵** |
-| `crimson` | Eruza: Cyber Rose Crimson | 第二世代。解禁は物語上ただ二度 |
+| `crimson` | Eruza: Cyber Rose Crimson | 第二世代。解禁は物語上ただ二度。**v70で再録**(4:22 → 4:49) |
 | `ephemeral` | Eruza: Ephemeral Cyber Rose | 第三世代。すべてが終わった後の、白い月の曲 |
 | `itami` | ……電脳の痛 (Remastered) | 第一世代の戦闘形態。熱は癒し、痛は討つ |
 | `kodou` | 鼓動 | 対機神戦。盗まれた鼓動 |
@@ -537,10 +537,16 @@ CDN キャッシュ。**症状が同じでも原因は別なので、まず実�
 ### ビルド前チェック
 
 ```bash
-# JS構文
-python3 -c "import io,re; s=io.open('crc/index.html',encoding='utf-8').read(); \
-io.open('/tmp/c.js','w',encoding='utf-8').write(re.search(r'<script>(.*)</script>',s,re.S).group(1))"
-node --check /tmp/c.js
+# JS構文 ── <script>は3ブロックある。欲張りな正規表現で1個に繋げると
+#            途中の </script> で必ず SyntaxError になるので、1ブロックずつ見る
+python3 - <<'EOF'
+import io,re
+s=io.open('crc/index.html',encoding='utf-8').read()
+for i,b in enumerate(re.findall(r'<script>(.*?)</script>',s,re.S)):
+    io.open('/tmp/c%d.js'%i,'w',encoding='utf-8').write(b)
+    print('block',i,len(b))
+EOF
+for f in /tmp/c*.js; do node --check "$f" && echo "$f OK"; done
 
 # 参照整合(bg/spr/bgm/yuの実在、label/jump、ifFlag、EP_ORDER三者整合)
 node tools/verify.cjs crc/index.html
@@ -565,6 +571,7 @@ node tools/verify.cjs crc/index.html
 | v67 | タイトル画面を刷新。**タイトルが画面外にはみ出していたバグを修正**。紅い月を実体化、花びらとデータの雨、起動シーケンス。**素材ゼロで実装したため容量は不変** |
 | v68 | **チャプターメニューからタイトルへ戻れなかった問題を修正**。扉絵の左上と一覧の末尾に導線を追加 |
 | v69 | Track 04 慟哭グラデーションのジャケットを専用画像 `imgDoukoku` に差し替え |
+| v70 | **タイトル曲 `crimson` (Eruza: Cyber Rose Crimson) を再録版に差し替え**。4:22 → 4:49。翔平が Suno で録り直したもの。56kbps モノラル・48kHz は従来どおり |
 
 ## 15. PWA構成(v60〜)
 
