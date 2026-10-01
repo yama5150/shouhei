@@ -40,7 +40,7 @@ https://yama5150.github.io/shouhei/crc/
 
 ## Cyber Rose Crimson
 
-ビジュアルノベル。全16章・単一 HTML(素材は base64 で内包、約 28.6MB)。
+ビジュアルノベル。全16章・単一 HTML(素材は base64 で内包、約 34.5MB)。
 
 - 本体は `crc/index.html` の**1ファイルのみ**
 - **ファイル名を変えないこと。** 変えると配信 URL が変わる
@@ -50,10 +50,16 @@ https://yama5150.github.io/shouhei/crc/
 ### ビルド前チェック
 
 ```bash
-# JS構文
-python3 -c "import io,re; s=io.open('crc/index.html',encoding='utf-8').read(); \
-io.open('/tmp/c.js','w',encoding='utf-8').write(re.search(r'<script>(.*)</script>',s,re.S).group(1))"
-node --check /tmp/c.js
+# JS構文 ── <script>は3ブロックある。欲張りな正規表現で1個に繋げると
+#            途中の </script> で必ず SyntaxError になるので、1ブロックずつ見る
+python3 - <<'EOF'
+import io,re
+s=io.open('crc/index.html',encoding='utf-8').read()
+for i,b in enumerate(re.findall(r'<script>(.*?)</script>',s,re.S)):
+    io.open('/tmp/c%d.js'%i,'w',encoding='utf-8').write(b)
+    print('block',i,len(b))
+EOF
+for f in /tmp/c*.js; do node --check "$f" && echo "$f OK"; done
 
 # 参照整合(bg/spr/bgm/yu の実在、label/jump、ifFlag、EP_ORDER 三者整合)
 node tools/verify.cjs crc/index.html

@@ -1,6 +1,6 @@
 # Cyber Rose Crimson — 設定集(正史)
 
-最終更新: v66 / 全16章・本文 35,232字 / PWA構成 / 動画2本
+最終更新: v69 / 全16章・本文 35,232字 / PWA構成 / 動画2本
 
 > この文書が正典。本文と食い違ったら**本文が正しい**。気づいたらここを直す。
 
@@ -240,7 +240,7 @@ EP_ORDER = ["1","2","m1","en1","3","4","en4","m2","en2","5","6","7","en3","8","m
 | 01 | obscure | `imgKako` |
 | 02 | carrot-hoofbeats | `imgKobo` |
 | 03 | 薔薇の涙 | `imgElza` |
-| 04 | 慟哭グラデーション | `imgKasa` |
+| 04 | 慟哭グラデーション | `imgDoukoku` |
 | 05 | 電脳の熱 | `imgMic` |
 | 06 | Cyber Rose Crimson | `imgCore` |
 | 07 | Ephemeral Cyber Rose | `imgAsa` |
@@ -248,6 +248,12 @@ EP_ORDER = ["1","2","m1","en1","3","4","en4","m2","en2","5","6","7","en3","8","m
 | 09 | 鼓動 | `imgKishin` |
 | 10 | 逆転 | `imgAoi` |
 | 11 | 秒 慟哭 紅い月 | `imgYoin` |
+
+ジャケットは**シナリオの背景と兼用しないほうがよい場合がある**。Track 04 は当初
+`imgKasa`(赤い傘)を流用していたが、この画像は第三話の背景 `bg:"kasa"` としても
+使われており、曲の性格(悲劇の章のEDテーマ)とも合っていなかった。専用の
+`imgDoukoku` を追加し、`imgKasa` は背景として残している。**流用をやめるときは、
+元の画像が他で使われていないか必ず確認すること。**
 
 ⚠️ **曲を追加したら `srcMap` にも必ず登録すること。** v60 までは `obscure` が
 `srcMap` から漏れており、MUSIC ROOM の Track 01 が無音だった。`obscure` は
@@ -263,7 +269,7 @@ TRACKS と srcMap の突き合わせは別途必要。
 | `bara` | 薔薇の涙 | 泣かせ担当。BPM152 |
 | `doukoku` | 慟哭グラデーション | 悲劇の章(第五話〜第八話)のED |
 | `genkei` | 涙の赤、忘却の青、混ぜれば紫、電脳の熱 | **第一世代。源三の十八番。すべての封印を開ける鍵** |
-| `crimson` | Eruza: Cyber Rose Crimson | 第二世代。解禁は物語上ただ二度 |
+| `crimson` | Eruza: Cyber Rose Crimson | 第二世代。解禁は物語上ただ二度。**v70で再録**(4:22 → 4:49) |
 | `ephemeral` | Eruza: Ephemeral Cyber Rose | 第三世代。すべてが終わった後の、白い月の曲 |
 | `itami` | ……電脳の痛 (Remastered) | 第一世代の戦闘形態。熱は癒し、痛は討つ |
 | `kodou` | 鼓動 | 対機神戦。盗まれた鼓動 |
@@ -355,7 +361,57 @@ ASSETS からも外した。**使わない素材は入れっぱなしにしな�
 
 ---
 
-## 12. 動画背景(bgv)
+## 12. タイトル画面(v67〜)
+
+**素材を増やさず CSS と JS だけで作っている。** 容量への影響はゼロ。
+
+| 要素 | 実装 |
+|---|---|
+| 紅い月 | `#titleMoonWrap` の3層(ハロー / 本体 / 薄雲)。7.5秒周期でゆっくり明滅する |
+| 花びら | `#petals` に16枚を JS で生成。落下速度・横流れ・回転・大きさを個別にばらす |
+| データの雨 | `#rain` に26本。第一話「破損したデータが崩れて落ちていく音を、俺の脳が『雨』と翻訳している」から |
+| 起動シーケンス | `#title.intro` を3.6秒だけ付け、月 → 題字 → 副題 → 罫線 → 歌詞 → ボタン の順に浮かび上がる |
+| 題字のグリッチ | 既存の `titleGlitch` を維持(4.5秒ごとに一瞬ずれる) |
+
+### 月の色は絵からサンプリングした
+
+`imgSea` と `imgChapter` の月の領域から実測した値を使っている。
+
+```
+中心 #f46258   中間 #cd3a3d   縁 #8d2931
+```
+
+**勘で紅を置くとショッキングピンクになる。** 作品の月は赤寄りで深い。色を変える
+ときは絵から取り直すこと。
+
+### 直したバグ
+
+`#titleMain` に `text-align` が無く、`font-size:8.4vw` で1行に収まらず折り返した
+結果、**題字が画面の左端にはみ出していた**。`white-space:nowrap` と明示的な改行、
+`min()` による上限付きサイズで解決した。
+
+`prefers-reduced-motion` では粒子とアニメーションを止めている。
+
+---
+
+### 画面の行き来
+
+チャプターメニューには **タイトルへ戻る導線が2箇所** ある。
+
+| 場所 | id | 用途 |
+|---|---|---|
+| 扉絵の左上 | `chBack` | 開いた直後に気が変わったとき |
+| 一覧の末尾 | `chBackFoot` | 全話をスクロールし切った先 |
+
+どちらも `closeChapters()` を呼ぶ。**まだ何も始まっていないので `location.reload()` は
+使わず、`epSelect` から `show` を外すだけ**(ゲーム中の TITLE ボタンはリロードする)。
+同時に扉絵の動画も `pause()` する。
+
+再度開くと動画は**停止した位置から再開**する。3往復しても崩れないことを確認済み。
+
+---
+
+## 13. 動画背景(bgv)
 
 ### 使い方
 
@@ -418,7 +474,7 @@ ffmpeg -i 元.mp4 -vf "scale=720:1280,fps=24" -c:v libx264 -profile:v main \
 
 ---
 
-## 13. 記法
+## 14. 記法
 
 ```js
 {bg:"kobo", dim:true}          // 背景(dimで暗く)
@@ -481,10 +537,16 @@ CDN キャッシュ。**症状が同じでも原因は別なので、まず実�
 ### ビルド前チェック
 
 ```bash
-# JS構文
-python3 -c "import io,re; s=io.open('crc/index.html',encoding='utf-8').read(); \
-io.open('/tmp/c.js','w',encoding='utf-8').write(re.search(r'<script>(.*)</script>',s,re.S).group(1))"
-node --check /tmp/c.js
+# JS構文 ── <script>は3ブロックある。欲張りな正規表現で1個に繋げると
+#            途中の </script> で必ず SyntaxError になるので、1ブロックずつ見る
+python3 - <<'EOF'
+import io,re
+s=io.open('crc/index.html',encoding='utf-8').read()
+for i,b in enumerate(re.findall(r'<script>(.*?)</script>',s,re.S)):
+    io.open('/tmp/c%d.js'%i,'w',encoding='utf-8').write(b)
+    print('block',i,len(b))
+EOF
+for f in /tmp/c*.js; do node --check "$f" && echo "$f OK"; done
 
 # 参照整合(bg/spr/bgm/yuの実在、label/jump、ifFlag、EP_ORDER三者整合)
 node tools/verify.cjs crc/index.html
@@ -506,6 +568,10 @@ node tools/verify.cjs crc/index.html
 | v64 | CH15(後日談 ココア)のサムネを `imgFunyu` に差し戻し。未使用になった `sdCocoa` を ASSETS から削除 |
 | v65 | **動画背景の初投入**。第三話の花火シーンに `vidKoya`(720x1280 / 12秒ループ)。`tools/verify.cjs` に bgv の検査を追加 |
 | v66 | チャプターメニューの扉絵を動画化(`vidChapter`)。縦型素材に合わせ枠を 16/11 → 16/13 に。メニューを閉じたら再生を止める |
+| v67 | タイトル画面を刷新。**タイトルが画面外にはみ出していたバグを修正**。紅い月を実体化、花びらとデータの雨、起動シーケンス。**素材ゼロで実装したため容量は不変** |
+| v68 | **チャプターメニューからタイトルへ戻れなかった問題を修正**。扉絵の左上と一覧の末尾に導線を追加 |
+| v69 | Track 04 慟哭グラデーションのジャケットを専用画像 `imgDoukoku` に差し替え |
+| v70 | **タイトル曲 `crimson` (Eruza: Cyber Rose Crimson) を再録版に差し替え**。4:22 → 4:49。翔平が Suno で録り直したもの。56kbps モノラル・48kHz は従来どおり |
 
 ## 15. PWA構成(v60〜)
 
