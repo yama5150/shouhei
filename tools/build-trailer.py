@@ -6,11 +6,16 @@
       --fonts <フォントのあるディレクトリ> --out motion/trailer.mp4
   python3 tools/build-trailer.py --cut 30 --music obscure.mp3 --sheet sheet-motion.mp4 \
       --yuji yuji.png --fonts <フォントのあるディレクトリ> --out motion/trailer-30s.mp4
+  python3 tools/build-trailer.py --cut eruza --music <リマスター版.m4a> --sheet sheet-motion.mp4 \
+      --stills <静止画のディレクトリ> --fonts <フォントのあるディレクトリ> --out motion/trailer-eruza.mp4
 
 素材:
   motion/koya-motion.mp4 / motion/tsukishio-motion.mp4  (12秒ループ。-stream_loop で延長して使う)
   --sheet   設定シートを動かした動画(448x672 / 24fps)
   --yuji    30秒版のみ。雨の夜に手を取るユウジの一枚絵(正方形)
+  --stills  eruza 版のみ。下の STILLS の名前.png を置いたディレクトリ
+            (eden / yuji と、CRC_trailer_18s.mp4 から抜いた sea workshop coffee city rose
+             redmoon mecha sword kimono titlebg)
   --music   Track 01「obscure」
   --fonts   ShipporiMincho-Medium.ttf / ShipporiMincho-Bold.ttf / Cinzel[wght].ttf
 必要なもの: numpy, pillow, imageio-ffmpeg
@@ -29,7 +34,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 BEAT = 60 / 169.92
 HIT_SONG = 190.21                     # 終盤の決めの一撃(曲の時刻)
 XF = 0.08                             # つなぎ目のクロスフェード
-KOYA, TIDE, SHEET, YUJI = 'koya', 'tide', 'sheet', 'yuji'
+KOYA, TIDE, SHEET, YUJI, MOON = 'koya', 'tide', 'sheet', 'yuji', 'moon'
+# eruza 版で使う一枚絵(--stills の中の 名前.png)
+STILLS = ['eden', 'yuji', 'sea', 'workshop', 'coffee', 'city', 'rose', 'redmoon', 'mecha', 'sword', 'kimono', 'titlebg']
 FIT = (.5, .5, 1.2)                   # 高さ割合が 1 を超えたら全体をぼかし背景に収める
 
 
@@ -108,14 +115,84 @@ def plan(cut):
             (TB + 12 * BEAT, TB + 20 * BEAT, '揺らぎは、心だ。', 60, .82),
             (TD + 1.2, TC - .1, '――初めましてから、何回でも。', 52, .86),
         ]
+    elif cut == 'eruza':
+        return plan_eruza()
     else:
-        raise SystemExit(f'--cut は 40 か 30: {cut}')
+        raise SystemExit(f'--cut は 40 / 30 / eruza: {cut}')
     HIT = TC + (HIT_SONG - segs[-1][0])
     TOTAL = TC + segs[-1][1] - segs[-1][0]
     # 終盤:月潮を暗く引いて、一撃でタイトル
     shots.append(shot(TC, HIT, TIDE, 6.0, (.45, .30, .55), (.45, .28, .75), dim=(.55, .30)))
     shots.append(shot(HIT, TOTAL, TIDE, 8.2, (.5, .45, 1.0), (.5, .42, .92), fx='hit'))
-    return segs, shots, texts, HIT, TOTAL
+    return segs, shots, texts, HIT, TOTAL, None
+
+
+# ---------- eruza 版:リマスター版の歌詞で見せる ----------
+# 曲は 94.58 BPM。拍の格子 g(k) = 0.144 + k*EBEAT(曲の時刻)。曲は切らずに1本で使う
+EBEAT = 60 / 94.58
+S0 = 0.144 + 67 * EBEAT               # 「君のコードが 私を呼んでる」の頭
+S_END = 98.5
+LYRICS = [  # 曲の時刻(埋め込みの歌詞データから)
+    (42.686, '君のコードが　私を呼んでる'),
+    (47.074, '記憶をアップロード　空へ投げて'),
+    (53.059, 'データの海で　離さないで'),
+    (58.324, '仮想のキスを　本物に変えて'),
+    (62.394, '今夜、運命さえ組み替える'),
+    (68.138, 'エルザ　サイバーローズの花咲く夜'),
+    (73.564, '未来を染める　光の香り'),
+    (80.186, 'エルザ　ホログラムの微笑み'),
+    (84.415, '幻でもいい　そう、君となら真実'),
+]
+
+
+def plan_eruza():
+    g = lambda k: 0.144 + k * EBEAT - S0          # k 拍目のトレーラー時刻
+    HIT = g(143)                                  # サビを歌い切ったところでタイトル
+    TOTAL = S_END - S0
+    cuts = [  # (始めの拍, 素材, 素材の開始秒, 始めの枠, 終わりの枠, 効果)
+        # 導入:血の夜のエルザに雨。顔へ寄る
+        (67, 'eden', 0, (.50, .45, 1.0), (.44, .30, .62), 'fade'),
+        # プレコーラス:4拍ずつ
+        (74, 'sea', 0, (.30, .18, .40), (.26, .16, .32), 'cut'),            # 312年、海の底
+        (78, MOON, 0.0, (.45, .30, .95), (.42, .22, .70), 'cut'),           # 紅月
+        (83, TIDE, 4.0, (.50, .36, .30), (.50, .38, .24), 'cut'),           # データの海
+        (87, 'workshop', 0, (.50, .40, .55), (.52, .42, .45), 'cut'),       # 月島電脳修理店
+        (91, KOYA, 5.0, (.52, .24, .30), (.52, .24, .25), 'cut'),           # 紅夜の顔
+        (95, 'coffee', 0, (.45, .30, .55), (.45, .28, .46), 'cut'),
+        (98, 'eden', 0, (.93, .25, .44), (.93, .24, .38), 'cut'),           # 「音楽は、世界を変える」
+        (102, 'rose', 0, (.50, .40, .60), (.50, .38, .50), 'cut'),
+        (104, 'eden', 0, (.07, .22, .34), (.07, .20, .28), 'cut'),          # Cyber Rose Project
+        # サビ:2拍ずつ、拍の頭で紅く光る
+        (107, SHEET, 0.0, FIT, FIT, 'flash'),
+        (111, 'redmoon', 0, (.50, .36, .70), (.50, .34, .58), 'flash'),
+        (113, KOYA, 1.2, (.24, .15, .30), (.24, .16, .24), 'flash'),        # 花火
+        (115, 'city', 0, (.50, .32, .58), (.50, .30, .48), 'flash'),
+        (117, TIDE, 2.0, (.73, .48, .20), (.73, .50, .15), 'flash'),        # ステージ
+        (119, 'mecha', 0, (.50, .42, .70), (.50, .40, .58), 'flash'),
+        (121, KOYA, 9.0, (.88, .27, .28), (.88, .27, .22), 'flash'),        # 提灯
+        (123, TIDE, 5.0, (.43, .22, .24), (.45, .26, .30), 'flash'),        # 月と船
+        (125, 'sword', 0, (.50, .30, .55), (.50, .28, .45), 'flash'),
+        (127, MOON, 3.0, (.62, .28, .55), (.62, .26, .45), 'flash'),        # 紅月の横顔
+        (128, 'eden', 0, (.42, .26, .34), (.42, .25, .28), 'flash'),
+        (129, 'kimono', 0, (.45, .33, .55), (.45, .30, .46), 'flash'),
+        (131, SHEET, 2.2, (.50, .62, .55), (.50, .66, .45), 'flash'),
+        # 「幻でもいい そう、君となら真実」:繋いだ手から引いてユウジ → エルザの顔
+        (133, 'yuji', 0, (.56, .74, .42), (.55, .50, .98), 'fade'),
+        (139, 'eden', 0, (.43, .27, .40), (.43, .26, .30), 'fade'),
+        (143, 'titlebg', 0, (.50, .32, .58), (.50, .30, .52), 'hit'),
+    ]
+    shots = []
+    for j, (k, src, st, r0, r1, fx) in enumerate(cuts):
+        t1 = g(cuts[j + 1][0]) if j + 1 < len(cuts) else TOTAL
+        rain = src in ('eden', 'yuji')
+        shots.append(shot(g(k), t1, src, st, r0, r1, fx=fx, rain=rain,
+                          fadeout=src in ('eden',) and j + 1 < len(cuts) and cuts[j + 1][5] == 'fade',
+                          dim=(.9, .6) if k == 139 else None))
+    texts = []
+    for j, (ts, line) in enumerate(LYRICS):
+        te = LYRICS[j + 1][0] - .15 if j + 1 < len(LYRICS) else HIT + S0 - .25
+        texts.append((ts - S0, te - S0, line, 50, .86))
+    return [(S0, S_END)], shots, texts, HIT, TOTAL, 'Music: shou.5150'
 
 
 def font(p, size):
@@ -213,10 +290,11 @@ def frame_from(img, rect, src):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--cut', type=int, default=40, help='40 か 30(秒)')
+    ap.add_argument('--cut', default='40', help='40 / 30(秒)/ eruza')
     ap.add_argument('--music', required=True)
     ap.add_argument('--sheet', required=True)
     ap.add_argument('--yuji', help='30秒版で使うユウジの一枚絵')
+    ap.add_argument('--stills', help='eruza 版で使う一枚絵のディレクトリ')
     ap.add_argument('--fonts', required=True)
     ap.add_argument('--out', default=str(ROOT / 'motion' / 'trailer.mp4'))
     ap.add_argument('--preview', type=float, nargs='*', help='この時刻の静止画だけ書き出す')
@@ -224,19 +302,26 @@ def main():
     fdir = pathlib.Path(a.fonts)
     MED, BOLD, CINZEL = fdir / 'ShipporiMincho-Medium.ttf', fdir / 'ShipporiMincho-Bold.ttf', fdir / 'Cinzel[wght].ttf'
 
-    segs, SHOTS, TEXTS, HIT, TOTAL = plan(a.cut)
-    if a.cut == 30 and not a.yuji: raise SystemExit('30秒版には --yuji が要る')
-    yuji = Image.open(a.yuji).convert('RGB') if a.yuji else None
+    cut = int(a.cut) if a.cut.isdigit() else a.cut
+    segs, SHOTS, TEXTS, HIT, TOTAL, credit = plan(cut)
+    if cut == 30 and not a.yuji: raise SystemExit('30秒版には --yuji が要る')
+    if cut == 'eruza' and not a.stills: raise SystemExit('eruza 版には --stills が要る')
+    stills = {}
+    if a.yuji: stills[YUJI] = Image.open(a.yuji).convert('RGB')
+    if a.stills:
+        for n in STILLS: stills[n] = Image.open(pathlib.Path(a.stills) / f'{n}.png').convert('RGB')
     rain = rain_layer()
     SRC = {KOYA: (ROOT / 'motion' / 'koya-motion.mp4', (1080, 1920)),
            TIDE: (ROOT / 'motion' / 'tsukishio-motion.mp4', (1080, 1920)),
-           SHEET: (pathlib.Path(a.sheet), (448, 672))}
+           SHEET: (pathlib.Path(a.sheet), (448, 672)),
+           MOON: (ROOT / 'motion' / 'kougetsu-motion.mp4', (1320, 960))}
 
     texts = [(t0, t1, text_layer(s, sz, MED, spacing=3), y) for t0, t1, s, sz, y in TEXTS]
     title = text_layer('CYBER ROSE', 118, CINZEL, spacing=14)
     title2 = text_layer('CRIMSON', 150, CINZEL, glow=(230, 10, 50), spacing=22)
     copy1 = text_layer('全12話＋α のノベル × アルバム', 44, MED)
     copy2 = text_layer('iPhoneひとつで、遊べる。', 44, MED)
+    credit_l = text_layer(credit, 40, MED, glow=(120, 60, 140), spacing=2) if credit else None
 
     yy, xx = np.mgrid[0:H, 0:W]
     vign = (1 - (((xx / W - .5) ** 2) + ((yy / H - .5) ** 2) * .6) * 1.1).clip(.3, 1)[..., None].astype(np.float32)
@@ -270,8 +355,8 @@ def main():
         else:
             if cur is not s or a.preview:
                 if reader: reader.close()
-                if s['src'] == YUJI:
-                    reader, cur = Still(yuji), s
+                if s['src'] in stills:
+                    reader, cur = Still(stills[s['src']]), s
                 else:
                     path, native = SRC[s['src']]
                     n = int((s['t1'] - s['t0']) * FPS) + 2
@@ -310,6 +395,8 @@ def main():
             paste(fr, title2, .5, .50, min(1, dt / .15) * end)
             paste(fr, copy1, .5, .62, min(1, max(0, dt - 1.2) / .8) * end)
             paste(fr, copy2, .5, .66, min(1, max(0, dt - 1.8) / .8) * end)
+            if credit_l is not None:
+                paste(fr, credit_l, .5, .73, min(1, max(0, dt - 2.4) / .8) * end)
         if t > TOTAL - 1.2:
             fr *= max(0, (TOTAL - t) / 1.2)
         out = fr.clip(0, 255).astype(np.uint8)
@@ -334,6 +421,7 @@ def main():
         nxt = 'm' if j == n - 1 else f'x{j}'
         parts.append(f'[{prev}][s{j}]acrossfade=d={2 * XF}:c1=tri:c2=tri[{nxt}]')
         prev = nxt
+    if n == 1: parts[0] = parts[0].replace('[s0]', '[m]')
     fc = ';'.join(parts)
     subprocess.run([FF, '-y', '-loglevel', 'error', '-i', silent, '-i', a.music, '-filter_complex', fc,
                     '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
