@@ -124,14 +124,16 @@ def plan(cut):
     # 終盤:月潮を暗く引いて、一撃でタイトル
     shots.append(shot(TC, HIT, TIDE, 6.0, (.45, .30, .55), (.45, .28, .75), dim=(.55, .30)))
     shots.append(shot(HIT, TOTAL, TIDE, 8.2, (.5, .45, 1.0), (.5, .42, .92), fx='hit'))
-    return segs, shots, texts, HIT, TOTAL, None
+    return segs, shots, texts, HIT, TOTAL, {}
 
 
 # ---------- eruza 版:リマスター版の歌詞で見せる ----------
 # 曲は 94.58 BPM。拍の格子 g(k) = 0.144 + k*EBEAT(曲の時刻)。曲は切らずに1本で使う
 EBEAT = 60 / 94.58
 S0 = 0.144 + 67 * EBEAT               # 「君のコードが 私を呼んでる」の頭
-S_END = 98.5
+S_END = 100.7                         # 2番の歌い出し(100.85秒)の手前まで
+GAME_URL = 'rawcdn.githack.com/yama5150/shouhei/main/crc/index.html'
+SUNO_URL = 'suno.com/@shou.5150'
 LYRICS = [  # 曲の時刻(埋め込みの歌詞データから)
     (42.686, '君のコードが　私を呼んでる'),
     (47.074, '記憶をアップロード　空へ投げて'),
@@ -192,7 +194,7 @@ def plan_eruza():
     for j, (ts, line) in enumerate(LYRICS):
         te = LYRICS[j + 1][0] - .15 if j + 1 < len(LYRICS) else HIT + S0 - .25
         texts.append((ts - S0, te - S0, line, 50, .86))
-    return [(S0, S_END)], shots, texts, HIT, TOTAL, 'Music: shou.5150'
+    return [(S0, S_END)], shots, texts, HIT, TOTAL, {'credit': 'Music: shou.5150', 'card': True}
 
 
 def font(p, size):
@@ -204,7 +206,8 @@ def text_layer(txt, size, fpath, glow=(200, 20, 70), spacing=6):
     f = font(fpath, size)
     # 明朝に無い字(α など)は DejaVu Serif で補う
     alt = font('/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf', int(size * .9))
-    fonts = [alt if ch in 'αβ' else f for ch in txt]
+    sym = font('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', int(size * .8))   # ▶ ♪ など
+    fonts = [alt if ch in 'αβ' else sym if ch in '▶♪' else f for ch in txt]
     tw = sum(ff.getlength(ch) + spacing for ch, ff in zip(txt, fonts))
     im = Image.new('RGBA', (int(tw) + 160, size * 2 + 80), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -303,7 +306,7 @@ def main():
     MED, BOLD, CINZEL = fdir / 'ShipporiMincho-Medium.ttf', fdir / 'ShipporiMincho-Bold.ttf', fdir / 'Cinzel[wght].ttf'
 
     cut = int(a.cut) if a.cut.isdigit() else a.cut
-    segs, SHOTS, TEXTS, HIT, TOTAL, credit = plan(cut)
+    segs, SHOTS, TEXTS, HIT, TOTAL, END = plan(cut)
     if cut == 30 and not a.yuji: raise SystemExit('30秒版には --yuji が要る')
     if cut == 'eruza' and not a.stills: raise SystemExit('eruza 版には --stills が要る')
     stills = {}
@@ -321,7 +324,21 @@ def main():
     title2 = text_layer('CRIMSON', 150, CINZEL, glow=(230, 10, 50), spacing=22)
     copy1 = text_layer('全12話＋α のノベル × アルバム', 44, MED)
     copy2 = text_layer('iPhoneひとつで、遊べる。', 44, MED)
-    credit_l = text_layer(credit, 40, MED, glow=(120, 60, 140), spacing=2) if credit else None
+    credit_l = text_layer(END['credit'], 40, MED, glow=(120, 60, 140), spacing=2) if END.get('credit') else None
+    if END.get('card'):  # 商品説明と導線
+        small1 = text_layer('CYBER ROSE', 64, CINZEL, spacing=8)
+        small2 = text_layer('CRIMSON', 82, CINZEL, glow=(230, 10, 50), spacing=12)
+        feats = [text_layer(x, 42, MED, spacing=2) for x in (
+            '全12話＋α のノベル × アルバム',
+            '曲が物語の中で鳴る、再生する物語アルバム',
+            '収録曲 全11曲 ／ MUSIC ROOM 搭載',
+            'iPhoneひとつで、遊べる。')]
+        play_h = text_layer('▶ PLAY', 46, CINZEL, glow=(230, 10, 50), spacing=6)
+        play_u = text_layer(GAME_URL, 30, MED, glow=(120, 30, 80), spacing=0)
+        suno_h = text_layer('♪ MUSIC ON SUNO', 46, CINZEL, glow=(150, 60, 220), spacing=6)
+        suno_u = text_layer(SUNO_URL, 44, MED, glow=(150, 60, 220), spacing=1)
+        rule = np.zeros((6, 640, 4), np.float32); rule[..., :3] = (220, 60, 110)
+        rule[..., 3] = (255 * np.sin(np.linspace(0, np.pi, 640)) ** 2)[None, :] * .8
 
     yy, xx = np.mgrid[0:H, 0:W]
     vign = (1 - (((xx / W - .5) ** 2) + ((yy / H - .5) ** 2) * .6) * 1.1).clip(.3, 1)[..., None].astype(np.float32)
@@ -391,12 +408,31 @@ def main():
         if t >= HIT:
             dt = t - HIT
             end = min(1, (TOTAL - t) / 1.2)
-            paste(fr, title, .5, .43, min(1, dt / .15) * end)
-            paste(fr, title2, .5, .50, min(1, dt / .15) * end)
-            paste(fr, copy1, .5, .62, min(1, max(0, dt - 1.2) / .8) * end)
-            paste(fr, copy2, .5, .66, min(1, max(0, dt - 1.8) / .8) * end)
-            if credit_l is not None:
-                paste(fr, credit_l, .5, .73, min(1, max(0, dt - 2.4) / .8) * end)
+            if END.get('card'):
+                # 一撃でタイトル → 2.4秒後に商品説明のカードへ
+                ph2 = min(1, max(0, dt - 2.4) / .5)
+                a1 = min(1, dt / .15) * (1 - ph2)
+                paste(fr, title, .5, .43, a1)
+                paste(fr, title2, .5, .50, a1)
+                paste(fr, credit_l, .5, .60, min(1, max(0, dt - .6) / .6) * (1 - ph2))
+                if ph2 > 0:
+                    fr *= 1 - .45 * ph2                     # 文字が読めるよう背景を沈める
+                    fade = lambda d: min(1, max(0, dt - 2.4 - d) / .4) * end
+                    paste(fr, small1, .5, .17, fade(0))
+                    paste(fr, small2, .5, .215, fade(0))
+                    paste(fr, rule, .5, .265, fade(.2))
+                    for j, L in enumerate(feats):
+                        paste(fr, L, .5, .31 + j * .045, fade(.3 + j * .15))
+                    paste(fr, rule, .5, .50, fade(.9))
+                    paste(fr, play_h, .5, .56, fade(1.0))
+                    paste(fr, play_u, .5, .60, fade(1.1))
+                    paste(fr, suno_h, .5, .69, fade(1.3))
+                    paste(fr, suno_u, .5, .735, fade(1.4))
+            else:
+                paste(fr, title, .5, .43, min(1, dt / .15) * end)
+                paste(fr, title2, .5, .50, min(1, dt / .15) * end)
+                paste(fr, copy1, .5, .62, min(1, max(0, dt - 1.2) / .8) * end)
+                paste(fr, copy2, .5, .66, min(1, max(0, dt - 1.8) / .8) * end)
         if t > TOTAL - 1.2:
             fr *= max(0, (TOTAL - t) / 1.2)
         out = fr.clip(0, 255).astype(np.uint8)
