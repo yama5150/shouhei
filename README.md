@@ -14,6 +14,7 @@
 | トレーラー(30秒・縦) | `motion/trailer-30s.mp4` |
 | トレーラー eruza 版(58秒・縦・歌詞入り) | `motion/trailer-eruza.mp4` |
 | リンクページ(プロフィール用) | `links/index.html` |
+| リール用カバー画像 | `motion/thumbs/` |
 
 ## 配信方法
 
@@ -108,3 +109,7 @@ https://rawcdn.githack.com/yama5150/shouhei/main/links/index.html
 ```
 
 main にマージされてから有効になる(og:image も main の URL を指している)。
+
+## リール用カバー(`motion/thumbs/`)
+
+1080×1920。プロフィールのグリッドでは中央の 3:4(上下 240px ずつ切れる)しか見えないので、顔とタイトルはその中に置いた。`grid-preview.jpg` がグリッドでの見え方。作り直すときは `python3 tools/build-thumbs.py --stills <eden.png のあるディレクトリ> --fonts <フォントのディレクトリ>`。
