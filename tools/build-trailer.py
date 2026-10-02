@@ -132,8 +132,7 @@ def plan(cut):
 EBEAT = 60 / 94.58
 S0 = 0.144 + 67 * EBEAT               # 「君のコードが 私を呼んでる」の頭
 S_END = 100.7                         # 2番の歌い出し(100.85秒)の手前まで
-GAME_URL = 'rawcdn.githack.com/yama5150/shouhei/main/crc/index.html'
-SUNO_URL = 'suno.com/@shou.5150'
+SUNO_HANDLE = '@shou.5150'            # Suno で検索できるよう名前は画面に残す
 LYRICS = [  # 曲の時刻(埋め込みの歌詞データから)
     (42.686, '君のコードが　私を呼んでる'),
     (47.074, '記憶をアップロード　空へ投げて'),
@@ -333,10 +332,11 @@ def main():
             '曲が物語の中で鳴る、再生する物語アルバム',
             '収録曲 全11曲 ／ MUSIC ROOM 搭載',
             'iPhoneひとつで、遊べる。')]
-        play_h = text_layer('▶ PLAY', 46, CINZEL, glow=(230, 10, 50), spacing=6)
-        play_u = text_layer(GAME_URL, 30, MED, glow=(120, 30, 80), spacing=0)
-        suno_h = text_layer('♪ MUSIC ON SUNO', 46, CINZEL, glow=(150, 60, 220), spacing=6)
-        suno_u = text_layer(SUNO_URL, 44, MED, glow=(150, 60, 220), spacing=1)
+        # 動画の中の URL は押せないので、押せるリンクはプロフィールのリンクページ(links/)に置く
+        play_h = text_layer('▶ PLAY   /   ♪ LISTEN', 46, CINZEL, glow=(230, 10, 50), spacing=6)
+        play_u = text_layer('ゲームと音楽は、プロフィールのリンクから', 46, MED, glow=(230, 10, 50), spacing=2)
+        suno_h = text_layer('♪ MUSIC ON SUNO', 40, CINZEL, glow=(150, 60, 220), spacing=6)
+        suno_u = text_layer(SUNO_HANDLE, 46, MED, glow=(150, 60, 220), spacing=1)
         rule = np.zeros((6, 640, 4), np.float32); rule[..., :3] = (220, 60, 110)
         rule[..., 3] = (255 * np.sin(np.linspace(0, np.pi, 640)) ** 2)[None, :] * .8
 
@@ -425,7 +425,7 @@ def main():
                         paste(fr, L, .5, .31 + j * .045, fade(.3 + j * .15))
                     paste(fr, rule, .5, .50, fade(.9))
                     paste(fr, play_h, .5, .56, fade(1.0))
-                    paste(fr, play_u, .5, .60, fade(1.1))
+                    paste(fr, play_u, .5, .605, fade(1.1))
                     paste(fr, suno_h, .5, .69, fade(1.3))
                     paste(fr, suno_u, .5, .735, fade(1.4))
             else:
