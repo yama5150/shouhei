@@ -1,9 +1,11 @@
 <!doctype html>
 <!--
-  株式会社ほくと給食 コーポレートサイト（モバイルファースト版）
-  - 390px を基準に設計し、min-width のメディアクエリで広い画面へ拡張
-  - 外部リソース非依存（フォント/JS/CSS すべて自己完結）
-  - 掲載している会社情報は公開情報にもとづく
+  株式会社ほくと給食 コーポレートサイト
+  ───────────────────────────────────────────────────────────
+  アートディレクション: 写真素材を使わず、縦組みタイポグラフィ・
+  光・質感・スクロール演出だけで density を出す構成。
+  実装: 外部リソース非依存の単一HTML / モバイルファースト。
+  掲載している会社情報は公開情報にもとづく。
 -->
 <html lang="ja">
 <head>
@@ -11,53 +13,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>株式会社ほくと給食｜札幌の給食受託・食材販売</title>
 <meta name="description" content="株式会社ほくと給食は、1997年から札幌で給食受託と食材販売を行っています。厨房ごとの受託でも、食材の仕入れだけでも。障がい者施設・保育園・高齢者施設・学校寄宿舎など、その施設のやり方に合わせて毎日の食事を組み立てます。" />
-<meta name="theme-color" content="#0f2e22" />
+<meta name="theme-color" content="#081410" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="株式会社ほくと給食｜札幌の給食受託・食材販売" />
 <meta property="og:description" content="札幌の現場と、いっしょにつくる、毎日の給食。まるごとでも、食材だけでも。1997年創業・札幌市厚別区。" />
 <meta property="og:locale" content="ja_JP" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f2e22'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23e8b055' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23e8b055'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23081410'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23d8b45c' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23d8b45c'/%3E%3C/svg%3E" />
 
 <style>
 /* ═══════════════════════════════════════════════════════════
-   Tokens — 基準は 390px。数値はすべてモバイルの値から始める
+   1. TOKENS
    ═══════════════════════════════════════════════════════════ */
 :root{
-  --deep:#0f2e22; --deep-2:#143b2c; --green:#1f6b45; --green-soft:#e6efe8;
-  --accent:#c9762f; --accent-2:#e8b055;
-  --cream:#faf7f0; --cream-2:#f3ede1; --paper:#fff;
-  --ink:#1a231e; --ink-2:#4c5a52; --ink-3:#78877e; --line:#e2ddd2;
+  --void:#081410;        /* 最も深い背景 */
+  --deep:#0f2e22;
+  --deep-2:#143b2c;
+  --green:#1f6b45;
+  --green-soft:#e6efe8;
+  --brass:#c69b3f;       /* 落ち着いた真鍮色。多用しない */
+  --brass-2:#e2c383;
+  --cream:#f8f5ee;
+  --cream-2:#f0eae0;
+  --paper:#fff;
+  --ink:#141c18;
+  --ink-2:#4a584f;
+  --ink-3:#7a887f;
+  --line:#e3ded3;
 
   --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
   --sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP","Segoe UI",sans-serif;
 
-  --gut:20px;          /* 画面左右の余白 */
-  --bar:68px;          /* スマホ下部の固定バー高さ */
-  --hdr:56px;
+  --gut:20px;
+  --bar:68px;
+  --hdr:58px;
   --r:16px;
-  --sh-s:0 1px 2px rgba(15,46,34,.05), 0 3px 10px rgba(15,46,34,.05);
-  --sh-m:0 2px 6px rgba(15,46,34,.06), 0 14px 32px rgba(15,46,34,.09);
-  --sh-l:0 4px 10px rgba(15,46,34,.07), 0 28px 64px rgba(15,46,34,.13);
   --ease:cubic-bezier(.22,.68,.32,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --sh-s:0 1px 2px rgba(8,20,16,.05), 0 3px 10px rgba(8,20,16,.05);
+  --sh-m:0 2px 8px rgba(8,20,16,.06), 0 16px 36px rgba(8,20,16,.09);
+  --sh-l:0 6px 14px rgba(8,20,16,.08), 0 34px 74px rgba(8,20,16,.15);
 }
-@media (min-width:768px){ :root{ --gut:40px; --hdr:68px; --bar:0px; --r:18px; } }
-@media (min-width:1100px){ :root{ --gut:56px; --hdr:76px; } }
+@media (min-width:768px){ :root{ --gut:40px; --hdr:74px; --bar:0px; --r:18px; } }
+@media (min-width:1200px){ :root{ --gut:60px; --hdr:84px; } }
+
+/* 紙のグレイン。全体の質感を底上げする */
+:root{
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
 
 /* ═══════════════════════════════════════════════════════════
-   Base
+   2. BASE
    ═══════════════════════════════════════════════════════════ */
 *,*::before,*::after{ box-sizing:border-box; }
 html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
 body{
   margin:0;
-  /* 下の固定バーの下にコンテンツが隠れないよう逃がす */
   padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom, 0px));
   background:var(--cream); color:var(--ink);
-  font-family:var(--sans); font-size:15px; line-height:1.8; letter-spacing:.02em;
+  font-family:var(--sans); font-size:15px; line-height:1.85; letter-spacing:.025em;
   font-feature-settings:"palt" 1; -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
 }
-@media (min-width:768px){ body{ padding-bottom:0; font-size:16px; line-height:1.9; } }
+@media (min-width:768px){ body{ padding-bottom:0; font-size:16px; line-height:1.95; } }
+body.locked{ overflow:hidden; }
 
 img,svg{ max-width:100%; height:auto; display:block; }
 a{ color:inherit; }
@@ -66,516 +84,779 @@ p{ margin:0; }
 ul{ margin:0; padding:0; list-style:none; }
 summary::-webkit-details-marker{ display:none; }
 
-.wrap{ width:100%; max-width:1180px; margin-inline:auto; padding-inline:var(--gut); }
-.sec{ padding-block:56px; position:relative; }
-@media (min-width:768px){ .sec{ padding-block:92px; } }
-@media (min-width:1100px){ .sec{ padding-block:124px; } }
+.wrap{ width:100%; max-width:1240px; margin-inline:auto; padding-inline:var(--gut); }
+/* overflow:hidden は position:sticky を壊すので clip を使う */
+.sec{ position:relative; padding-block:68px; overflow-x:clip; }
+@media (min-width:768px){ .sec{ padding-block:112px; } }
+@media (min-width:1200px){ .sec{ padding-block:152px; } }
+section[id]{ scroll-margin-top:calc(var(--hdr) + 10px); }
 
-section[id]{ scroll-margin-top:calc(var(--hdr) + 12px); }
-
+/* ═══════════════════════════════════════════════════════════
+   3. TYPE SYSTEM
+   ═══════════════════════════════════════════════════════════ */
 .eyebrow{
-  display:inline-flex; align-items:center; gap:.6em;
-  font-size:11px; font-weight:700; letter-spacing:.2em;
+  display:inline-flex; align-items:center; gap:.7em;
+  font-size:10.5px; font-weight:700; letter-spacing:.26em;
   text-transform:uppercase; color:var(--green);
 }
-.eyebrow::before{ content:""; width:22px; height:1px; background:currentColor; opacity:.6; }
+.eyebrow::before{ content:""; width:24px; height:1px; background:currentColor; opacity:.55; }
+@media (min-width:768px){ .eyebrow{ font-size:11.5px; } }
+
+/* 行ごとのマスク出し。文字分割より崩れにくく、効果は十分に出る */
+.ln{ display:block; overflow:hidden; }
+.ln > i{
+  display:block; font-style:inherit;
+  transform:translateY(105%); opacity:0;
+  transition:transform 1.05s var(--ease-out), opacity .8s var(--ease-out);
+}
+.in .ln > i,
+.ln.in > i{ transform:none; opacity:1; }
+.in .ln:nth-child(2) > i{ transition-delay:.1s; }
+.in .ln:nth-child(3) > i{ transition-delay:.2s; }
+.in .ln:nth-child(4) > i{ transition-delay:.3s; }
 
 .ttl{
-  font-family:var(--serif); font-size:24px; line-height:1.5;
-  letter-spacing:.04em; margin-top:14px;
+  font-family:var(--serif); font-size:min(26px, 6.8vw); line-height:1.48;
+  letter-spacing:.045em; margin-top:16px; font-weight:600;
 }
-@media (min-width:768px){ .ttl{ font-size:32px; margin-top:18px; } }
-@media (min-width:1100px){ .ttl{ font-size:40px; } }
+@media (min-width:768px){ .ttl{ font-size:38px; margin-top:22px; } }
+@media (min-width:1200px){ .ttl{ font-size:50px; letter-spacing:.05em; } }
+/* 狭い2カラムの中に置く見出しは、列幅に合わせて小さくする */
+@media (min-width:980px){
+  .local__side .ttl,
+  .sup__grid > div .ttl{ font-size:min(40px, 3.3vw); }
+}
 
-.lead{ margin-top:16px; color:var(--ink-2); font-size:14px; max-width:60ch; }
-@media (min-width:768px){ .lead{ margin-top:20px; font-size:15.5px; } }
+.lead{ margin-top:18px; color:var(--ink-2); font-size:14px; max-width:58ch; }
+@media (min-width:768px){ .lead{ margin-top:24px; font-size:16px; } }
+
+/* 背景に敷く巨大なアウトライン英字 */
+.ghost{
+  position:absolute; pointer-events:none; user-select:none; z-index:0;
+  font-family:var(--serif); font-weight:600; letter-spacing:.02em;
+  font-size:19vw; line-height:1; white-space:nowrap;
+  -webkit-text-stroke:1px rgba(20,28,24,.07); color:transparent;
+}
+@media (min-width:768px){ .ghost{ font-size:15vw; } }
+.sec > .wrap{ position:relative; z-index:1; }
 
 /* ═══════════════════════════════════════════════════════════
-   Buttons — タップ領域は最低 48px
+   4. BUTTONS
    ═══════════════════════════════════════════════════════════ */
 .btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:.55em;
-  min-height:50px; padding:0 1.5em; border-radius:999px;
-  text-decoration:none; font-size:14px; font-weight:700; letter-spacing:.06em;
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:.6em;
+  min-height:52px; padding:0 1.7em; border-radius:999px;
+  text-decoration:none; font-size:13.5px; font-weight:700; letter-spacing:.09em;
   border:1px solid transparent; white-space:nowrap;
-  transition:background .3s var(--ease), color .3s, border-color .3s, transform .3s var(--ease), box-shadow .3s var(--ease);
+  transition:color .4s var(--ease), border-color .4s var(--ease), transform .4s var(--ease), box-shadow .4s var(--ease);
+  isolation:isolate;
+}
+/* hover で塗りが下からせり上がる */
+.btn::before{
+  content:""; position:absolute; inset:0; z-index:-1;
+  transform:translateY(101%); transition:transform .5s var(--ease-out);
 }
 .btn--fill{ background:var(--deep); color:#fff; box-shadow:var(--sh-s); }
-.btn--line{ border-color:rgba(15,46,34,.22); color:var(--deep); }
-.btn--ghost{ border-color:rgba(255,255,255,.42); color:#fff; }
+.btn--fill::before{ background:var(--green); }
+.btn--line{ border-color:rgba(20,28,24,.2); color:var(--ink); }
+.btn--line::before{ background:var(--deep); }
+.btn--ghost{ border-color:rgba(255,255,255,.34); color:#fff; }
+.btn--ghost::before{ background:rgba(255,255,255,.14); }
+.btn--brass{ background:var(--brass); color:var(--void); }
+.btn--brass::before{ background:var(--brass-2); }
 .btn--full{ width:100%; }
 @media (hover:hover){
-  .btn--fill:hover{ background:var(--green); transform:translateY(-2px); box-shadow:var(--sh-m); }
-  .btn--line:hover{ border-color:var(--deep); background:rgba(15,46,34,.04); transform:translateY(-2px); }
-  .btn--ghost:hover{ background:rgba(255,255,255,.12); border-color:#fff; }
+  .btn:hover{ transform:translateY(-2px); box-shadow:var(--sh-m); }
+  .btn:hover::before{ transform:none; }
+  .btn--line:hover{ color:#fff; border-color:var(--deep); }
+}
+.btn svg{ flex:none; }
+
+/* ═══════════════════════════════════════════════════════════
+   5. LOADER
+   ═══════════════════════════════════════════════════════════ */
+.loader{
+  position:fixed; inset:0; z-index:200; background:var(--void);
+  display:grid; place-items:center;
+  transition:opacity .5s var(--ease), visibility .5s;
+}
+.loader.done{ opacity:0; visibility:hidden; }
+.loader__m{ width:54px; height:54px; opacity:0; animation:lmark 1.5s var(--ease-out) forwards; }
+@keyframes lmark{
+  0%{ opacity:0; transform:scale(.82) rotate(-18deg); }
+  45%{ opacity:1; transform:none; }
+  100%{ opacity:1; transform:none; }
+}
+.loader__bar{
+  position:absolute; bottom:calc(32% - 1px); left:50%; transform:translateX(-50%);
+  width:86px; height:1px; background:rgba(255,255,255,.16); overflow:hidden;
+}
+.loader__bar i{
+  display:block; height:100%; width:100%; background:var(--brass);
+  transform:scaleX(0); transform-origin:left; animation:lbar 1.4s var(--ease-out) forwards;
+}
+@keyframes lbar{ to{ transform:scaleX(1); } }
+
+/* スクロール進捗 */
+.prog{
+  position:fixed; top:0; left:0; right:0; height:2px; z-index:90;
+  background:transparent; pointer-events:none;
+}
+.prog i{
+  display:block; height:100%; width:100%; transform:scaleX(0); transform-origin:left;
+  background:linear-gradient(90deg, var(--green), var(--brass));
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Header
+   6. CURSOR (ポインタのある環境のみ)
+   ═══════════════════════════════════════════════════════════ */
+.cur{
+  position:fixed; top:0; left:0; z-index:150; pointer-events:none;
+  width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%;
+  border:1px solid rgba(198,155,63,.75);
+  transition:width .3s var(--ease), height .3s var(--ease), margin .3s var(--ease),
+             background .3s var(--ease), opacity .3s;
+  opacity:0; will-change:transform;
+}
+.cur.on{ opacity:1; }
+.cur.big{ width:56px; height:56px; margin:-28px 0 0 -28px; background:rgba(198,155,63,.12); }
+@media (hover:none),(pointer:coarse){ .cur{ display:none; } }
+
+/* ═══════════════════════════════════════════════════════════
+   7. HEADER
    ═══════════════════════════════════════════════════════════ */
 .hdr{
-  position:fixed; inset:0 0 auto 0; z-index:60;
-  transition:background .35s var(--ease), box-shadow .35s var(--ease), transform .35s var(--ease);
+  position:fixed; inset:0 0 auto 0; z-index:80;
+  transition:background .45s var(--ease), box-shadow .45s var(--ease), transform .45s var(--ease);
 }
 .hdr__in{ display:flex; align-items:center; justify-content:space-between; gap:16px; height:var(--hdr); }
 .hdr.stuck{
-  background:rgba(250,247,240,.97);
-  backdrop-filter:saturate(170%) blur(12px); -webkit-backdrop-filter:saturate(170%) blur(12px);
-  box-shadow:0 1px 0 rgba(15,46,34,.08);
+  background:rgba(248,245,238,.96);
+  backdrop-filter:saturate(180%) blur(14px); -webkit-backdrop-filter:saturate(180%) blur(14px);
+  box-shadow:0 1px 0 rgba(8,20,16,.08);
 }
 .hdr.away{ transform:translateY(-102%); }
+/* ヒーロー上では白抜き */
+.hdr.over .logo__ja{ color:#fff; }
+.hdr.over .logo__en{ color:rgba(255,255,255,.5); }
+.hdr.over .nav a{ color:rgba(255,255,255,.78); }
+.hdr.over .nav a:hover{ color:#fff; }
+.hdr.over .nav a::after{ background:var(--brass); }
+.hdr.over .burger i{ background:#fff; }
+.hdr.over .hdr__cta{ background:transparent; border-color:rgba(255,255,255,.38); color:#fff; }
+.hdr.over .hdr__cta::before{ background:rgba(255,255,255,.16); }
 
-.logo{ display:flex; align-items:center; gap:9px; text-decoration:none; }
+.logo{ display:flex; align-items:center; gap:10px; text-decoration:none; }
 .logo__m{ width:30px; height:30px; flex:none; }
-.logo__ja{ font-family:var(--serif); font-size:15.5px; letter-spacing:.08em; font-weight:600; line-height:1.25; display:block; }
-.logo__en{ font-size:8.5px; letter-spacing:.2em; color:var(--ink-3); font-weight:700; display:block; }
+.logo__ja{ font-family:var(--serif); font-size:16px; letter-spacing:.09em; font-weight:600; line-height:1.25; display:block; transition:color .4s; }
+.logo__en{ font-size:8.5px; letter-spacing:.2em; color:var(--ink-3); font-weight:700; display:block; transition:color .4s; }
 @media (min-width:768px){
-  .logo__m{ width:34px; height:34px; }
-  .logo__ja{ font-size:17px; }
+  .logo__m{ width:36px; height:36px; }
+  .logo__ja{ font-size:18px; }
   .logo__en{ font-size:9.5px; letter-spacing:.24em; }
 }
 
 .nav{ display:none; }
-@media (min-width:1000px){
-  .nav{ display:flex; align-items:center; gap:26px; }
+@media (min-width:1060px){
+  .nav{ display:flex; align-items:center; gap:30px; }
   .nav a{
-    position:relative; text-decoration:none; font-size:13.5px; font-weight:600;
-    letter-spacing:.06em; color:var(--ink-2); padding-block:6px;
+    position:relative; text-decoration:none; font-size:13px; font-weight:600;
+    letter-spacing:.07em; color:var(--ink-2); padding-block:7px; transition:color .4s;
   }
   .nav a::after{
     content:""; position:absolute; left:0; right:100%; bottom:0; height:1.5px;
-    background:var(--green); transition:right .35s var(--ease);
+    background:var(--green); transition:right .4s var(--ease);
   }
-  .nav a:hover{ color:var(--deep); }
+  .nav a:hover{ color:var(--ink); }
   .nav a:hover::after{ right:0; }
 }
 .hdr__cta{ display:none; }
-@media (min-width:1000px){ .hdr__cta{ display:inline-flex; min-height:42px; font-size:13px; } }
+@media (min-width:1060px){ .hdr__cta{ display:inline-flex; min-height:44px; font-size:12.5px; padding:0 1.4em; } }
 
-/* burger */
 .burger{
-  position:relative; width:46px; height:46px; margin-right:-10px;
+  position:relative; width:46px; height:46px; margin-right:-11px;
   border:0; background:transparent; cursor:pointer; padding:0; border-radius:12px;
 }
 .burger i{
-  position:absolute; left:12px; width:22px; height:1.8px; background:var(--deep);
-  border-radius:2px; transition:top .28s var(--ease), transform .34s var(--ease), opacity .2s;
+  position:absolute; left:12px; width:22px; height:1.6px; background:var(--ink);
+  border-radius:2px; transition:top .3s var(--ease), transform .36s var(--ease), opacity .2s, background .4s;
 }
 .burger i:nth-child(1){ top:16px; }
 .burger i:nth-child(2){ top:22px; }
 .burger i:nth-child(3){ top:28px; }
-.burger[aria-expanded="true"] i:nth-child(1){ top:22px; transform:rotate(45deg); }
+.burger[aria-expanded="true"] i:nth-child(1){ top:22px; transform:rotate(45deg); background:#fff; }
 .burger[aria-expanded="true"] i:nth-child(2){ opacity:0; }
-.burger[aria-expanded="true"] i:nth-child(3){ top:22px; transform:rotate(-45deg); }
-@media (min-width:1000px){ .burger{ display:none; } }
+.burger[aria-expanded="true"] i:nth-child(3){ top:22px; transform:rotate(-45deg); background:#fff; }
+@media (min-width:1060px){ .burger{ display:none; } }
 
-/* drawer */
+/* ドロワーは暗転。白背景より「落ちる」感じが出る */
 .drawer{
-  position:fixed; inset:0; z-index:55; background:var(--cream);
+  position:fixed; inset:0; z-index:75; background:var(--void); color:#fff;
   display:flex; flex-direction:column; justify-content:center;
   padding:var(--gut) var(--gut) calc(var(--bar) + var(--gut));
-  opacity:0; visibility:hidden; transform:translateY(-6px);
-  transition:opacity .35s var(--ease), transform .35s var(--ease), visibility .35s;
+  clip-path:circle(0% at calc(100% - 34px) 32px);
+  transition:clip-path .72s var(--ease-out), visibility .72s;
+  visibility:hidden;
 }
-.drawer.open{ opacity:1; visibility:visible; transform:none; }
+.drawer.open{ clip-path:circle(150% at calc(100% - 34px) 32px); visibility:visible; }
+.drawer::after{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:var(--grain); mix-blend-mode:overlay;
+}
 .drawer a{
-  display:flex; align-items:baseline; gap:12px; text-decoration:none;
-  font-family:var(--serif); font-size:23px; letter-spacing:.06em;
-  padding-block:16px; border-bottom:1px solid var(--line);
+  position:relative; display:flex; align-items:baseline; gap:12px; text-decoration:none;
+  font-family:var(--serif); font-size:24px; letter-spacing:.07em;
+  padding-block:16px; border-bottom:1px solid rgba(255,255,255,.12);
+  opacity:0; transform:translateY(14px);
+  transition:opacity .5s var(--ease-out), transform .5s var(--ease-out);
 }
+.drawer.open a{ opacity:1; transform:none; }
+.drawer.open a:nth-child(1){ transition-delay:.18s; }
+.drawer.open a:nth-child(2){ transition-delay:.24s; }
+.drawer.open a:nth-child(3){ transition-delay:.30s; }
+.drawer.open a:nth-child(4){ transition-delay:.36s; }
+.drawer.open a:nth-child(5){ transition-delay:.42s; }
+.drawer.open a:nth-child(6){ transition-delay:.48s; }
 .drawer a em{
-  font-family:var(--sans); font-style:normal; font-size:9.5px; letter-spacing:.18em;
-  color:var(--ink-3); font-weight:700;
+  font-family:var(--sans); font-style:normal; font-size:9px; letter-spacing:.2em;
+  color:var(--brass); font-weight:700;
 }
-body.lock{ overflow:hidden; }
 
 /* ═══════════════════════════════════════════════════════════
-   Hero — 1画面に収まることを最優先
+   8. HERO — 全画面・暗転・縦組み
    ═══════════════════════════════════════════════════════════ */
 .hero{
-  padding-top:calc(var(--hdr) + 26px); padding-bottom:36px;
-  background:
-    radial-gradient(120% 70% at 92% 2%, #fff4e2 0%, rgba(255,244,226,0) 56%),
-    radial-gradient(90% 60% at 0% 100%, #e9f1ea 0%, rgba(233,241,234,0) 58%),
-    var(--cream);
   position:relative; overflow:hidden;
+  min-height:100svh; display:flex; flex-direction:column;
+  padding-top:calc(var(--hdr) + 6px); padding-bottom:26px;
+  background:var(--void); color:#fff;
 }
-@media (min-width:768px){ .hero{ padding-top:calc(var(--hdr) + 56px); padding-bottom:64px; } }
+@media (min-width:768px){ .hero{ padding-bottom:44px; } }
 
+/* 背景の光。ゆっくり呼吸する */
+.hero__glow{ position:absolute; inset:0; pointer-events:none; }
+.hero__glow span{
+  position:absolute; border-radius:50%; filter:blur(60px);
+  animation:breathe 15s ease-in-out infinite;
+}
+.hero__glow span:nth-child(1){
+  width:86vw; height:86vw; right:-24vw; top:-18vw; opacity:.9;
+  background:radial-gradient(circle, rgba(34,124,80,.95), rgba(34,124,80,0) 66%);
+}
+.hero__glow span:nth-child(2){
+  width:70vw; height:70vw; left:-24vw; bottom:-18vw; opacity:.85;
+  background:radial-gradient(circle, rgba(198,155,63,.6), rgba(198,155,63,0) 66%);
+  animation-delay:-6s;
+}
+.hero__glow span:nth-child(3){
+  width:54vw; height:54vw; left:28vw; top:14vw; opacity:.8;
+  background:radial-gradient(circle, rgba(226,195,131,.45), rgba(226,195,131,0) 68%);
+  animation-delay:-11s;
+}
+
+/* ── ステージ: 料理 + 縦書きを横並びに ── */
+.hero__stage{
+  position:relative; z-index:2; flex:1 1 auto;
+  display:grid; grid-template-columns:minmax(0,1fr) auto;
+  align-items:center; gap:clamp(8px,2.5vw,52px);
+  width:100%; max-width:1240px; margin-inline:auto;
+  padding-inline:var(--gut); padding-block:8px;
+  min-height:290px;
+}
+@media (min-width:900px){ .hero__stage{ min-height:400px; } }
+
+.dish{ position:relative; }
+/* 料理に当てるスポットライト */
+.dish::before{
+  content:""; position:absolute; inset:-30% -22%; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(255,236,196,.42), rgba(255,236,196,0) 70%);
+  filter:blur(26px);
+}
+.dish svg{
+  position:relative;
+  filter:drop-shadow(0 26px 46px rgba(0,0,0,.6)) drop-shadow(0 2px 0 rgba(255,245,220,.16));
+  margin-inline:auto;
+  width:min(100%, 560px);
+}
+.steam{ animation:steam 6s ease-in-out infinite; transform-origin:center bottom; }
+.steam:nth-of-type(2){ animation-delay:-2s; }
+.steam:nth-of-type(3){ animation-delay:-4s; }
+@keyframes steam{
+  0%{ opacity:0; transform:translateY(8px) scaleX(.92); }
+  35%{ opacity:.85; }
+  100%{ opacity:0; transform:translateY(-26px) scaleX(1.16); }
+}
+@keyframes breathe{
+  0%,100%{ transform:translate3d(0,0,0) scale(1); }
+  50%{ transform:translate3d(0,-3%,0) scale(1.1); }
+}
+
+/* 回転する細い円。和の器・太陽のモチーフ */
+.hero__ring{
+  position:absolute; left:50%; top:46%; translate:-50% -50%;
+  width:122vw; height:122vw; max-width:980px; max-height:980px;
+  border:1px solid rgba(198,155,63,.17); border-radius:50%;
+  pointer-events:none; animation:spin 68s linear infinite;
+}
+.hero__ring::before,.hero__ring::after{
+  content:""; position:absolute; border-radius:50%;
+  border:1px solid rgba(198,155,63,.12);
+}
+.hero__ring::before{ inset:9%; }
+.hero__ring::after{ inset:21%; border-color:rgba(255,255,255,.07); }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.hero__grain{
+  position:absolute; inset:0; pointer-events:none; opacity:.42;
+  background-image:var(--grain); mix-blend-mode:overlay;
+}
+/* 下端を沈ませて文字を浮かせる */
+.hero__vig{
+  position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(8,20,16,.55) 0%, rgba(8,20,16,0) 26%, rgba(8,20,16,.35) 62%, rgba(8,20,16,.92) 100%);
+}
+
+.hero__in{
+  position:relative; z-index:2; width:100%;
+  display:grid; gap:18px;
+}
+@media (min-width:900px){
+  .hero__in{ grid-template-columns:1fr auto; align-items:end; gap:40px; }
+}
+
+/* 縦組みのキャッチコピー */
+/* 縦組み。
+   writing-mode:vertical-rl はフォントに縦書きメトリクス(vmtx)が無いと
+   字が同じ位置に重なるため使わない。1文字ずつブロックで積んで列を作る。
+   これならどのフォントに落ちても字送りが壊れない。 */
+.vcatch{
+  display:flex; flex-direction:row-reverse; align-items:flex-start;
+  gap:.56em; margin:0; justify-self:end;
+  font-family:var(--serif); font-weight:600; letter-spacing:0;
+  font-size:min(26px, 4.4svh);
+  text-shadow:0 2px 20px rgba(8,20,16,.75);
+}
+@media (min-width:600px){ .vcatch{ font-size:min(33px, 4.4svh); } }
+@media (min-width:900px){ .vcatch{ font-size:min(44px, 4.4svh); } }
+@media (min-width:1200px){ .vcatch{ font-size:min(54px, 4.6svh); } }
+.vcatch .ln{ overflow:hidden; display:block; }
+.vcatch .inner{
+  display:block; transform:translateX(108%); opacity:0;
+  transition:transform 1.1s var(--ease-out), opacity .8s var(--ease-out);
+}
+.vcatch.in .inner{ transform:none; opacity:1; }
+.vcatch.in .ln:nth-child(2) .inner{ transition-delay:.12s; }
+.vcatch.in .ln:nth-child(3) .inner{ transition-delay:.24s; }
+.vcatch i{
+  display:block; font-style:normal; width:1em; line-height:1.24; text-align:center;
+}
+/* 句読点は縦組みでは字面の右上に置く */
+.vcatch i.pt{ transform:translate(.36em, -.4em); }
+/* 縦組みの傍線は字の右側 */
+.vcatch i.u{ background:linear-gradient(to right, transparent 78%, rgba(198,155,63,.62) 78%); }
+
+.hero__meta{ display:grid; gap:20px; max-width:30em; }
+@media (min-width:900px){ .hero__meta{ order:-1; } }
 .hero__tag{
-  display:inline-flex; align-items:center; gap:.55em;
-  background:rgba(31,107,69,.09); color:var(--green);
-  border-radius:999px; padding:.42em 1em;
-  font-size:11px; font-weight:700; letter-spacing:.1em;
+  display:inline-flex; align-items:center; gap:.6em; width:max-content;
+  border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:.44em 1.05em;
+  font-size:10.5px; font-weight:700; letter-spacing:.14em; color:rgba(255,255,255,.88);
 }
-.hero__tag b{ width:5px; height:5px; border-radius:50%; background:var(--accent-2); flex:none; }
-
-.hero h1{
-  font-family:var(--serif); font-size:30px; line-height:1.45;
-  letter-spacing:.035em; margin-top:18px;
-}
-@media (min-width:768px){ .hero h1{ font-size:40px; margin-top:24px; } }
-@media (min-width:1100px){ .hero h1{ font-size:50px; } }
-.hero h1 u{ text-decoration:none; background:linear-gradient(transparent 68%, rgba(232,176,85,.45) 68%); }
-
-.hero__sub{ margin-top:18px; color:var(--ink-2); font-size:14px; max-width:36em; }
-@media (min-width:768px){ .hero__sub{ margin-top:22px; font-size:15.5px; } }
-
-.hero__cta{ display:grid; gap:10px; margin-top:24px; }
+.hero__tag b{ width:5px; height:5px; border-radius:50%; background:var(--brass); flex:none;
+  box-shadow:0 0 0 0 rgba(198,155,63,.6); animation:pulse 2.6s ease-out infinite; }
+@keyframes pulse{ 70%{ box-shadow:0 0 0 7px rgba(198,155,63,0); } 100%{ box-shadow:0 0 0 0 rgba(198,155,63,0); } }
+.hero__sub{ color:rgba(255,255,255,.72); font-size:13.5px; }
+@media (min-width:768px){ .hero__sub{ font-size:15px; } }
+.hero__cta{ display:grid; gap:10px; }
 @media (min-width:560px){ .hero__cta{ grid-auto-flow:column; justify-content:start; } }
 
-.hero__art{ margin-top:30px; }
-@media (min-width:860px){
-  .hero__grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center; }
-  .hero__art{ margin-top:0; }
+.scrollcue{
+  position:absolute; left:50%; bottom:14px; translate:-50% 0; z-index:3;
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  font-size:8.5px; letter-spacing:.26em; color:rgba(255,255,255,.45); font-weight:700;
 }
-.tray{ filter:drop-shadow(0 16px 30px rgba(15,46,34,.15)); }
-.steam{ animation:steam 5.5s ease-in-out infinite; transform-origin:center bottom; }
-.steam:nth-of-type(2){ animation-delay:-1.9s; }
-.steam:nth-of-type(3){ animation-delay:-3.6s; }
-@keyframes steam{
-  0%{ opacity:0; transform:translateY(6px) scaleX(.94); }
-  35%{ opacity:.75; }
-  100%{ opacity:0; transform:translateY(-22px) scaleX(1.12); }
+.scrollcue span{ display:block; width:1px; height:36px; background:rgba(255,255,255,.22); position:relative; overflow:hidden; }
+.scrollcue span::after{
+  content:""; position:absolute; inset:0; background:var(--brass);
+  animation:cue 2.1s var(--ease) infinite;
 }
-
-/* イラスト下の小さな情報チップ（スマホでは必ず読める形で縦に） */
-.chips{ display:grid; gap:8px; margin-top:12px; }
-@media (min-width:480px){ .chips{ grid-template-columns:1fr 1fr; } }
-.chip{
-  display:flex; align-items:center; gap:10px;
-  background:rgba(255,255,255,.9); border:1px solid rgba(15,46,34,.07);
-  border-radius:13px; padding:10px 13px; box-shadow:var(--sh-s);
-}
-.chip svg{ width:17px; height:17px; }
-.chip i{
-  width:30px; height:30px; border-radius:9px; flex:none; display:grid; place-items:center;
-  background:var(--green-soft); color:var(--green);
-}
-.chip b{ font-family:var(--serif); font-size:15px; letter-spacing:.03em; display:block; line-height:1.35; }
-.chip span{ font-size:10px; letter-spacing:.08em; color:var(--ink-3); font-weight:700; }
+@keyframes cue{ 0%{ transform:translateY(-100%); } 60%,100%{ transform:translateY(100%); } }
+@media (max-width:899px){ .scrollcue{ display:none; } }
 
 /* ═══════════════════════════════════════════════════════════
-   Marquee
+   9. MARQUEE
    ═══════════════════════════════════════════════════════════ */
-.strip{ background:var(--deep); color:rgba(255,255,255,.9); overflow:hidden; padding-block:11px; }
-@media (min-width:768px){ .strip{ padding-block:15px; } }
-.strip__row{ display:flex; width:max-content; animation:marquee 32s linear infinite; }
+.strip{
+  background:var(--deep); color:rgba(255,255,255,.88); overflow:hidden;
+  padding-block:12px; position:relative; z-index:2;
+  border-block:1px solid rgba(255,255,255,.08);
+}
+@media (min-width:768px){ .strip{ padding-block:16px; } }
+.strip__row{ display:flex; width:max-content; animation:marquee 34s linear infinite; }
 .strip__row span{
-  display:inline-flex; align-items:center; gap:16px; padding-right:16px;
-  font-size:10.5px; letter-spacing:.14em; font-weight:600; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:18px; padding-right:18px;
+  font-size:10.5px; letter-spacing:.16em; font-weight:600; white-space:nowrap;
 }
-.strip__row span::after{ content:"◆"; color:var(--accent-2); font-size:7px; }
-@media (min-width:768px){
-  .strip__row span{ font-size:12.5px; letter-spacing:.2em; gap:26px; padding-right:26px; }
-}
+.strip__row span::after{ content:""; width:4px; height:4px; border-radius:50%; background:var(--brass); }
+@media (min-width:768px){ .strip__row span{ font-size:12.5px; letter-spacing:.22em; gap:28px; padding-right:28px; } }
 @keyframes marquee{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 
 /* ═══════════════════════════════════════════════════════════
-   Stats
+   10. STATEMENT — 大きく組んだ一文で緩急をつける
    ═══════════════════════════════════════════════════════════ */
-.stats{ background:var(--paper); border-block:1px solid var(--line); }
-.stats__in{ display:grid; grid-template-columns:repeat(3,1fr); padding-block:28px; }
-@media (min-width:768px){ .stats__in{ padding-block:48px; } }
-.stat{ padding-inline:10px; border-left:1px solid var(--line); }
-.stat:first-child{ border-left:0; padding-left:0; }
-.stat b{
-  font-family:var(--serif); font-size:26px; line-height:1.15;
-  color:var(--deep); letter-spacing:.02em; display:block; font-weight:600;
+.stmt{ background:var(--cream); }
+.stmt__q{
+  font-family:var(--serif); font-size:25px; line-height:1.72; letter-spacing:.05em;
+  margin-top:22px;
 }
-@media (min-width:768px){ .stat b{ font-size:40px; } }
-.stat b small{ font-size:.42em; margin-left:.22em; color:var(--green); }
-/* ラベルは .stat の直下だけ。b の中の数字 span に当てないこと */
-.stat > span{ display:block; margin-top:6px; font-size:10.5px; letter-spacing:.06em; color:var(--ink-3); font-weight:700; }
-@media (min-width:768px){ .stat > span{ font-size:12.5px; margin-top:9px; } }
+@media (min-width:768px){ .stmt__q{ font-size:38px; margin-top:30px; } }
+@media (min-width:1200px){ .stmt__q{ font-size:50px; } }
+.stmt__q em{ font-style:normal; color:var(--green); }
+
+.nums{ display:grid; grid-template-columns:repeat(3,1fr); margin-top:40px; border-top:1px solid var(--line); }
+@media (min-width:768px){ .nums{ margin-top:68px; } }
+.num{ padding:22px 10px 0; border-left:1px solid var(--line); }
+.num:first-child{ border-left:0; padding-left:0; }
+@media (min-width:768px){ .num{ padding:30px 24px 0; } }
+.num b{
+  display:block; font-family:var(--serif); font-size:30px; line-height:1.1;
+  color:var(--deep); letter-spacing:.01em; font-weight:600;
+}
+@media (min-width:768px){ .num b{ font-size:58px; } }
+@media (min-width:1200px){ .num b{ font-size:74px; } }
+.num b small{ font-size:.36em; margin-left:.2em; color:var(--brass); }
+.num > span{ display:block; margin-top:8px; font-size:10.5px; letter-spacing:.1em; color:var(--ink-3); font-weight:700; }
+@media (min-width:768px){ .num > span{ font-size:12px; margin-top:14px; } }
 
 /* ═══════════════════════════════════════════════════════════
-   Cards (事業内容)
+   11. BUSINESS
    ═══════════════════════════════════════════════════════════ */
-.biz{ display:grid; gap:14px; margin-top:28px; }
-@media (min-width:860px){ .biz{ grid-template-columns:1fr 1fr; gap:26px; margin-top:48px; } }
+.biz{ display:grid; gap:14px; margin-top:32px; }
+@media (min-width:880px){ .biz{ grid-template-columns:1fr 1fr; gap:28px; margin-top:62px; } }
 .card{
   position:relative; overflow:hidden; background:var(--paper);
-  border:1px solid var(--line); border-radius:var(--r); padding:24px 22px;
-  transition:transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s;
+  border:1px solid var(--line); border-radius:var(--r); padding:26px 22px;
+  transition:transform .55s var(--ease-out), box-shadow .55s var(--ease-out), border-color .55s;
 }
-@media (min-width:768px){ .card{ padding:36px 34px; } }
-@media (hover:hover){ .card:hover{ transform:translateY(-5px); box-shadow:var(--sh-l); border-color:transparent; } }
-.card__ic{ position:absolute; right:-12px; top:-12px; width:104px; height:104px; color:var(--green); opacity:.07; }
-.card__no{ font-family:var(--serif); font-size:11px; letter-spacing:.2em; color:var(--accent); font-weight:700; }
-.card h3{ font-family:var(--serif); font-size:20px; margin-top:10px; letter-spacing:.04em; }
-@media (min-width:768px){ .card h3{ font-size:25px; margin-top:14px; } }
-.card p{ margin-top:13px; color:var(--ink-2); font-size:14px; }
-.tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:18px; }
+@media (min-width:768px){ .card{ padding:44px 40px; } }
+@media (hover:hover){ .card:hover{ transform:translateY(-6px); box-shadow:var(--sh-l); border-color:transparent; } }
+.card__ic{ position:absolute; right:-14px; top:-14px; width:118px; height:118px; color:var(--green); opacity:.06; transition:transform .7s var(--ease-out), opacity .7s; }
+@media (hover:hover){ .card:hover .card__ic{ transform:scale(1.1) rotate(-7deg); opacity:.11; } }
+.card__no{ font-family:var(--serif); font-size:11px; letter-spacing:.24em; color:var(--brass); font-weight:700; }
+.card h3{ font-family:var(--serif); font-size:21px; margin-top:12px; letter-spacing:.05em; }
+@media (min-width:768px){ .card h3{ font-size:28px; margin-top:16px; } }
+.card p{ margin-top:14px; color:var(--ink-2); font-size:14px; }
+.tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:20px; }
 .tags span{
   font-size:11.5px; letter-spacing:.04em; font-weight:600;
-  background:var(--green-soft); color:var(--green); padding:.38em .85em; border-radius:999px;
+  background:var(--green-soft); color:var(--green); padding:.4em .9em; border-radius:999px;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Why local
+   12. WHY LOCAL — 広い画面では左を固定して読ませる
    ═══════════════════════════════════════════════════════════ */
 .local{ background:var(--cream-2); }
-@media (min-width:900px){
-  .local__grid{ display:grid; grid-template-columns:.85fr 1.15fr; gap:56px; }
+@media (min-width:980px){
+  .local__grid{ display:grid; grid-template-columns:.82fr 1.18fr; gap:70px; align-items:start; }
+  .local__side{ position:sticky; top:calc(var(--hdr) + 60px); }
 }
 .note{
-  margin-top:20px; padding:16px 18px; border-radius:14px;
-  background:rgba(255,255,255,.75); border:1px solid var(--line);
+  margin-top:24px; padding:18px 20px; border-radius:14px;
+  background:rgba(255,255,255,.72); border:1px solid var(--line);
   font-size:13.5px; color:var(--ink-2);
 }
-.reasons{ margin-top:26px; }
-@media (min-width:900px){ .reasons{ margin-top:0; } }
+.reasons{ margin-top:30px; }
+@media (min-width:980px){ .reasons{ margin-top:0; } }
 .reason{
-  display:grid; grid-template-columns:auto 1fr; gap:14px;
-  padding-block:20px; border-top:1px solid rgba(15,46,34,.14);
+  display:grid; grid-template-columns:auto 1fr; gap:16px;
+  padding-block:24px; border-top:1px solid rgba(20,28,24,.13);
 }
-.reason:last-child{ border-bottom:1px solid rgba(15,46,34,.14); }
-.reason b{ font-family:var(--serif); font-size:20px; color:var(--accent); line-height:1.3; font-weight:600; }
-.reason h3{ font-family:var(--serif); font-size:17px; letter-spacing:.03em; }
-@media (min-width:768px){ .reason h3{ font-size:20px; } }
-.reason p{ margin-top:9px; font-size:14px; color:var(--ink-2); }
+@media (min-width:768px){ .reason{ padding-block:38px; gap:28px; } }
+.reason:last-child{ border-bottom:1px solid rgba(20,28,24,.13); }
+.reason b{ font-family:var(--serif); font-size:21px; color:var(--brass); line-height:1.25; font-weight:600; }
+@media (min-width:768px){ .reason b{ font-size:30px; } }
+.reason h3{ font-family:var(--serif); font-size:18px; letter-spacing:.04em; }
+@media (min-width:768px){ .reason h3{ font-size:24px; } }
+.reason p{ margin-top:10px; font-size:14px; color:var(--ink-2); }
 
 /* ═══════════════════════════════════════════════════════════
-   Scroller — スマホは横スワイプ、広い画面はグリッド
+   13. SCROLLER — スマホ横スワイプ / 広い画面はグリッド
    ═══════════════════════════════════════════════════════════ */
-.swipe-hint{
-  display:flex; align-items:center; gap:7px; margin-top:22px;
-  font-size:11px; letter-spacing:.1em; font-weight:700; color:var(--ink-3);
+.hint{
+  display:flex; align-items:center; gap:8px; margin-top:26px;
+  font-size:10.5px; letter-spacing:.14em; font-weight:700; color:var(--ink-3);
 }
-.swipe-hint svg{ width:15px; height:15px; }
-@media (min-width:860px){ .swipe-hint{ display:none; } }
+.hint svg{ width:15px; height:15px; animation:nudge 1.9s var(--ease) infinite; }
+@keyframes nudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(5px); } }
+@media (min-width:880px){ .hint{ display:none; } }
 
 .scroller{
-  display:grid; grid-auto-flow:column; grid-auto-columns:74%;
+  display:grid; grid-auto-flow:column; grid-auto-columns:73%;
   gap:12px; margin-top:12px;
   overflow-x:auto; overscroll-behavior-x:contain;
   scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
   padding-inline:var(--gut); margin-inline:calc(var(--gut) * -1);
-  /* これが無いとスナップ位置が padding を無視して1枚目が画面端に貼り付く */
   scroll-padding-inline:var(--gut);
-  padding-bottom:4px;
-  scrollbar-width:none;
+  padding-bottom:4px; scrollbar-width:none;
 }
 .scroller::-webkit-scrollbar{ display:none; }
 .scroller > *{ scroll-snap-align:start; }
-@media (min-width:560px){ .scroller{ grid-auto-columns:46%; } }
-@media (min-width:860px){
+@media (min-width:560px){ .scroller{ grid-auto-columns:44%; } }
+@media (min-width:880px){
   .scroller{
     grid-auto-flow:row; grid-template-columns:repeat(4,1fr); grid-auto-columns:auto;
-    overflow:visible; padding-inline:0; margin-inline:0; margin-top:44px; gap:1px;
+    overflow:visible; padding-inline:0; margin-inline:0; margin-top:58px; gap:1px;
   }
 }
 
 .fac{ background:var(--paper); }
 .fac .scroller > div{
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r);
-  padding:22px 20px;
+  padding:24px 20px; transition:background .45s var(--ease);
 }
-@media (min-width:860px){
+@media (min-width:880px){
   .fac .scroller{ background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; }
-  .fac .scroller > div{ border:0; border-radius:0; padding:30px 26px; }
+  .fac .scroller > div{ border:0; border-radius:0; padding:38px 30px; }
+  .fac .scroller > div:hover{ background:var(--cream); }
 }
-.fac svg{ width:27px; height:27px; color:var(--green); }
-.fac h3{ font-family:var(--serif); font-size:16px; margin-top:14px; letter-spacing:.04em; }
-.fac p{ margin-top:8px; font-size:13px; color:var(--ink-3); line-height:1.8; }
+.fac svg.i{ width:28px; height:28px; color:var(--green); }
+.fac h3{ font-family:var(--serif); font-size:17px; margin-top:16px; letter-spacing:.05em; }
+@media (min-width:880px){ .fac h3{ font-size:19px; } }
+.fac p{ margin-top:9px; font-size:13px; color:var(--ink-3); line-height:1.82; }
 
 /* ═══════════════════════════════════════════════════════════
-   Strength (dark)
+   14. SAFETY — 暗転セクション
    ═══════════════════════════════════════════════════════════ */
-.str{
+.str{ background:var(--void); color:#fff; overflow:hidden; }
+.str::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
   background:
-    radial-gradient(80% 50% at 95% 0%, #1b4a35 0%, rgba(27,74,53,0) 60%),
-    radial-gradient(70% 50% at 0% 100%, #16382a 0%, rgba(22,56,42,0) 58%),
-    var(--deep);
-  color:#fff;
+    radial-gradient(70% 45% at 92% 0%, rgba(31,107,69,.5) 0%, rgba(31,107,69,0) 62%),
+    radial-gradient(60% 45% at 2% 100%, rgba(198,155,63,.17) 0%, rgba(198,155,63,0) 60%);
 }
-.str .eyebrow{ color:var(--accent-2); }
-.str .lead{ color:rgba(255,255,255,.72); }
-.pillars{ display:grid; gap:12px; margin-top:28px; }
-@media (min-width:880px){ .pillars{ grid-template-columns:repeat(3,1fr); gap:22px; margin-top:48px; } }
+.str::after{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.4;
+  background-image:var(--grain); mix-blend-mode:overlay;
+}
+.str .eyebrow{ color:var(--brass); }
+.str .lead{ color:rgba(255,255,255,.7); }
+.str .ghost{ -webkit-text-stroke-color:rgba(255,255,255,.06); }
+.pillars{ display:grid; gap:12px; margin-top:34px; }
+@media (min-width:900px){ .pillars{ grid-template-columns:repeat(3,1fr); gap:24px; margin-top:62px; } }
 .pillar{
-  border:1px solid rgba(255,255,255,.14); border-radius:var(--r);
-  background:rgba(255,255,255,.045); padding:24px 22px;
+  position:relative; overflow:hidden;
+  border:1px solid rgba(255,255,255,.13); border-radius:var(--r);
+  background:rgba(255,255,255,.04); padding:26px 22px;
+  transition:background .5s var(--ease), border-color .5s, transform .5s var(--ease-out);
 }
-@media (min-width:768px){ .pillar{ padding:32px 30px; } }
-.pillar i{
-  width:46px; height:46px; border-radius:13px; display:grid; place-items:center;
-  background:rgba(232,176,85,.16); color:var(--accent-2);
+@media (min-width:768px){ .pillar{ padding:38px 34px; } }
+@media (hover:hover){ .pillar:hover{ background:rgba(255,255,255,.075); border-color:rgba(198,155,63,.4); transform:translateY(-6px); } }
+.pillar i.ic{
+  width:48px; height:48px; border-radius:14px; display:grid; place-items:center;
+  background:rgba(198,155,63,.15); color:var(--brass-2);
 }
 .pillar svg{ width:22px; height:22px; }
-.pillar h3{ font-family:var(--serif); font-size:19px; margin-top:18px; letter-spacing:.04em; }
-.pillar p{ margin-top:12px; font-size:14px; color:rgba(255,255,255,.74); }
+.pillar h3{ font-family:var(--serif); font-size:20px; margin-top:20px; letter-spacing:.05em; }
+@media (min-width:768px){ .pillar h3{ font-size:23px; } }
+.pillar p{ margin-top:14px; font-size:14px; color:rgba(255,255,255,.72); }
 
 .cycle{
-  margin-top:28px; border:1px solid rgba(255,255,255,.14); border-radius:var(--r);
-  padding:22px 0 22px 20px; background:rgba(0,0,0,.14);
+  position:relative; margin-top:34px; border:1px solid rgba(255,255,255,.13);
+  border-radius:var(--r); padding:24px 0 24px 20px; background:rgba(0,0,0,.2);
 }
-@media (min-width:860px){ .cycle{ padding:32px; margin-top:48px; } }
+@media (min-width:880px){ .cycle{ padding:38px; margin-top:62px; } }
 .cycle__hd{ display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; padding-right:20px; }
-.cycle__hd h3{ font-family:var(--serif); font-size:18px; letter-spacing:.04em; }
-.cycle__hd em{ font-style:normal; font-size:10.5px; letter-spacing:.14em; color:var(--accent-2); font-weight:700; }
+.cycle__hd h3{ font-family:var(--serif); font-size:19px; letter-spacing:.05em; }
+@media (min-width:768px){ .cycle__hd h3{ font-size:23px; } }
+.cycle__hd em{ font-style:normal; font-size:10px; letter-spacing:.16em; color:var(--brass); font-weight:700; }
 .cycle .scroller{
-  grid-auto-columns:68%; padding-inline:0; margin-inline:0;
-  scroll-padding-inline:0; padding-right:20px; margin-top:20px;
+  grid-auto-columns:67%; padding-inline:0; margin-inline:0;
+  scroll-padding-inline:0; padding-right:20px; margin-top:22px;
 }
-@media (min-width:860px){
-  .cycle .scroller{ grid-template-columns:repeat(4,1fr); gap:16px; padding-right:0; margin-top:24px; }
+@media (min-width:880px){
+  .cycle .scroller{ grid-template-columns:repeat(4,1fr); gap:18px; padding-right:0; margin-top:28px; }
 }
-.step{ position:relative; padding-top:20px; border-top:1px solid rgba(255,255,255,.16); }
-.step::before{ content:""; position:absolute; top:-4.5px; left:0; width:9px; height:9px; border-radius:50%; background:var(--accent-2); }
-.step b{ display:block; font-size:10px; letter-spacing:.18em; color:rgba(255,255,255,.5); font-weight:700; }
-.step h4{ font-family:var(--serif); font-size:15.5px; margin-top:7px; letter-spacing:.03em; }
-.step p{ margin-top:7px; font-size:12.5px; color:rgba(255,255,255,.66); line-height:1.78; }
+.step{ position:relative; padding-top:22px; border-top:1px solid rgba(255,255,255,.15); }
+.step::before{ content:""; position:absolute; top:-4.5px; left:0; width:9px; height:9px; border-radius:50%; background:var(--brass); }
+.step b{ display:block; font-size:9.5px; letter-spacing:.2em; color:rgba(255,255,255,.45); font-weight:700; }
+.step h4{ font-family:var(--serif); font-size:16px; margin-top:8px; letter-spacing:.04em; }
+.step p{ margin-top:8px; font-size:12.5px; color:rgba(255,255,255,.62); line-height:1.8; }
 
 /* ═══════════════════════════════════════════════════════════
-   Supply — Q&A はアコーディオンで縦を節約
+   15. SUPPLY
    ═══════════════════════════════════════════════════════════ */
-@media (min-width:900px){
-  .sup__grid{ display:grid; grid-template-columns:.9fr 1.1fr; gap:56px; align-items:start; }
+.sup{ overflow:hidden; }
+@media (min-width:980px){
+  .sup__grid{ display:grid; grid-template-columns:.88fr 1.12fr; gap:70px; align-items:start; }
 }
-.qa{ margin-top:24px; display:grid; gap:9px; }
-@media (min-width:900px){ .qa{ margin-top:0; } }
+.qa{ margin-top:28px; display:grid; gap:9px; }
+@media (min-width:980px){ .qa{ margin-top:0; } }
 .qa details{
   background:var(--paper); border:1px solid var(--line); border-radius:14px;
-  overflow:hidden; transition:box-shadow .35s var(--ease);
+  overflow:hidden; transition:box-shadow .4s var(--ease), border-color .4s;
 }
-.qa details[open]{ box-shadow:var(--sh-m); }
+.qa details[open]{ box-shadow:var(--sh-m); border-color:transparent; }
 .qa summary{
   display:flex; align-items:flex-start; gap:12px; cursor:pointer;
-  padding:16px 18px; list-style:none;
-  font-size:14px; font-weight:700; color:var(--ink);
+  padding:17px 18px; list-style:none; font-size:14px; font-weight:700; color:var(--ink);
 }
 .qa summary i{
   flex:none; width:26px; height:26px; border-radius:8px; margin-top:1px;
-  background:var(--cream-2); color:var(--accent);
+  background:var(--cream-2); color:var(--brass);
   display:grid; place-items:center; font-size:12px; font-weight:800; font-style:normal;
 }
 .qa summary::after{
   content:""; flex:none; width:9px; height:9px; margin:7px 0 0 auto;
   border-right:1.8px solid var(--ink-3); border-bottom:1.8px solid var(--ink-3);
-  transform:rotate(45deg); transition:transform .3s var(--ease);
+  transform:rotate(45deg); transition:transform .35s var(--ease);
 }
 .qa details[open] summary::after{ transform:rotate(-135deg); }
 .qa p{ padding:0 18px 18px 56px; font-size:13.5px; color:var(--ink-2); }
 
 /* ═══════════════════════════════════════════════════════════
-   Company
+   16. COMPANY
    ═══════════════════════════════════════════════════════════ */
-.about{ background:var(--paper); }
-.tbl{ margin-top:26px; border-top:1px solid var(--line); }
-@media (min-width:768px){ .tbl{ margin-top:40px; } }
-.tbl > div{ padding-block:15px; border-bottom:1px solid var(--line); }
+.about{ background:var(--paper); overflow:hidden; }
+.tbl{ margin-top:30px; border-top:1px solid var(--line); }
+@media (min-width:768px){ .tbl{ margin-top:52px; } }
+.tbl > div{ padding-block:16px; border-bottom:1px solid var(--line); transition:background .35s; }
 @media (min-width:700px){
-  .tbl > div{ display:grid; grid-template-columns:190px 1fr; gap:20px; padding-block:19px; }
+  .tbl > div{ display:grid; grid-template-columns:200px 1fr; gap:24px; padding-block:21px; }
+  .tbl > div:hover{ background:var(--cream); }
 }
-.tbl dt{ font-size:11.5px; letter-spacing:.1em; color:var(--ink-3); font-weight:700; }
-@media (min-width:700px){ .tbl dt{ font-size:13px; } }
+.tbl dt{ font-size:11.5px; letter-spacing:.12em; color:var(--ink-3); font-weight:700; }
+@media (min-width:700px){ .tbl dt{ font-size:12.5px; } }
 .tbl dd{ margin:4px 0 0; font-size:14.5px; }
-@media (min-width:700px){ .tbl dd{ margin:0; font-size:15px; } }
+@media (min-width:700px){ .tbl dd{ margin:0; font-size:15.5px; } }
 .tbl dd a{ color:var(--green); text-decoration:none; border-bottom:1px solid rgba(31,107,69,.3); }
 
 /* ═══════════════════════════════════════════════════════════
-   Contact
+   17. CONTACT
    ═══════════════════════════════════════════════════════════ */
-.cta{ background:linear-gradient(180deg, var(--cream) 0%, var(--cream-2) 100%); }
-.cta__box{
-  position:relative; overflow:hidden; color:#fff; border-radius:22px;
-  padding:30px 24px; box-shadow:var(--sh-l);
-  background:radial-gradient(95% 110% at 100% 0%, #1d5039 0%, rgba(29,80,57,0) 58%), var(--deep);
+.cta{ position:relative; background:var(--void); color:#fff; overflow:hidden; }
+.cta::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(60% 70% at 88% 6%, rgba(31,107,69,.55) 0%, rgba(31,107,69,0) 62%),
+    radial-gradient(55% 60% at 4% 96%, rgba(198,155,63,.2) 0%, rgba(198,155,63,0) 60%);
 }
-@media (min-width:768px){ .cta__box{ padding:52px 48px; border-radius:26px; } }
-.cta__box::after{
-  content:""; position:absolute; right:-70px; bottom:-90px; width:260px; height:260px;
-  border:1px solid rgba(232,176,85,.24); border-radius:50%;
+.cta::after{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.4;
+  background-image:var(--grain); mix-blend-mode:overlay;
 }
-@media (min-width:860px){
-  .cta__grid{ position:relative; z-index:1; display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center; }
+.cta .eyebrow{ color:var(--brass); }
+.cta__ring{
+  position:absolute; right:-24vw; bottom:-30vw; width:70vw; height:70vw;
+  max-width:620px; max-height:620px;
+  border:1px solid rgba(198,155,63,.2); border-radius:50%; pointer-events:none;
 }
-.cta__box .eyebrow{ color:var(--accent-2); }
-.cta__box h2{ font-family:var(--serif); font-size:22px; line-height:1.55; letter-spacing:.04em; margin-top:14px; position:relative; z-index:1; }
-@media (min-width:768px){ .cta__box h2{ font-size:30px; } }
-.cta__box > * , .cta__grid > *{ position:relative; z-index:1; }
-.cta__box p{ margin-top:14px; color:rgba(255,255,255,.75); font-size:14px; }
+.cta__ring::before{ content:""; position:absolute; inset:13%; border:1px solid rgba(255,255,255,.07); border-radius:50%; }
+@media (min-width:900px){
+  .cta__grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:60px; align-items:center; }
+}
+.cta h2{
+  font-family:var(--serif); font-size:26px; line-height:1.55; letter-spacing:.045em; margin-top:16px;
+}
+@media (min-width:768px){ .cta h2{ font-size:38px; } }
+@media (min-width:1200px){ .cta h2{ font-size:46px; } }
+.cta__txt{ margin-top:18px; color:rgba(255,255,255,.72); font-size:14px; max-width:40em; }
+@media (min-width:768px){ .cta__txt{ font-size:15.5px; } }
 
 .tel{
-  margin-top:24px; background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.16); border-radius:var(--r); padding:20px;
+  margin-top:30px; background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.15); border-radius:var(--r); padding:22px;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
 }
-@media (min-width:860px){ .tel{ margin-top:0; padding:28px; } }
-.tel em{ font-style:normal; font-size:10.5px; letter-spacing:.16em; color:var(--accent-2); font-weight:700; }
+@media (min-width:900px){ .tel{ margin-top:0; padding:34px; } }
+.tel em{ font-style:normal; font-size:10px; letter-spacing:.18em; color:var(--brass); font-weight:700; }
 .tel a.num{
-  display:flex; align-items:center; gap:11px; text-decoration:none; color:#fff;
-  font-family:var(--serif); font-size:29px; letter-spacing:.02em; margin-top:8px; line-height:1.2;
+  display:flex; align-items:center; gap:12px; text-decoration:none; color:#fff;
+  font-family:var(--serif); font-size:30px; letter-spacing:.02em; margin-top:10px; line-height:1.2;
+  transition:color .35s;
 }
-@media (min-width:768px){ .tel a.num{ font-size:36px; } }
-.tel a.num svg{ width:23px; height:23px; flex:none; }
-.tel small{ display:block; margin-top:9px; font-size:12.5px; color:rgba(255,255,255,.6); }
-.tel .btn{ margin-top:18px; }
+@media (min-width:768px){ .tel a.num{ font-size:40px; } }
+.tel a.num:hover{ color:var(--brass-2); }
+.tel a.num svg{ width:24px; height:24px; flex:none; }
+.tel small{ display:block; margin-top:10px; font-size:12.5px; color:rgba(255,255,255,.58); }
+.tel .btn{ margin-top:20px; }
 
 /* ═══════════════════════════════════════════════════════════
-   Footer
+   18. FOOTER / DOCK
    ═══════════════════════════════════════════════════════════ */
-.ftr{ background:var(--deep-2); color:rgba(255,255,255,.66); padding-top:44px; }
-@media (min-width:768px){ .ftr{ padding-top:64px; } }
-.ftr__grid{ display:grid; gap:30px; }
-@media (min-width:700px){ .ftr__grid{ grid-template-columns:1.5fr 1fr 1fr; gap:40px; } }
+.ftr{ background:var(--deep-2); color:rgba(255,255,255,.64); padding-top:48px; }
+@media (min-width:768px){ .ftr{ padding-top:76px; } }
+.ftr__grid{ display:grid; gap:32px; }
+@media (min-width:700px){ .ftr__grid{ grid-template-columns:1.5fr 1fr 1fr; gap:44px; } }
 .ftr .logo__ja,.ftr .logo__en{ color:#fff; }
-.ftr__addr{ margin-top:16px; font-size:12.5px; line-height:1.95; }
-.ftr h4{ font-size:10.5px; letter-spacing:.18em; color:var(--accent-2); font-weight:700; }
-.ftr ul{ margin-top:13px; display:grid; gap:10px; }
-.ftr ul a{ text-decoration:none; font-size:13px; }
+.ftr .logo__en{ color:rgba(255,255,255,.45); }
+.ftr__addr{ margin-top:18px; font-size:12.5px; line-height:2; }
+.ftr h4{ font-size:10px; letter-spacing:.2em; color:var(--brass); font-weight:700; }
+.ftr ul{ margin-top:14px; display:grid; gap:11px; }
+.ftr ul a{ text-decoration:none; font-size:13px; transition:color .3s; }
 .ftr ul a:hover{ color:#fff; }
 .ftr__bar{
-  margin-top:34px; border-top:1px solid rgba(255,255,255,.12); padding-block:18px;
-  display:grid; gap:7px; font-size:10.5px; letter-spacing:.04em; color:rgba(255,255,255,.42);
+  margin-top:38px; border-top:1px solid rgba(255,255,255,.11); padding-block:20px;
+  display:grid; gap:7px; font-size:10.5px; letter-spacing:.05em; color:rgba(255,255,255,.4);
 }
 @media (min-width:700px){ .ftr__bar{ display:flex; justify-content:space-between; gap:20px; } }
 
-/* ═══════════════════════════════════════════════════════════
-   Bottom action bar — スマホ専用。常に手の届く位置にCTA
-   ═══════════════════════════════════════════════════════════ */
 .dock{
-  position:fixed; left:0; right:0; bottom:0; z-index:58;
+  position:fixed; left:0; right:0; bottom:0; z-index:70;
   display:grid; grid-template-columns:1fr 1fr; gap:9px;
   padding:9px var(--gut) calc(9px + env(safe-area-inset-bottom, 0px));
-  background:rgba(250,247,240,.95);
-  backdrop-filter:saturate(170%) blur(12px); -webkit-backdrop-filter:saturate(170%) blur(12px);
+  background:rgba(248,245,238,.95);
+  backdrop-filter:saturate(180%) blur(14px); -webkit-backdrop-filter:saturate(180%) blur(14px);
   border-top:1px solid var(--line);
-  transform:translateY(130%); transition:transform .38s var(--ease);
+  transform:translateY(130%); transition:transform .45s var(--ease-out);
 }
 .dock.up{ transform:none; }
-.dock .btn{ min-height:48px; font-size:13.5px; padding:0 .8em; }
+.dock .btn{ min-height:48px; font-size:13px; padding:0 .8em; }
 @media (min-width:768px){ .dock{ display:none; } }
 
 /* ═══════════════════════════════════════════════════════════
-   Reveal
+   19. REVEAL / PARALLAX
    ═══════════════════════════════════════════════════════════ */
-.rv{ opacity:0; transform:translateY(20px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+.rv{ opacity:0; transform:translateY(26px); transition:opacity .9s var(--ease-out), transform .9s var(--ease-out); }
 .rv.in{ opacity:1; transform:none; }
-.d1{ transition-delay:.08s; } .d2{ transition-delay:.16s; } .d3{ transition-delay:.24s; }
+.d1{ transition-delay:.09s; } .d2{ transition-delay:.18s; } .d3{ transition-delay:.27s; }
+[data-par]{ will-change:transform; }
 
-:focus-visible{ outline:2.5px solid var(--accent); outline-offset:3px; border-radius:4px; }
+:focus-visible{ outline:2.5px solid var(--brass); outline-offset:3px; border-radius:4px; }
 
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior:auto; }
   *,*::before,*::after{ animation:none !important; transition-duration:.01ms !important; }
-  .rv{ opacity:1; transform:none; }
+  .rv,.ln > i{ opacity:1 !important; transform:none !important; }
   .dock{ transform:none; }
+  .loader{ display:none; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══════════ HEADER ══════════ -->
-<header class="hdr" id="hdr">
+<!-- ══ LOADER ══ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <svg class="loader__m" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="13" fill="none" stroke="#c69b3f" stroke-width="1.2"/>
+    <circle cx="20" cy="20" r="4.6" fill="#c69b3f"/>
+    <path d="M20 1v5M20 34v5M1 20h5M34 20h5" stroke="#c69b3f" stroke-width="1.2" stroke-linecap="round" opacity=".6"/>
+  </svg>
+  <div class="loader__bar"><i></i></div>
+</div>
+
+<div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+<div class="cur" id="cur" aria-hidden="true"></div>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr over" id="hdr">
   <div class="wrap hdr__in">
     <a class="logo" href="#top" aria-label="株式会社ほくと給食 ホーム">
       <svg class="logo__m" viewBox="0 0 40 40" aria-hidden="true">
         <rect width="40" height="40" rx="11" fill="#0f2e22"/>
-        <circle cx="20" cy="20" r="9.5" fill="none" stroke="#e8b055" stroke-width="1.6"/>
-        <circle cx="20" cy="20" r="3.4" fill="#e8b055"/>
-        <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#e8b055" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+        <circle cx="20" cy="20" r="9.5" fill="none" stroke="#c69b3f" stroke-width="1.6"/>
+        <circle cx="20" cy="20" r="3.4" fill="#c69b3f"/>
+        <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#c69b3f" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
       </svg>
       <span>
         <span class="logo__ja">ほくと給食</span>
@@ -591,7 +872,7 @@ body.lock{ overflow:hidden; }
       <a href="#about">会社概要</a>
     </nav>
 
-    <a class="btn btn--fill hdr__cta" href="#contact">お問い合わせ</a>
+    <a class="btn btn--line hdr__cta" href="#contact">お問い合わせ</a>
 
     <button class="burger" id="burger" aria-label="メニューを開く" aria-expanded="false" aria-controls="drawer">
       <i></i><i></i><i></i>
@@ -610,52 +891,40 @@ body.lock{ overflow:hidden; }
 
 <main id="top">
 
-<!-- ══════════ HERO ══════════ -->
-<section class="hero">
-  <div class="wrap hero__grid">
-    <div>
-      <span class="hero__tag"><b></b>札幌市厚別区・1997年創業</span>
+<!-- ══ HERO ══ -->
+<section class="hero" id="hero">
+  <div class="hero__glow" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="hero__ring" aria-hidden="true"></div>
+  <div class="hero__vig" aria-hidden="true"></div>
+  <div class="hero__grain" aria-hidden="true"></div>
 
-      <h1>
-        札幌の現場と、<br>
-        <u>いっしょに</u>つくる、<br>
-        毎日の給食。
-      </h1>
-
-      <p class="hero__sub">
-        全国一律のやり方を、そのまま持ち込むことはしません。
-        その施設のやり方に合わせて、毎日の食事を一緒に組み立てていく会社です。
-      </p>
-
-      <div class="hero__cta">
-        <a class="btn btn--fill" href="#contact">まずは相談してみる</a>
-        <a class="btn btn--line" href="#business">できることを見る</a>
-      </div>
-    </div>
-
-    <div class="hero__art">
-      <svg class="tray" viewBox="0 0 520 420" role="img" aria-label="給食トレーのイラスト">
+  <div class="hero__stage">
+    <div class="dish rv">
+      <svg viewBox="0 0 520 420" role="img" aria-label="給食の一膳">
         <defs>
           <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2ece0"/>
+            <stop offset="0" stop-color="#fffdf7"/><stop offset="1" stop-color="#e9e0cd"/>
           </linearGradient>
           <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#c9762f"/><stop offset="1" stop-color="#a85c22"/>
+            <stop offset="0" stop-color="#d4832f"/><stop offset="1" stop-color="#a85c22"/>
           </linearGradient>
           <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#e8b055"/><stop offset="1" stop-color="#d8873a"/>
+            <stop offset="0" stop-color="#f3c069"/><stop offset="1" stop-color="#d8873a"/>
           </linearGradient>
+          <radialGradient id="g4" cx="38%" cy="30%">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#efe9da"/>
+          </radialGradient>
         </defs>
 
-        <rect x="26" y="40" width="468" height="336" rx="34" fill="url(#g1)" stroke="#e2ddd2" stroke-width="2"/>
-        <rect x="44" y="58" width="432" height="300" rx="24" fill="none" stroke="#efe9dc" stroke-width="1.5"/>
+        <rect x="26" y="40" width="468" height="336" rx="34" fill="url(#g1)"/>
+        <rect x="44" y="58" width="432" height="300" rx="24" fill="none" stroke="#ded3bd" stroke-width="1.5"/>
 
         <!-- ごはん -->
-        <circle cx="150" cy="152" r="70" fill="#1f6b45"/>
-        <circle cx="150" cy="152" r="61" fill="#2b7d54"/>
-        <circle cx="150" cy="152" r="52" fill="#f7f4ec"/>
-        <ellipse cx="150" cy="150" rx="45" ry="43" fill="#fffdf8"/>
-        <g fill="#efeadd">
+        <circle cx="150" cy="152" r="70" fill="#1b5e3d"/>
+        <circle cx="150" cy="152" r="61" fill="#27744c"/>
+        <circle cx="150" cy="152" r="52" fill="#f2ece0"/>
+        <ellipse cx="150" cy="150" rx="45" ry="43" fill="url(#g4)"/>
+        <g fill="#e9e2d2">
           <ellipse cx="130" cy="136" rx="8" ry="5.5" transform="rotate(-24 130 136)"/>
           <ellipse cx="152" cy="128" rx="8" ry="5.5" transform="rotate(12 152 128)"/>
           <ellipse cx="171" cy="143" rx="8" ry="5.5" transform="rotate(-40 171 143)"/>
@@ -663,59 +932,70 @@ body.lock{ overflow:hidden; }
           <ellipse cx="146" cy="176" rx="8" ry="5.5" transform="rotate(-8 146 176)"/>
           <ellipse cx="172" cy="170" rx="8" ry="5.5" transform="rotate(34 172 170)"/>
         </g>
-        <circle cx="151" cy="153" r="8" fill="#d24a45"/>
-        <circle cx="148" cy="150" r="2.6" fill="#fff" opacity=".4"/>
-        <path class="steam" d="M138 70c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".45"/>
-        <path class="steam" d="M162 66c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".45"/>
+        <circle cx="151" cy="153" r="8" fill="#cf4a44"/>
+        <circle cx="148" cy="150" r="2.6" fill="#fff" opacity=".45"/>
+        <path class="steam" d="M136 68c-9-11 9-17 0-29" fill="none" stroke="#e2c383" stroke-width="3.2" stroke-linecap="round" opacity=".7"/>
+        <path class="steam" d="M164 64c-9-11 9-17 0-29" fill="none" stroke="#e2c383" stroke-width="3.2" stroke-linecap="round" opacity=".7"/>
 
         <!-- 汁物 -->
         <circle cx="150" cy="288" r="58" fill="url(#g2)"/>
-        <circle cx="150" cy="288" r="47" fill="#2f2a24"/>
-        <circle cx="150" cy="288" r="40" fill="#7d5a2e"/>
-        <circle cx="132" cy="278" r="7" fill="#f2ede2" opacity=".85"/>
-        <circle cx="164" cy="292" r="5.5" fill="#8fb87a" opacity=".9"/>
-        <circle cx="148" cy="302" r="4.5" fill="#f2ede2" opacity=".7"/>
-        <path class="steam" d="M150 218c-8-10 8-16 0-27" fill="none" stroke="#1f6b45" stroke-width="3.4" stroke-linecap="round" opacity=".4"/>
+        <circle cx="150" cy="288" r="47" fill="#332c23"/>
+        <circle cx="150" cy="288" r="40" fill="#86632f"/>
+        <circle cx="132" cy="278" r="7" fill="#f2ede2" opacity=".9"/>
+        <circle cx="164" cy="292" r="5.5" fill="#92bb7c" opacity=".95"/>
+        <circle cx="148" cy="302" r="4.5" fill="#f2ede2" opacity=".72"/>
+        <path class="steam" d="M150 216c-9-11 9-17 0-29" fill="none" stroke="#e2c383" stroke-width="3.2" stroke-linecap="round" opacity=".6"/>
 
         <!-- 主菜 -->
-        <ellipse cx="340" cy="196" rx="118" ry="98" fill="#fff" stroke="#e2ddd2" stroke-width="2"/>
-        <ellipse cx="340" cy="196" rx="98" ry="80" fill="#fbfaf6"/>
+        <ellipse cx="340" cy="196" rx="118" ry="98" fill="#fffdf7"/>
+        <ellipse cx="340" cy="196" rx="98" ry="80" fill="#f6f1e5"/>
         <path d="M282 176c16-26 52-32 74-16 20 14 22 44 4 58-22 17-60 9-76-12-4-6-6-20-2-30z" fill="url(#g3)"/>
-        <path d="M300 170c14-10 34-12 48-4" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"/>
-        <ellipse cx="386" cy="232" rx="30" ry="20" fill="#8fb87a"/>
-        <ellipse cx="386" cy="232" rx="19" ry="12" fill="#a6c993"/>
+        <path d="M300 170c14-10 34-12 48-4" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+        <ellipse cx="386" cy="232" rx="30" ry="20" fill="#92bb7c"/>
+        <ellipse cx="386" cy="232" rx="19" ry="12" fill="#abcd98"/>
         <circle cx="392" cy="164" r="16" fill="#e05a4a"/>
-        <circle cx="386" cy="159" r="5" fill="#fff" opacity=".45"/>
+        <circle cx="386" cy="159" r="5" fill="#fff" opacity=".5"/>
 
         <!-- 牛乳 -->
-        <rect x="252" y="286" width="70" height="70" rx="10" fill="#fff" stroke="#e2ddd2" stroke-width="2"/>
-        <path d="M252 300h70" stroke="#e2ddd2" stroke-width="2"/>
-        <path d="M262 286h50l-6-10h-38z" fill="#f7f4ec" stroke="#e2ddd2" stroke-width="2" stroke-linejoin="round"/>
-        <rect x="262" y="310" width="50" height="36" rx="6" fill="#1f6b45"/>
-        <path d="M272 338c2-13 9-20 19-21" fill="none" stroke="#e8b055" stroke-width="3.4" stroke-linecap="round"/>
-        <circle cx="299" cy="320" r="4.5" fill="#e8b055"/>
+        <rect x="252" y="286" width="70" height="70" rx="10" fill="#fffdf7"/>
+        <path d="M252 300h70" stroke="#ded3bd" stroke-width="2"/>
+        <path d="M262 286h50l-6-10h-38z" fill="#f2ece0" stroke="#ded3bd" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="262" y="310" width="50" height="36" rx="6" fill="#1b5e3d"/>
+        <path d="M272 338c2-13 9-20 19-21" fill="none" stroke="#e2c383" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="299" cy="320" r="4.5" fill="#e2c383"/>
 
         <!-- 箸 -->
         <g stroke="#b98a55" stroke-width="7" stroke-linecap="round">
           <path d="M362 292h96"/><path d="M362 314h96"/>
         </g>
       </svg>
+    </div>
 
-      <div class="chips">
-        <div class="chip">
-          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></i>
-          <span><b>衛生管理委員会</b><span>月1回・全社で運用</span></span>
-        </div>
-        <div class="chip">
-          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></i>
-          <span><b>札幌市厚別区</b><span>大谷地西の本社より</span></span>
-        </div>
+    <h1 class="vcatch" id="vcatch" aria-label="札幌の現場と、いっしょにつくる、毎日の給食。">
+      <span class="ln" data-col="札幌の現場と、"></span>
+      <span class="ln" data-col="いっしょにつくる、" data-u="5"></span>
+      <span class="ln" data-col="毎日の給食。"></span>
+    </h1>
+  </div>
+
+  <div class="wrap hero__in">
+    <div class="hero__meta">
+      <span class="hero__tag rv"><b></b>札幌市厚別区・1997年創業</span>
+      <p class="hero__sub rv d1">
+        全国一律のやり方は、持ち込みません。その施設に合わせて、
+        毎日の食事を一緒に組み立てていく会社です。
+      </p>
+      <div class="hero__cta rv d2">
+        <a class="btn btn--brass" href="#contact">まずは相談してみる</a>
+        <a class="btn btn--ghost" href="#business">できることを見る</a>
       </div>
     </div>
   </div>
+
+  <div class="scrollcue" aria-hidden="true"><span></span>SCROLL</div>
 </section>
 
-<!-- ══════════ MARQUEE ══════════ -->
+<!-- ══ MARQUEE ══ -->
 <div class="strip" aria-hidden="true">
   <div class="strip__row">
     <span>厨房ごとの給食受託</span><span>食材だけの販売も可</span><span>管理栄養士の献立</span>
@@ -725,20 +1005,29 @@ body.lock{ overflow:hidden; }
   </div>
 </div>
 
-<!-- ══════════ STATS ══════════ -->
-<section class="stats">
-  <div class="wrap stats__in">
-    <div class="stat rv"><b data-n="1997">1997</b><span>創業（平成9年）</span></div>
-    <div class="stat rv d1"><b><span data-n="180">180</span><small>名</small></b><span>従業員数</span></div>
-    <div class="stat rv d2"><b><span id="years" data-n="29">29</span><small>年</small></b><span>札幌での事業年数</span></div>
+<!-- ══ STATEMENT ══ -->
+<section class="sec stmt">
+  <div class="ghost" data-par="-16" style="top:4%; left:-4%;">SAPPORO</div>
+  <div class="wrap">
+    <span class="eyebrow rv">Our Stance</span>
+    <h2 class="stmt__q rv d1" data-lines>
+      給食は、特別な日の料理ではありません。<br>
+      なんでもない日が、<em>365日続く</em>仕事です。
+    </h2>
+    <div class="nums">
+      <div class="num rv"><b data-n="1997">1997</b><span>創業（平成9年）</span></div>
+      <div class="num rv d1"><b><span data-n="180">180</span><small>名</small></b><span>従業員数</span></div>
+      <div class="num rv d2"><b><span id="years" data-n="29">29</span><small>年</small></b><span>札幌での事業年数</span></div>
+    </div>
   </div>
 </section>
 
-<!-- ══════════ BUSINESS ══════════ -->
-<section class="sec" id="business">
+<!-- ══ BUSINESS ══ -->
+<section class="sec" id="business" style="background:var(--cream-2); overflow:hidden">
+  <div class="ghost" data-par="14" style="bottom:2%; right:-6%;">01</div>
   <div class="wrap">
     <span class="eyebrow rv">Business</span>
-    <h2 class="ttl rv d1">まるごとでも、一部でも。</h2>
+    <h2 class="ttl" data-lines>まるごとでも、一部でも。</h2>
     <p class="lead rv d2">
       厨房ごと引き受ける給食受託と、食材だけをお届けする食材販売。
       「全部お願いするほどではないけれど、ここだけ手伝ってほしい」——
@@ -747,7 +1036,7 @@ body.lock{ overflow:hidden; }
 
     <div class="biz">
       <article class="card rv d1">
-        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
           <path d="M3 11h18"/><path d="M4 11a8 8 0 0 1 16 0"/><path d="M2 15h20"/><path d="M6 19h12"/>
         </svg>
         <div class="card__no">01 — MEAL SERVICE</div>
@@ -763,7 +1052,7 @@ body.lock{ overflow:hidden; }
       </article>
 
       <article class="card rv d2">
-        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <svg class="card__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
           <path d="M3 7h18l-1.5 12.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 7z"/><path d="M8 7a4 4 0 0 1 8 0"/>
         </svg>
         <div class="card__no">02 — FOOD SUPPLY</div>
@@ -781,12 +1070,12 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ WHY LOCAL ══════════ -->
+<!-- ══ WHY LOCAL ══ -->
 <section class="sec local" id="local">
   <div class="wrap local__grid">
-    <div>
+    <div class="local__side">
       <span class="eyebrow rv">Why Local</span>
-      <h2 class="ttl rv d1">札幌の会社に頼む意味。</h2>
+      <h2 class="ttl" data-lines>近いから、できる。</h2>
       <p class="lead rv d2">
         給食会社を選ぶとき、大きさで決めることもできます。
         それでも地元の会社を選ぶ理由が、たしかにあると考えています。
@@ -798,21 +1087,21 @@ body.lock{ overflow:hidden; }
     </div>
 
     <div class="reasons">
-      <div class="reason rv d1">
+      <div class="reason rv">
         <b>01</b>
         <div>
           <h3>ひな形ではなく、その施設のかたちで</h3>
           <p>決まったパッケージを当てはめるのではなく、いまの運営に合わせて献立や提供のしかたを組み立てます。施設ごとに事情が違うことを、前提にして考えます。</p>
         </div>
       </div>
-      <div class="reason rv d2">
+      <div class="reason rv">
         <b>02</b>
         <div>
           <h3>必要なところだけ、頼める</h3>
           <p>厨房ごとの受託でも、食材の仕入れだけでも構いません。全部を切り替える決断をしなくても、困っている部分から始められます。</p>
         </div>
       </div>
-      <div class="reason rv d3">
+      <div class="reason rv">
         <b>03</b>
         <div>
           <h3>話が、そのまま届く距離で</h3>
@@ -823,58 +1112,59 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ FACILITIES ══════════ -->
+<!-- ══ FACILITIES ══ -->
 <section class="sec fac" id="facilities">
+  <div class="ghost" data-par="-12" style="top:3%; right:-5%;">02</div>
   <div class="wrap">
     <span class="eyebrow rv">Facilities</span>
-    <h2 class="ttl rv d1">子どもから高齢者まで。</h2>
+    <h2 class="ttl" data-lines>子どもから高齢者まで。</h2>
     <p class="lead rv d2">
       施設の種類ごとに、求められる食事はまったく違います。それぞれの現場に合わせた運営で対応しています。
     </p>
 
-    <div class="swipe-hint rv">
+    <div class="hint rv">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       横にスワイプできます
     </div>
 
     <div class="scroller rv d1">
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
         <h3>障がい者施設</h3>
         <p>咀嚼・嚥下の状態や個別の配慮に合わせた食事形態で提供します。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
         <h3>保育園</h3>
         <p>成長期の栄養設計に加え、食べる楽しさを伝える食育にも力を入れています。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8v11h18V8z"/><path d="M9 19v-5h6v5"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8v11h18V8z"/><path d="M9 19v-5h6v5"/></svg>
         <h3>高齢者施設</h3>
         <p>栄養価と食べやすさを両立し、日々の楽しみになる献立をご用意します。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         <h3>デイサービス</h3>
         <p>利用時間に合わせた提供スケジュールで、温かい食事をお出しします。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10.5V16c0 1.7 2.2 3 5 3s5-1.3 5-3v-5.5"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10.5V16c0 1.7 2.2 3 5 3s5-1.3 5-3v-5.5"/></svg>
         <h3>学校寄宿舎</h3>
         <p>毎日の三食を通じて、学びの時間を支える体づくりをサポートします。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
         <h3>研修所</h3>
         <p>研修日程に合わせた食数の変動にも柔軟に対応いたします。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
         <h3>グループホーム</h3>
         <p>食材販売を中心に、少人数の生活の場に合った量とかたちでお届けします。</p>
       </div>
       <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         <h3>その他の施設</h3>
         <p>上記以外の福祉・教育施設についても、まずはご相談ください。</p>
       </div>
@@ -882,28 +1172,29 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ STRENGTH ══════════ -->
+<!-- ══ SAFETY ══ -->
 <section class="sec str" id="strength">
+  <div class="ghost" data-par="18" style="bottom:4%; left:-5%;">SAFETY</div>
   <div class="wrap">
     <span class="eyebrow rv">Safety</span>
-    <h2 class="ttl rv d1">安全は、仕組みで守る。</h2>
+    <h2 class="ttl" data-lines>安全は、仕組みで守る。</h2>
     <p class="lead rv d2">
       給食は毎日続くものだからこそ、気合いではなく仕組みで守ります。大切にしている3つの柱です。
     </p>
 
     <div class="pillars">
       <article class="pillar rv d1">
-        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></i>
+        <i class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></i>
         <h3>衛生管理委員会</h3>
         <p>社内に衛生管理委員会を設置し、月1回の開催で毎月の目標を設定。衛生管理と労働安全管理の対策を全社で協議し、実行まで落とし込んでいます。食中毒の防止、災害発生時の対応、感染症発生時の対策も、事前に議論を重ねたうえで運用しています。</p>
       </article>
       <article class="pillar rv d2">
-        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C11 5 13 4 15 4c-2 3-1 6 1 8"/><path d="M11 20c0-4 2-8 6-10"/></svg></i>
+        <i class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C11 5 13 4 15 4c-2 3-1 6 1 8"/><path d="M11 20c0-4 2-8 6-10"/></svg></i>
         <h3>食材の目利き</h3>
         <p>食材の仕入れには専任の担当者を置き、産地や注文履歴といった情報を管理したうえで、良質な食材の確保に努めています。「おいしい食材を選ぶ」ことが、おいしい給食のいちばんの近道だと考えています。</p>
       </article>
       <article class="pillar rv d3">
-        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M8 8h6M8 12h6"/></svg></i>
+        <i class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M8 8h6M8 12h6"/></svg></i>
         <h3>栄養設計と食育</h3>
         <p>管理栄養士が、一人ひとりの状態に合わせて栄養価とバランスを考えた献立を作成します。保育園では、食べることの楽しさや喜びを味わってもらい、食に興味を持ってもらえるよう食育にも力を入れています。</p>
       </article>
@@ -924,12 +1215,13 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ SUPPLY ══════════ -->
-<section class="sec" id="supply">
+<!-- ══ SUPPLY ══ -->
+<section class="sec sup" id="supply">
+  <div class="ghost" data-par="-14" style="top:6%; left:-4%;">03</div>
   <div class="wrap sup__grid">
     <div>
       <span class="eyebrow rv">Food Supply</span>
-      <h2 class="ttl rv d1">食材だけでも、いい。</h2>
+      <h2 class="ttl" data-lines>食材だけでも。</h2>
       <p class="lead rv d2">
         食材販売はグループホームを基本にご提供しています。調理はこれまで通り自分たちで、
         買い出しにかかっていた時間だけを、利用者さんと向き合う時間に回す。そういう使い方ができます。
@@ -957,11 +1249,12 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ COMPANY ══════════ -->
+<!-- ══ COMPANY ══ -->
 <section class="sec about" id="about">
+  <div class="ghost" data-par="12" style="bottom:3%; right:-4%;">1997</div>
   <div class="wrap">
     <span class="eyebrow rv">Company</span>
-    <h2 class="ttl rv d1">会社概要</h2>
+    <h2 class="ttl" data-lines>会社概要</h2>
 
     <dl class="tbl rv d2">
       <div><dt>商号</dt><dd>株式会社ほくと給食</dd></div>
@@ -976,50 +1269,49 @@ body.lock{ overflow:hidden; }
   </div>
 </section>
 
-<!-- ══════════ CONTACT ══════════ -->
+<!-- ══ CONTACT ══ -->
 <section class="sec cta" id="contact">
+  <div class="cta__ring" aria-hidden="true"></div>
   <div class="wrap">
-    <div class="cta__box rv">
-      <div class="cta__grid">
-        <div>
-          <span class="eyebrow">Contact</span>
-          <h2>まだ決めていなくて、<br>いい。</h2>
-          <p>
-            「いまのやり方の、ここだけ困っている」——その一点からで大丈夫です。
-            全部を切り替える話でなくても構いません。施設の状況をお聞きしたうえで、
-            できることとできないことを、正直にお伝えします。
-          </p>
-        </div>
+    <div class="cta__grid">
+      <div>
+        <span class="eyebrow rv">Contact</span>
+        <h2 data-lines>まだ決めていなくて、<br>いい。</h2>
+        <p class="cta__txt rv d2">
+          「いまのやり方の、ここだけ困っている」——その一点からで大丈夫です。
+          全部を切り替える話でなくても構いません。施設の状況をお聞きしたうえで、
+          できることとできないことを、正直にお伝えします。
+        </p>
+      </div>
 
-        <div class="tel">
-          <em>TEL — お電話でのご相談</em>
-          <a class="num" href="tel:0118945251">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
-            011-894-5251
-          </a>
-          <small>受付時間　平日 9:00〜18:00</small>
-          <a class="btn btn--ghost btn--full" href="https://www.hokutokyuushoku.net/contact" target="_blank" rel="noopener">
-            お問い合わせフォームへ
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
-          </a>
-        </div>
+      <div class="tel rv d1">
+        <em>TEL — お電話でのご相談</em>
+        <a class="num" href="tel:0118945251">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+          011-894-5251
+        </a>
+        <small>受付時間　平日 9:00〜18:00</small>
+        <a class="btn btn--ghost btn--full" href="https://www.hokutokyuushoku.net/contact" target="_blank" rel="noopener">
+          お問い合わせフォームへ
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+        </a>
       </div>
     </div>
   </div>
 </section>
 </main>
 
-<!-- ══════════ FOOTER ══════════ -->
+<!-- ══ FOOTER ══ -->
 <footer class="ftr">
   <div class="wrap">
     <div class="ftr__grid">
       <div>
         <div class="logo">
           <svg class="logo__m" viewBox="0 0 40 40" aria-hidden="true">
-            <rect width="40" height="40" rx="11" fill="#0f2e22"/>
-            <circle cx="20" cy="20" r="9.5" fill="none" stroke="#e8b055" stroke-width="1.6"/>
-            <circle cx="20" cy="20" r="3.4" fill="#e8b055"/>
-            <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#e8b055" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+            <rect width="40" height="40" rx="11" fill="#081410"/>
+            <circle cx="20" cy="20" r="9.5" fill="none" stroke="#c69b3f" stroke-width="1.6"/>
+            <circle cx="20" cy="20" r="3.4" fill="#c69b3f"/>
+            <path d="M20 5.5v3M20 31.5v3M5.5 20h3M31.5 20h3" stroke="#c69b3f" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
           </svg>
           <span>
             <span class="logo__ja">株式会社ほくと給食</span>
@@ -1060,7 +1352,7 @@ body.lock{ overflow:hidden; }
   </div>
 </footer>
 
-<!-- ══════════ BOTTOM DOCK (mobile) ══════════ -->
+<!-- ══ DOCK ══ -->
 <div class="dock" id="dock">
   <a class="btn btn--line" href="tel:0118945251">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
@@ -1073,47 +1365,79 @@ body.lock{ overflow:hidden; }
 (function(){
   'use strict';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $  = function(s,c){ return (c||document).querySelector(s); };
+  var $$ = function(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
 
-  /* 創業(1997年7月)からの年数 */
-  var yrs = document.getElementById('years');
+  /* ── 年数・年号 ───────────────────────────── */
+  var yrs = $('#years');
   if (yrs){
     var now = new Date();
     var n = now.getFullYear() - 1997 - (now.getMonth() < 6 ? 1 : 0);
     yrs.dataset.n = n; yrs.textContent = n;
   }
-  document.getElementById('yr').textContent = new Date().getFullYear();
+  $('#yr').textContent = new Date().getFullYear();
 
-  /* スクロールで表示 */
-  var targets = document.querySelectorAll('.rv');
+  /* ── 縦組みの列を組み立てる ──
+     1文字 = 1ブロック。フォントの縦書きメトリクスに依存させない。 */
+  $$('.vcatch .ln[data-col]').forEach(function(col){
+    var chars = Array.from(col.dataset.col);         /* サロゲートペア対策 */
+    var uTo = parseInt(col.dataset.u || '0', 10);    /* 先頭から何文字に傍線を引くか */
+    var inner = document.createElement('span');
+    inner.className = 'inner';
+    inner.setAttribute('aria-hidden', 'true');
+    chars.forEach(function(ch, idx){
+      var i = document.createElement('i');
+      i.textContent = ch;
+      if ('、。，．'.indexOf(ch) > -1) i.className = 'pt';
+      else if (idx < uTo) i.className = 'u';
+      inner.appendChild(i);
+    });
+    col.appendChild(inner);
+  });
+
+  /* ── 見出しを行ごとに包んでマスク出しにする ──
+     <br> を境に分割する。手で .ln を書かずに済ませるため。 */
+  $$('[data-lines]').forEach(function(el){
+    if (el.querySelector('.ln')) return;
+    var parts = el.innerHTML.split(/<br\s*\/?>/i);
+    el.innerHTML = parts.map(function(p){
+      return '<span class="ln"><i>' + p.trim() + '</i></span>';
+    }).join('');
+    el.classList.add('rv-lines');
+  });
+
+  /* ── 表示アニメーション ───────────────────── */
+  var revealables = $$('.rv').concat($$('.rv-lines')).concat($$('.vcatch'));
+  function show(el){ el.classList.add('in'); }
   if (reduce || !('IntersectionObserver' in window)){
-    targets.forEach(function(el){ el.classList.add('in'); });
+    revealables.forEach(show);
   } else {
     var io = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold:.05, rootMargin:'0px 0px -5% 0px' });
-    targets.forEach(function(el){ io.observe(el); });
+      es.forEach(function(e){ if (e.isIntersecting){ show(e.target); io.unobserve(e.target); } });
+    }, { threshold:.05, rootMargin:'0px 0px -6% 0px' });
+    revealables.forEach(function(el){ io.observe(el); });
 
-    /* 安全網: 監視が効かなくても表示域の要素は必ず出す */
+    /* 安全網: 監視が効かなくても表示域にある要素は必ず出す */
     window.addEventListener('load', function(){
       setTimeout(function(){
-        document.querySelectorAll('.rv:not(.in)').forEach(function(el){
+        revealables.forEach(function(el){
+          if (el.classList.contains('in')) return;
           var r = el.getBoundingClientRect();
-          if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('in');
+          if (r.top < window.innerHeight && r.bottom > 0) show(el);
         });
-      }, 700);
+      }, 800);
     });
   }
 
-  /* 数字のカウントアップ */
-  var nums = document.querySelectorAll('[data-n]');
+  /* ── 数字のカウントアップ ─────────────────── */
   function countUp(el){
     var goal = parseInt(el.dataset.n, 10);
     if (reduce){ el.textContent = goal; return; }
-    var dur = 1200, t0 = null;
+    var dur = 1500, t0 = null;
     function tick(t){
       if (!t0) t0 = t;
       var p = Math.min((t - t0) / dur, 1);
-      el.textContent = Math.round(goal * (1 - Math.pow(1 - p, 3)));
+      el.textContent = Math.round(goal * (1 - Math.pow(1 - p, 4)));
       if (p < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
@@ -1122,36 +1446,52 @@ body.lock{ overflow:hidden; }
     var io2 = new IntersectionObserver(function(es){
       es.forEach(function(e){ if (e.isIntersecting){ countUp(e.target); io2.unobserve(e.target); } });
     }, { threshold:.6 });
-    nums.forEach(function(el){ io2.observe(el); });
+    $$('[data-n]').forEach(function(el){ io2.observe(el); });
   }
 
-  /* ヘッダーと下部バー */
-  var hdr = document.getElementById('hdr');
-  var dock = document.getElementById('dock');
+  /* ── スクロール: ヘッダー / 進捗 / ドック / パララックス ── */
+  var hdr = $('#hdr'), dock = $('#dock'), bar = $('#progBar'), hero = $('#hero');
+  var pars = $$('[data-par]');
   var ticking = false, lastY = 0;
-  function onScroll(){
+
+  function frame(){
     var y = window.pageYOffset;
-    var menuOpen = document.body.classList.contains('lock');
+    var vh = window.innerHeight;
+    var doc = document.documentElement.scrollHeight - vh;
+    var menuOpen = document.body.classList.contains('locked');
+
+    bar.style.transform = 'scaleX(' + (doc > 0 ? Math.min(y / doc, 1) : 0) + ')';
+
     hdr.classList.toggle('stuck', y > 20);
-    hdr.classList.toggle('away', !menuOpen && y > 240 && y > lastY + 4);
-    /* 下部バーはヒーローを過ぎてから出す */
-    dock.classList.toggle('up', !menuOpen && y > 420);
+    hdr.classList.toggle('away', !menuOpen && y > 300 && y > lastY + 4);
+    /* ヒーローの上にいる間だけ白抜きヘッダー */
+    hdr.classList.toggle('over', !menuOpen && y < (hero ? hero.offsetHeight - 90 : 0));
+    dock.classList.toggle('up', !menuOpen && y > vh * 0.75);
+
+    if (!reduce){
+      pars.forEach(function(el){
+        var r = el.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > vh + 200) return;
+        var mid = r.top + r.height / 2 - vh / 2;
+        el.style.transform = 'translate3d(0,' + (mid * (parseFloat(el.dataset.par) / 100)) + 'px,0)';
+      });
+    }
     lastY = y;
     ticking = false;
   }
   window.addEventListener('scroll', function(){
-    if (!ticking){ requestAnimationFrame(onScroll); ticking = true; }
+    if (!ticking){ requestAnimationFrame(frame); ticking = true; }
   }, { passive:true });
-  onScroll();
+  window.addEventListener('resize', function(){ requestAnimationFrame(frame); }, { passive:true });
+  frame();
 
-  /* メニュー */
-  var burger = document.getElementById('burger');
-  var drawer = document.getElementById('drawer');
+  /* ── メニュー ─────────────────────────────── */
+  var burger = $('#burger'), drawer = $('#drawer');
   function setMenu(open){
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
     drawer.classList.toggle('open', open);
-    document.body.classList.toggle('lock', open);
+    document.body.classList.toggle('locked', open);
     if (open) hdr.classList.remove('away');
   }
   burger.addEventListener('click', function(){
@@ -1159,7 +1499,46 @@ body.lock{ overflow:hidden; }
   });
   drawer.addEventListener('click', function(e){ if (e.target.closest('a')) setMenu(false); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setMenu(false); });
-  window.addEventListener('resize', function(){ if (window.innerWidth >= 1000) setMenu(false); });
+  window.addEventListener('resize', function(){ if (window.innerWidth >= 1060) setMenu(false); });
+
+  /* ── カーソル(マウス環境のみ) ─────────────── */
+  var cur = $('#cur');
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !reduce){
+    var cx = 0, cy = 0, tx = 0, ty = 0, raf = null;
+    function loop(){
+      cx += (tx - cx) * .18; cy += (ty - cy) * .18;
+      cur.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
+      raf = requestAnimationFrame(loop);
+    }
+    document.addEventListener('mousemove', function(e){
+      tx = e.clientX; ty = e.clientY;
+      cur.classList.add('on');
+      if (!raf) loop();
+    }, { passive:true });
+    document.addEventListener('mouseleave', function(){ cur.classList.remove('on'); });
+    $$('a, button, summary').forEach(function(el){
+      el.addEventListener('mouseenter', function(){ cur.classList.add('big'); });
+      el.addEventListener('mouseleave', function(){ cur.classList.remove('big'); });
+    });
+  }
+
+  /* ── ローダー ─────────────────────────────── */
+  var loader = $('#loader');
+  function dismiss(){
+    loader.classList.add('done');
+    setTimeout(function(){ loader.remove(); }, 600);
+  }
+  if (reduce){ dismiss(); }
+  else {
+    /* 読み込みが速くても遅くても破綻しないよう、最短/最長の両方を決める */
+    var started = Date.now();
+    var fire = function(){
+      setTimeout(dismiss, Math.max(0, 1500 - (Date.now() - started)));
+    };
+    if (document.readyState === 'complete') fire();
+    else window.addEventListener('load', fire);
+    setTimeout(dismiss, 4000); /* 何かあっても必ず消す */
+  }
 })();
 </script>
 </body>
