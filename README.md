@@ -64,3 +64,9 @@ for f in /tmp/c*.js; do node --check "$f" && echo "$f OK"; done
 # 参照整合(bg/spr/bgm/yu の実在、label/jump、ifFlag、EP_ORDER 三者整合)
 node tools/verify.cjs crc/index.html
 ```
+
+```bash
+# 通しプレイQA(実ブラウザで全話を最後まで自動で進める)
+python3 tools/qa.py          # 全16話
+python3 tools/qa.py --mem    # メモリも測る
+```
