@@ -3,13 +3,13 @@
 <head>  
 <meta charset="UTF-8">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  
-<title>リゼ丸の冒険</title>
+<title>リゼ丸のプチプチ冒険島</title>
 <!-- PWA / ホーム画面アプリ設定 -->
 <meta name="theme-color" content="#2a1e3f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="リゼ丸の冒険">
+<meta name="apple-mobile-web-app-title" content="リゼ丸のプチプチ冒険島">
 <link rel="apple-touch-icon" href="https://raw.githack.com/yama5150/shouhei/main/icon-180.png">
 <link rel="icon" type="image/png" href="https://raw.githack.com/yama5150/shouhei/main/icon-192.png">
 <link rel="manifest" href="https://raw.githack.com/yama5150/shouhei/main/manifest.webmanifest">
@@ -1836,118 +1836,103 @@ function drawPlayer(){
   ctx.translate(cx, cy);  
   ctx.scale(p.dir*sx, sy);  
   
-  const fur = (x, y, rx, ry, n, amp)=>{ // トゲトゲの毛のかたまり
-    ctx.beginPath();
-    for(let i=0;i<=n*2;i++){
-      const a = i/(n*2)*Math.PI*2 - Math.PI/2;
-      const r = i%2 ? 1 - amp*(0.7 + 0.3*Math.sin(i*2.3)) : 1;
-      ctx.lineTo(x + Math.cos(a)*rx*r, y + Math.sin(a)*ry*r);
-    }
-    ctx.closePath();
-  };
-  // しっぽ
-  ctx.fillStyle = '#b5d84f'; fur(-21, 7, 6, 5, 6, 0.3); ctx.fill();
-
-  // ── モフモフの毛並み(上は黄色、下は黄緑)──
-  const fg = ctx.createLinearGradient(0, -22, 0, 22);
-  fg.addColorStop(0, '#f7f38c'); fg.addColorStop(0.45, '#e4f07a'); fg.addColorStop(1, '#9fcb45');
-  ctx.fillStyle = fg;
-  fur(0, 2, 23, 21.5, 32, 0.11); ctx.fill();
-  // 毛のすじ(ふわふわ感)
-  ctx.strokeStyle = 'rgba(122,170,40,.28)'; ctx.lineWidth = 1; ctx.lineCap = 'round';
+  // しっぽ(小さくモフッと)  
+  ctx.fillStyle = '#9ccc65';  
+  ctx.beginPath(); ctx.arc(-21, 6, 5, 0, Math.PI*2); ctx.fill();  
+  
+  // ── モフモフの毛並み(ギザギザ輪郭)──  
+  const fluff = ctx.createRadialGradient(-3,-5,4, 0,2,26);  
+  fluff.addColorStop(0,'#cde88a'); fluff.addColorStop(0.6,'#aed572'); fluff.addColorStop(1,'#8cbf52');  
+  ctx.fillStyle = fluff;  
+  ctx.beginPath();  
+  const spikes = 18, rx = 22, ry = 21;  
+  for(let i=0;i<spikes;i++){  
+    const a = (i/spikes)*Math.PI*2 - Math.PI/2;  
+    const r = (i%2===0) ? 1 : 0.88;     // 縁のギザギザ  
+    const wob = Math.sin(i*1.7)*0.04;  
+    const x = Math.cos(a)*rx*(r+wob), y = Math.sin(a)*ry*(r+wob)+2;  
+    if(i===0) ctx.moveTo(x,y);  
+    else {  
+      const pa = ((i-0.5)/spikes)*Math.PI*2 - Math.PI/2;  
+      ctx.quadraticCurveTo(Math.cos(pa)*rx*1.04, Math.sin(pa)*ry*1.04+2, x, y);  
+    }  
+  }  
+  ctx.closePath(); ctx.fill();  
+  
+  // ── 白いおなか(下半分)──  
+  ctx.save();  
+  ctx.beginPath(); ctx.ellipse(0,2,21,20,0,0,Math.PI*2); ctx.clip();  
+  ctx.fillStyle = '#f3f8e8';  
+  ctx.beginPath(); ctx.ellipse(1, 13, 15, 13, 0, 0, Math.PI*2); ctx.fill();  
+  ctx.restore();  
+  
+  // 耳(立ち耳・黄緑)  
+  ctx.fillStyle = '#9cc65a';  
+  ctx.beginPath(); ctx.ellipse(-10,-18,5,7,-0.2,0,Math.PI*2); ctx.ellipse(10,-18,5,7,0.2,0,Math.PI*2); ctx.fill();  
+  ctx.fillStyle = '#c8e89a';  
+  ctx.beginPath(); ctx.ellipse(-10,-18,2.5,4,-0.2,0,Math.PI*2); ctx.ellipse(10,-18,2.5,4,0.2,0,Math.PI*2); ctx.fill();  
+  
+  // ── リーゼント(緑のモフモフ前髪)。能力をコピーすると その色に そまる ──
+  const wob = Math.sin(p.anim*1.6) * 1.4 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3); // 走るとゆれる
+  ctx.fillStyle = ab ? ab.color : '#8bc34a';
   ctx.beginPath();
-  for(let i=0;i<16;i++){
-    const a = i/16*Math.PI*2 + 0.2, r1 = 15 + (i%3)*1.5, r2 = r1 + 5;
-    ctx.moveTo(Math.cos(a)*r1, 2 + Math.sin(a)*r1*0.94); ctx.lineTo(Math.cos(a+0.08)*r2, 2 + Math.sin(a+0.08)*r2*0.94);
-  }
-  ctx.stroke();
-  // おなかの明るいところ
-  ctx.fillStyle = 'rgba(255,255,205,.55)';
-  ctx.beginPath(); ctx.ellipse(3, 11, 13, 9, 0, 0, Math.PI*2); ctx.fill();
-
-  // 小さな丸い耳
-  ctx.fillStyle = '#d8ec74';
-  ctx.beginPath(); ctx.arc(-15, -13, 4.2, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#f3c4b4';
-  ctx.beginPath(); ctx.arc(-15, -13, 2, 0, Math.PI*2); ctx.fill();
-
-  // 頭の黄色いお花
-  ctx.save(); ctx.translate(-12, -19); ctx.rotate(Math.sin(p.anim)*0.15);
-  ctx.fillStyle = '#ffd740';
-  for(let k=0;k<5;k++){ const a = k*Math.PI*0.4; ctx.beginPath(); ctx.ellipse(Math.cos(a)*3.4, Math.sin(a)*3.4, 2.8, 2.2, a, 0, Math.PI*2); ctx.fill(); }
-  ctx.fillStyle = '#ff9800'; ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI*2); ctx.fill();
-  ctx.restore();
-
-  // ── リーゼント(濃い緑のモジャモジャ前髪)──
-  // 頭のてっぺんで もりあがって前へ流れ、毛先は 目の横まで たれる。能力をコピーすると その色に そまる
-  const wob = Math.sin(p.anim*1.6) * 1.2 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3); // 走るとゆれる
-  const hg = ctx.createLinearGradient(0, -34, 0, 4);
-  if(ab){ hg.addColorStop(0, '#ffffff'); hg.addColorStop(0.3, ab.color); hg.addColorStop(1, ab.color); }
-  else { hg.addColorStop(0, '#9ccc65'); hg.addColorStop(0.45, '#6a9f2e'); hg.addColorStop(1, '#3f7a1f'); }
-  ctx.fillStyle = hg;
-  const spike = (bx, by, w, ax, ay)=>{ ctx.beginPath(); ctx.moveTo(bx-w, by); ctx.lineTo(ax, ay); ctx.lineTo(bx+w, by); ctx.closePath(); ctx.fill(); };
-  // てっぺんの つんつん
-  spike(1, -22, 4, -2, -30); spike(8, -24, 4, 9, -34); spike(15, -22, 4, 20, -31);
-  // もじゃもじゃの かたまり
-  fur(8, -18, 13, 8, 12, 0.3); ctx.fill();
-  fur(19 + wob*0.5, -12, 9, 9, 10, 0.3); ctx.fill();
-  // 前にたれる毛先(目の横まで)
-  spike(14, -8, 3, 16, 3); spike(19, -8, 3, 23, 2); spike(23, -10, 3, 29 + wob, -3); spike(25, -15, 3, 32 + wob, -13);
-  // 毛すじ
-  ctx.strokeStyle = ab ? 'rgba(255,255,255,.65)' : 'rgba(205,235,150,.8)'; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+  ctx.moveTo(-17, -9);
+  ctx.bezierCurveTo(-19, -25, -5, -31, 9, -29);              // 後ろから ふくらむ
+  ctx.bezierCurveTo(22, -28, 33 + wob, -23, 33 + wob, -15);  // おでこの前に つきだす
+  ctx.bezierCurveTo(33 + wob, -9, 26, -8, 24, -12);          // 先っぽの カール
+  ctx.bezierCurveTo(21, -16, 11, -16, 4, -12);
+  ctx.bezierCurveTo(-3, -14, -11, -12, -17, -9);
+  ctx.closePath(); ctx.fill();
+  // カールの内がわの かげ
+  ctx.fillStyle = 'rgba(0,0,0,.16)';
+  ctx.beginPath(); ctx.ellipse(28 + wob*0.6, -14, 3.2, 2.4, 0.3, 0, Math.PI*2); ctx.fill();
+  // くしの すじ(つや)
+  ctx.strokeStyle = ab ? 'rgba(255,255,255,.7)' : '#d4ecaa'; ctx.lineWidth = 1.7; ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(-1, -20); ctx.quadraticCurveTo(10, -26, 20 + wob*0.5, -16);
-  ctx.moveTo(4, -15);  ctx.quadraticCurveTo(14, -18, 21 + wob*0.5, -8);
+  ctx.moveTo(-12, -20); ctx.quadraticCurveTo(6, -31, 25 + wob, -23);
+  ctx.moveTo(-8, -15);  ctx.quadraticCurveTo(9, -24, 28 + wob, -18);
   ctx.stroke();
   // 能力ごとの かざり
   if(p.ability==='fire'){
     const fl = Math.sin(game.frame*0.5)*2;
     ctx.fillStyle = '#ffeb3b';
-    ctx.beginPath(); ctx.moveTo(18, -28); ctx.quadraticCurveTo(27, -34-fl, 23, -42-fl); ctx.quadraticCurveTo(15, -35, 18, -28); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(27+wob, -24); ctx.quadraticCurveTo(36+wob, -30-fl, 33+wob, -37-fl); ctx.quadraticCurveTo(26+wob, -31, 27+wob, -24); ctx.fill();
   } else if(p.ability==='spark'){
-    const tw = 0.6 + 0.4*Math.abs(Math.sin(game.frame*0.3));
-    ctx.fillStyle = '#fff';
-    drawStarPath(30+wob, -22, 4.5*tw); ctx.fill();
-    drawStarPath(4, -36, 3*(1.6-tw)); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    const k = game.frame % 12 < 6 ? 1 : -1;
+    ctx.beginPath(); ctx.moveTo(33+wob, -24); ctx.lineTo(38+wob, -28+k*2); ctx.lineTo(36+wob, -21); ctx.lineTo(41+wob, -23); ctx.stroke();
   } else if(p.ability==='ice'){
     ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(9, -36, 2.4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(31+wob, -1, 1.8, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -31, 2.4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(34+wob, -12, 1.8, 0, Math.PI*2); ctx.fill();
   }
 
-  // ほっぺ(ほおばると ぷっくり)
-  if(p.mouthful){
-    ctx.fillStyle = '#ecf384';
-    fur(-9, 7, 9, 8, 8, 0.12); ctx.fill();
-    fur(17, 7, 9, 8, 8, 0.12); ctx.fill();
-  }
-  ctx.fillStyle = 'rgba(255,138,128,.45)';
-  ctx.beginPath(); ctx.ellipse(-5, 5, 3.6, 2.2, 0, 0, Math.PI*2); ctx.ellipse(16, 5, 3.6, 2.2, 0, 0, Math.PI*2); ctx.fill();
-
-  // 目(小さな点目)
-  ctx.fillStyle = '#3b2f1e';
-  ctx.beginPath(); ctx.arc(-1, -1, 2.7, 0, Math.PI*2); ctx.arc(11, -1, 2.7, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(0, -2, 1, 0, Math.PI*2); ctx.arc(12, -2, 1, 0, Math.PI*2); ctx.fill();
-
-  // 口
-  if(p.sucking){
-    ctx.fillStyle = '#6d3b2c';
-    ctx.beginPath(); ctx.ellipse(5, 6, 4.5, 5.5, 0, 0, Math.PI*2); ctx.fill();
-  } else {
-    // 小さく あいた口
-    ctx.fillStyle = '#7a3b2e';
-    ctx.beginPath(); ctx.moveTo(2, 4); ctx.quadraticCurveTo(5, 10, 8, 4); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#f48fb1';
-    ctx.beginPath(); ctx.ellipse(5, 7, 1.8, 1.2, 0, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#5d4530'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(1, 4); ctx.quadraticCurveTo(3, 5, 5, 4); ctx.quadraticCurveTo(7, 5, 9, 4); ctx.stroke();
-  }
-
-  // 足
-  ctx.fillStyle = '#f1f3c0';
-  const step = Math.sin(p.anim*2)*3 * (Math.abs(p.vx)>0.5?1:0);
-  ctx.beginPath(); ctx.ellipse(-7+step, 19, 5, 3.2, 0, 0, Math.PI*2);
-  ctx.ellipse(8-step, 19, 5, 3.2, 0, 0, Math.PI*2); ctx.fill();
+  // オレンジのほっぺ(ほおばると膨らむ)  
+  const cheek = p.mouthful ? 9 : 5.5;  
+  ctx.fillStyle = p.mouthful ? '#ffb74d' : '#ffa726';  
+  ctx.beginPath(); ctx.ellipse(-12, 4, cheek, cheek*0.9, 0, 0, Math.PI*2); ctx.fill();  
+  ctx.beginPath(); ctx.ellipse(12, 4, cheek, cheek*0.9, 0, 0, Math.PI*2); ctx.fill();  
+  
+  // 目(まんまるの点目)  
+  ctx.fillStyle = '#2e2a20';  
+  ctx.beginPath(); ctx.arc(-6,-3,3,0,Math.PI*2); ctx.arc(6,-3,3,0,Math.PI*2); ctx.fill();  
+  ctx.fillStyle = '#fff';  
+  ctx.beginPath(); ctx.arc(-5,-4,1.1,0,Math.PI*2); ctx.arc(7,-4,1.1,0,Math.PI*2); ctx.fill();  
+  
+  // 口  
+  if(p.sucking){  
+    ctx.fillStyle = '#6d4c41';  
+    ctx.beginPath(); ctx.ellipse(0, 5, 5, 6, 0, 0, Math.PI*2); ctx.fill();  
+  } else {  
+    // にっこり「v」っぽい口  
+    ctx.strokeStyle = '#5d4530'; ctx.lineWidth = 1.6; ctx.lineCap='round';  
+    ctx.beginPath(); ctx.moveTo(-4,3); ctx.lineTo(0,6); ctx.lineTo(4,3); ctx.stroke();  
+  }  
+  
+  // 足(白っぽい小さいの)  
+  ctx.fillStyle = '#e8f0d8';  
+  const step = Math.sin(p.anim*2)*3 * (Math.abs(p.vx)>0.5?1:0);  
+  ctx.beginPath(); ctx.ellipse(-7+step, 18, 5, 3.2, 0, 0, Math.PI*2);  
+  ctx.ellipse(7-step, 18, 5, 3.2, 0, 0, Math.PI*2); ctx.fill();  
   ctx.restore();  
   
   // 吸い込みの風エフェクト  
@@ -2362,7 +2347,7 @@ function drawTitle(){
   overlay();
   const T = performance.now()/16.67;
   bigText('ほおばりハムスター', 62, 22, '#fff3c4');
-  bigText('リゼ丸の冒険', 132, 64, '#ffd54f');
+  bigText('リゼ丸のプチプチ冒険島', 130, 58, '#ffd54f');
   bigText('てきを すいこんで ほおばろう! 全' + STAGES.length + 'ステージ', 188, 20, '#fff');
   // リゼ丸のイラストを まるいフレームに
   const ix = 150, iy = 298 + Math.sin(T*0.04)*4, ir = 86;
