@@ -5,7 +5,7 @@
 | | パス |
 |---|---|
 | 焼肉ロス管理アプリ | `index.html` |
-| ハムスターゲーム | `hamster.html` |
+| リゼ丸の冒険(ハムスターゲーム) | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
 
 ## 配信方法

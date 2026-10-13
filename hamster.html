@@ -3,13 +3,13 @@
 <head>  
 <meta charset="UTF-8">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  
-<title>ほおばりハムスター モグモグ大冒険</title>
+<title>リゼ丸の冒険</title>
 <!-- PWA / ホーム画面アプリ設定 -->
 <meta name="theme-color" content="#2a1e3f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="ほおばりハムスター">
+<meta name="apple-mobile-web-app-title" content="リゼ丸の冒険">
 <link rel="apple-touch-icon" href="https://raw.githack.com/yama5150/shouhei/main/icon-180.png">
 <link rel="icon" type="image/png" href="https://raw.githack.com/yama5150/shouhei/main/icon-192.png">
 <link rel="manifest" href="https://raw.githack.com/yama5150/shouhei/main/manifest.webmanifest">
@@ -168,27 +168,200 @@ function decodeBGM(cb){
     }, ()=>{ bgmDecoding = false; });  
   }catch(e){ bgmDecoding = false; }  
 }  
+// もとの曲(carrot-hoofbeats)を鳴らす
+function playHoof(){
+  try{
+    const ac = audio(); if(!ac) return;
+    if(ac.state === 'suspended') ac.resume();
+    const start = ()=>{
+      if(music.id !== 'hoof') return; // デコード中に曲が変わった
+      try{
+        stopHoof();
+        bgmSource = ac.createBufferSource();
+        bgmSource.buffer = bgmBuffer;
+        bgmSource.loop = true;
+        bgmGain = ac.createGain();
+        bgmGain.gain.value = 0.45;
+        bgmSource.connect(bgmGain); bgmGain.connect(ac.destination);
+        bgmSource.start(0);
+      }catch(e){}
+    };
+    if(bgmBuffer) start(); else decodeBGM(start);
+  }catch(e){}
+}
+function stopHoof(){ try{ if(bgmSource){ bgmSource.stop(); bgmSource.disconnect(); bgmSource = null; } }catch(e){} }
+
+// ---------- チップチューンの曲 ----------
+// lead: 8分音符ごとに 1つ。「.」= 休み、「-」= 前の音をのばす
+// chords: 1小節ごとのコード。ベース・アルペジオは コードから自動で作る
+const SONGS = {
+  forest: { title:'きのこの森', bpm:112, wave:'square', bass:'octave', drums:'pop', arp:true,
+    chords:['F','C','Dm','Bb','F','C','Bb','C'],
+    lead:`A4 . C5 . F5 - E5 C5   D5 . C5 . G4 - . .   F4 . A4 . D5 - C5 A4   Bb4 - A4 - G4 - . .
+          A4 . C5 . F5 - G5 A5   G5 . E5 . C5 - D5 E5   F5 . D5 . Bb4 . D5 .   C5 - - - . . . .` },
+  ice: { title:'こおりの谷', bpm:96, wave:'triangle', leadVol:0.13, bass:'half', drums:'soft', arp:true, echo:true,
+    chords:['Am','F','C','G','Am','F','E','E'],
+    lead:`E5 - . A4 C5 - B4 .   A4 - - - . . . .   G4 - . C5 E5 - D5 .   B4 - - - . . . .
+          E5 - . A5 G5 - E5 .   F5 - E5 - C5 - A4 .   G#4 - B4 - E5 - D5 .   B4 - - - G#4 - - .` },
+  desert: { title:'さばくのオアシス', bpm:120, wave:'sawtooth', leadVol:0.045, bass:'octave', drums:'tom',
+    chords:['D','Eb','D','Eb','D','Cm','Eb','D'],
+    lead:`D5 Eb5 F#5 . G5 F#5 Eb5 D5   Eb5 - - . . . . .   A5 G5 F#5 G5 A5 - Bb5 A5   G5 - F#5 - Eb5 - . .
+          D5 Eb5 F#5 . A5 . F#5 .   G5 - Eb5 - C5 - . .   Bb4 C5 Eb5 . D5 C5 Bb4 .   A4 - - - D5 - . .` },
+  volcano: { title:'ゆうやけ火山', bpm:140, wave:'square', bass:'root8', drums:'rock',
+    chords:['Em','C','D','B','Em','C','Am','B'],
+    lead:`E5 . E5 G5 . E5 B4 .   C5 - . E5 - G5 . .   F#5 . F#5 A5 . F#5 D5 .   D#5 - - - F#5 - - .
+          G5 . G5 F#5 . E5 B4 .   C5 . E5 G5 . C6 - .   B5 . A5 G5 . E5 C5 .   B4 - - - D#5 - F#5 .` },
+  cave: { title:'うみべのどうくつ', bpm:84, wave:'triangle', leadVol:0.14, bass:'half', drums:'none', arp:true, echo:true,
+    chords:['Dm','Em','Dm','Em','F','G','Am','Am'],
+    lead:`A4 - - . D5 - - .   B4 - - . E5 - D5 .   C5 - A4 - F4 - - .   G4 - - - - - . .
+          A4 - C5 - F5 - E5 .   D5 - - . B4 - G4 .   C5 - B4 - A4 - E4 .   A4 - - - - - . .` },
+  sky: { title:'くもの上', bpm:128, wave:'square', bass:'walk', drums:'pop', arp:true,
+    chords:['G','D','Em','C','G','D','C','D'],
+    lead:`D5 . G5 . B5 . A5 G5   F#5 - D5 - A4 - . .   G5 . E5 . B4 . E5 G5   E5 - - - D5 - C5 .
+          B4 . D5 . G5 . B5 .   A5 - F#5 - D5 - E5 F#5   G5 . E5 . C5 . E5 .   D5 - - - A5 - - .` },
+  castle: { title:'ほしぞら城', bpm:104, wave:'square', bass:'walk', drums:'march', arp:true,
+    chords:['Cm','Ab','Bb','G','Cm','Ab','Fm','G'],
+    lead:`C5 - Eb5 - G5 - Eb5 .   Ab5 - - - G5 - Eb5 .   F5 - D5 - Bb4 - D5 .   B4 - - - D5 - - .
+          G5 - G5 Ab5 G5 - Eb5 .   C6 - - - Ab5 - Eb5 .   F5 - Ab5 - C6 - Bb5 Ab5   G5 - - - B4 - D5 .` },
+  boss: { title:'ボスせん', bpm:160, wave:'sawtooth', leadVol:0.05, bass:'root8', drums:'rock',
+    chords:['Cm','Cm','Ab','Bb','Cm','Cm','Db','G'],
+    lead:`C5 C5 Eb5 C5 G5 C5 F#5 G5   Eb5 . D5 . C5 . G4 .   Ab4 C5 Eb5 Ab5 G5 Eb5 C5 Eb5   D5 - F5 - Bb5 - Ab5 G5
+          C6 . G5 . Eb5 . G5 .   C6 B5 Bb5 A5 Ab5 G5 F#5 G5   Ab5 - F5 - Db5 - F5 .   G5 - B4 - D5 - F5 .` },
+};
+// ステージごとの曲(hoof = もとの曲)
+const STAGE_BGM = { 'そよかぜ草原':'hoof', 'きのこの森':'forest', 'こおりの谷':'ice', 'さばくのオアシス':'desert',
+  'ゆうやけ火山':'volcano', 'うみべのどうくつ':'cave', 'くもの上':'sky', 'ほしぞら城':'castle' };
+
+const PITCH = { C:0, 'C#':1, Db:1, D:2, 'D#':3, Eb:3, E:4, F:5, 'F#':6, Gb:6, G:7, 'G#':8, Ab:8, A:9, 'A#':10, Bb:10, B:11 };
+const midiOf = n=>{ const m = n.match(/^([A-G][#b]?)(\d)$/); return 12*(+m[2] + 1) + PITCH[m[1]]; };
+const hz = m=> 440 * Math.pow(2, (m - 69)/12);
+const DRUM_PAT = { // 1小節(8分音符 8つ)ぶん。k=キック s=スネア h=ハイハット t=タム
+  pop:   ['kh','h','sh','h','kh','kh','sh','h'],
+  rock:  ['kh','h','sh','kh','kh','kh','sh','h'],
+  soft:  ['k','h','','h','k','h','','h'],
+  march: ['k','','s','','k','','s','s'],
+  tom:   ['k','','t','k','','t','t','h'],
+  none:  ['','','','','','','',''],
+};
+
+function compileSong(sg){
+  const steps = sg.chords.length * 8;
+  const at = Array.from({length:steps}, ()=>[]);
+  let last = null;
+  sg.lead.trim().split(/\s+/).forEach((tk, i)=>{
+    if(i >= steps) return;
+    if(tk==='-'){ if(last) last.d++; }
+    else if(tk==='.') last = null;
+    else { last = { v:'lead', m:midiOf(tk), d:1 }; at[i].push(last); }
+  });
+  sg.chords.forEach((c, b)=>{
+    const m = c.match(/^([A-G][#b]?)(m?)$/);
+    const r = PITCH[m[1]], third = m[2] ? 3 : 4;
+    let root = 36 + r; if(root > 43) root -= 12;
+    const tones = [0, third, 7];
+    for(let k=0;k<8;k++){
+      const t = b*8 + k;
+      if(sg.bass==='root8') at[t].push({ v:'bass', m:root, d:1 });
+      else if(sg.bass==='octave') at[t].push({ v:'bass', m:root + (k%2 ? 12 : 0), d:1 });
+      else if(sg.bass==='walk' && k%2===0) at[t].push({ v:'bass', m:root + [0, third, 7, third][k/2], d:2 });
+      else if(sg.bass==='half' && k%4===0) at[t].push({ v:'bass', m:root + (k ? 7 : 0), d:4 });
+      if(sg.arp){
+        let base = 60 + r; if(base > 66) base -= 12;
+        at[t].push({ v:'arp', m:base + [tones[0], tones[1], tones[2], 12][k%4], d:1 });
+      }
+    }
+  });
+  return at;
+}
+
+const music = { id:null, playing:false, song:null, at:null, step:0, next:0, timer:null, out:null };
+let noiseBuf = null;
+function seqNote(e, t, sd){
+  const ac = AC, sg = music.song;
+  const V = e.v==='lead' ? { type:sg.wave, vol:sg.leadVol || 0.07 }
+          : e.v==='bass' ? { type:'triangle', vol:0.17 }
+          : { type:'square', vol:0.022 };
+  const len = e.d * sd;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = V.type; o.frequency.setValueAtTime(hz(e.m), t);
+  if(e.v==='lead' && e.d >= 3){ // 長い音に ビブラート
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    lfo.frequency.value = 5.5; lg.gain.value = hz(e.m) * 0.012;
+    lfo.connect(lg); lg.connect(o.frequency); lfo.start(t + 0.12); lfo.stop(t + len);
+  }
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(V.vol, t + 0.012);
+  g.gain.setValueAtTime(V.vol, t + len*0.65);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len*0.97);
+  o.connect(g); g.connect(music.out); o.start(t); o.stop(t + len);
+}
+function seqDrum(kind, t){
+  const ac = AC;
+  if(kind==='k' || kind==='t'){
+    const o = ac.createOscillator(), g = ac.createGain();
+    const f0 = kind==='k' ? 150 : 230, f1 = kind==='k' ? 42 : 110;
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + 0.12);
+    g.gain.setValueAtTime(kind==='k' ? 0.5 : 0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    o.connect(g); g.connect(music.out); o.start(t); o.stop(t + 0.17);
+    return;
+  }
+  if(!noiseBuf){
+    noiseBuf = ac.createBuffer(1, ac.sampleRate*0.2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = Math.random()*2 - 1;
+  }
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = noiseBuf;
+  const snare = kind==='s';
+  f.type = snare ? 'bandpass' : 'highpass'; f.frequency.value = snare ? 1800 : 7000;
+  const dur = snare ? 0.12 : 0.035;
+  g.gain.setValueAtTime(snare ? 0.2 : 0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); g.connect(music.out); src.start(t); src.stop(t + dur + 0.01);
+}
+function seqTick(){
+  const ac = AC, sg = music.song; if(!ac || !sg) return;
+  const sd = 60 / sg.bpm / 2, n = music.at.length;
+  if(music.next < ac.currentTime - 0.2) music.next = ac.currentTime + 0.05; // おくれたら 追いつく
+  while(music.next < ac.currentTime + 0.15){
+    const st = music.step % n;
+    for(const e of music.at[st]) seqNote(e, music.next, sd);
+    for(const k of DRUM_PAT[sg.drums || 'none'][st % 8]) seqDrum(k, music.next);
+    music.next += sd; music.step++;
+  }
+}
+function startSeq(sg){
+  const ac = audio(); if(!ac) return;
+  if(ac.state === 'suspended') ac.resume();
+  if(!sg.at) sg.at = compileSong(sg);
+  music.song = sg; music.at = sg.at; music.step = 0; music.next = ac.currentTime + 0.08;
+  music.out = ac.createGain(); music.out.gain.value = 0.7; music.out.connect(ac.destination);
+  if(sg.echo){ // どうくつ・氷の やまびこ
+    const dl = ac.createDelay(), fb = ac.createGain(), wet = ac.createGain();
+    dl.delayTime.value = 60 / sg.bpm * 0.75; fb.gain.value = 0.3; wet.gain.value = 0.35;
+    music.out.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(ac.destination);
+  }
+  music.timer = setInterval(seqTick, 25); seqTick();
+}
+function stopSeq(){
+  if(music.timer){ clearInterval(music.timer); music.timer = null; }
+  if(music.out){ try{ music.out.disconnect(); }catch(e){} music.out = null; }
+  music.song = null;
+}
+
+// いまの場面に合った曲を流す(同じ曲なら そのまま)
+function currentTrack(){
+  if(game.state==='title' || game.state==='select' || game.state==='settings') return 'hoof';
+  if(boss && boss.alive && boss.engaged) return 'boss';
+  return STAGE_BGM[STAGES[Math.min(game.stage, STAGES.length-1)].name] || 'hoof';
+}
 function playBGM(){
-  if(!save.bgm) return;  
-  try{  
-    const ac = audio(); if(!ac) return;  
-    if(ac.state === 'suspended') ac.resume();  
-    const start = ()=>{  
-      try{  
-        stopBGM();  
-        bgmSource = ac.createBufferSource();  
-        bgmSource.buffer = bgmBuffer;  
-        bgmSource.loop = true;  
-        bgmGain = ac.createGain();  
-        bgmGain.gain.value = 0.45;  
-        bgmSource.connect(bgmGain); bgmGain.connect(ac.destination);  
-        bgmSource.start(0);  
-      }catch(e){}  
-    };  
-    if(bgmBuffer) start(); else decodeBGM(start);  
-  }catch(e){}  
-}  
-function stopBGM(){ try{ if(bgmSource){ bgmSource.stop(); bgmSource.disconnect(); bgmSource = null; } }catch(e){} }  
+  if(!save.bgm) return;
+  const id = currentTrack();
+  if(music.playing && music.id === id) return;
+  stopBGM();
+  music.id = id; music.playing = true;
+  if(id==='hoof') playHoof(); else startSeq(SONGS[id]);
+}
+function stopBGM(){ stopHoof(); stopSeq(); music.playing = false; music.id = null; }
 // ページ読み込み時に先にデコード開始(再生はユーザー操作後)  
 setTimeout(()=>decodeBGM(), 300);  
   
@@ -609,13 +782,13 @@ function startGame(cp){
   game.intro = 150;
   playBGM();
 }
-function toTitle(){ unlockAudio(); stopBGM(); resetGame(); setState('title'); }
+function toTitle(){ unlockAudio(); resetGame(); setState('title'); playBGM(); }
 function pauseGame(){
   if(game.state!=='play') return;
   setState('pause'); clearInput();
   try{ if(AC) AC.suspend(); }catch(e){}
 }
-function resumeGame(){ setState('play'); clearInput(); unlockAudio(); if(save.bgm && !bgmSource) playBGM(); }
+function resumeGame(){ setState('play'); clearInput(); unlockAudio(); playBGM(); }
 function updateBest(){
   if(game.score > save.best){ save.best = game.score; game.newRecord = true; writeSave(); }
 }
@@ -645,7 +818,7 @@ function menuItems(){
   if(game.state==='settings') return [
     { label:'むずかしさ:' + DIFFS[save.diff].label, act:()=>{
       save.diff = save.diff==='easy' ? 'normal' : 'easy'; game.diff = save.diff; writeSave(); } },
-    { label:'BGM:' + (save.bgm ? 'ON' : 'OFF'), act:()=>{ save.bgm = !save.bgm; writeSave(); if(!save.bgm) stopBGM(); } },
+    { label:'BGM:' + (save.bgm ? 'ON' : 'OFF'), act:()=>{ save.bgm = !save.bgm; writeSave(); if(!save.bgm) stopBGM(); else if(game.settingsFrom!=='pause') playBGM(); } },
     { label:'こうかおん:' + (save.se ? 'ON' : 'OFF'), act:()=>{ save.se = !save.se; writeSave(); } },
     { label:'もどる', act:()=>{ const back = game.settingsFrom || 'title'; setState(back); } },
   ];
@@ -663,6 +836,9 @@ function menuItems(){
   return [];
 }
 // リザルト画面はタップで早送り
+function menuMusic(){
+  if(game.state==='title' || game.state==='select' || (game.state==='settings' && game.settingsFrom!=='pause')) playBGM();
+}
 function skipResult(){ if(game.state==='next' && 210 - game.banner > 50 && game.banner > 25) game.banner = 25; }
 function canvasPoint(e){
   const r = cv.getBoundingClientRect();
@@ -684,7 +860,7 @@ function menuTap(e){
   if(!menuItems().length) return;
   const pt = canvasPoint(e);
   const i = menuButtons.findIndex(b=> inRect(pt, b));
-  if(i >= 0){ game.menuSel = i; unlockAudio(); SFX.seed(); menuButtons[i].act(); }
+  if(i >= 0){ game.menuSel = i; unlockAudio(); SFX.seed(); menuButtons[i].act(); menuMusic(); }
 }
 cv.addEventListener('touchstart', menuTap, {passive:false});
 cv.addEventListener('mousedown', menuTap);
@@ -704,7 +880,7 @@ addEventListener('keydown', e=>{
   else if(e.code==='Space' || e.code==='Enter' || e.code==='KeyZ'){
     e.preventDefault(); if(e.repeat) return;
     audio(); unlockAudio();
-    items[sel].act(); return;
+    items[sel].act(); menuMusic(); return;
   } else if(e.code==='Escape' || e.code==='Backspace'){
     if(items[n-1].label==='もどる') items[n-1].act();
     return;
@@ -880,7 +1056,7 @@ function updateBoss(){
   // プレイヤーが近づくと戦闘開始
   if(!b.engaged){
     if(p.x > b.x - 560){ b.engaged = true; b.atkCd = 60;
-      popup(b.x+b.w/2, b.y-24, BOSS_TYPES[b.type].name + ' とうじょう!', '#ff8a80'); }
+      popup(b.x+b.w/2, b.y-24, BOSS_TYPES[b.type].name + ' とうじょう!', '#ff8a80'); playBGM(); }
     return;
   }
 
@@ -944,6 +1120,7 @@ function damageBoss(d, by){
 function defeatBoss(){
   const b = boss;
   b.alive = false; game.bossDefeated = true; game.shake = 18;
+  playBGM(); // ステージの曲にもどす
   game.score += 3000; SFX.goal();
   for(let i=0;i<40;i++) spawnParticles(
     b.x+b.w/2 + (Math.random()-0.5)*b.w, b.y+b.h/2 + (Math.random()-0.5)*b.h,
@@ -1186,7 +1363,7 @@ function update(){
     for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; }  
     particles = particles.filter(p=>p.life>0);  
     if(game.banner <= 0){  
-      game.stage++; loadStage(game.stage);
+      game.stage++; loadStage(game.stage); playBGM();
       markCheckpoint(); game.intro = 150;
       game.time = 0; setState('play');  
     }  
@@ -1646,7 +1823,7 @@ function rounded(x,y,w,h,r){
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();  
 }  
   
-// ---------- ハムスター「モグ」 ----------  
+// ---------- ハムスター「リゼ丸」(緑のリーゼント) ----------  
 function drawPlayer(){  
   const p = player;  
   if(p.inv > 0 && Math.floor(p.inv/4)%2===0) return;  
@@ -1695,24 +1872,43 @@ function drawPlayer(){
   ctx.fillStyle = '#c8e89a';  
   ctx.beginPath(); ctx.ellipse(-10,-18,2.5,4,-0.2,0,Math.PI*2); ctx.ellipse(10,-18,2.5,4,0.2,0,Math.PI*2); ctx.fill();  
   
-  // 能力帽子  
-  if(ab){  
-    ctx.fillStyle = ab.color;  
-    if(p.ability==='fire'){  
-      ctx.beginPath(); ctx.moveTo(-12,-17); ctx.quadraticCurveTo(0,-40,12,-17);  
-      ctx.quadraticCurveTo(4,-23,0,-31); ctx.quadraticCurveTo(-4,-23,-12,-17); ctx.fill();  
-    } else if(p.ability==='spark'){  
-      ctx.beginPath();  
-      for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI*2/5;  
-        ctx.lineTo(Math.cos(a)*11, -24+Math.sin(a)*11);  
-        const a2=a+Math.PI/5; ctx.lineTo(Math.cos(a2)*5, -24+Math.sin(a2)*5); }  
-      ctx.closePath(); ctx.fill();  
-    } else {  
-      ctx.beginPath(); ctx.moveTo(-11,-16); ctx.lineTo(0,-33); ctx.lineTo(11,-16); ctx.closePath(); ctx.fill();  
-      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,-33,4,0,Math.PI*2); ctx.fill();  
-    }  
-  }  
-  
+  // ── リーゼント(緑のモフモフ前髪)。能力をコピーすると その色に そまる ──
+  const wob = Math.sin(p.anim*1.6) * 1.4 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3); // 走るとゆれる
+  // モフモフの毛のかたまりを 後ろ→前へ 大きくしながら重ねて、前に つきだす
+  const lobes = [[-13,-15,8],[-6,-21,9],[3,-25,10],[13,-26,10],[22,-23,9],[29,-17,7],[32,-11,5]];
+  const hair = ctx.createLinearGradient(0, -36, 0, -8);
+  if(ab){ hair.addColorStop(0, '#ffffff'); hair.addColorStop(0.25, ab.color); hair.addColorStop(1, ab.color); }
+  else { hair.addColorStop(0, '#d6ef9a'); hair.addColorStop(0.5, '#9ccc65'); hair.addColorStop(1, '#7cb342'); }
+  ctx.fillStyle = hair;
+  for(const [hx, hy, hr] of lobes){
+    const wx = hx > 15 ? wob*(hx-15)/15 : 0;
+    ctx.beginPath(); ctx.arc(hx + wx, hy, hr, 0, Math.PI*2); ctx.fill();
+  }
+  // 先っぽの くるん
+  ctx.strokeStyle = ab ? 'rgba(0,0,0,.25)' : '#689f38'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(30 + wob, -13, 3.2, -0.5, Math.PI*1.4); ctx.stroke();
+  // 毛すじ(つや)
+  ctx.strokeStyle = ab ? 'rgba(255,255,255,.75)' : '#e6f5c8'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(-14, -20); ctx.quadraticCurveTo(4, -34, 24 + wob, -27);
+  ctx.moveTo(-9, -14);  ctx.quadraticCurveTo(10, -26, 30 + wob, -19);
+  ctx.moveTo(0, -11);   ctx.quadraticCurveTo(14, -19, 24 + wob, -15);
+  ctx.stroke();
+  // 能力ごとの かざり
+  if(p.ability==='fire'){
+    const fl = Math.sin(game.frame*0.5)*2;
+    ctx.fillStyle = '#ffeb3b';
+    ctx.beginPath(); ctx.moveTo(30+wob, -22); ctx.quadraticCurveTo(40+wob, -30-fl, 36+wob, -38-fl); ctx.quadraticCurveTo(28+wob, -31, 30+wob, -22); ctx.fill();
+  } else if(p.ability==='spark'){
+    const tw = 0.6 + 0.4*Math.abs(Math.sin(game.frame*0.3));
+    ctx.fillStyle = '#fff';
+    drawStarPath(37+wob, -25, 4.5*tw); ctx.fill();
+    drawStarPath(16, -37, 3*(1.6-tw)); ctx.fill();
+  } else if(p.ability==='ice'){
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(8, -36, 2.4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(37+wob, -7, 1.8, 0, Math.PI*2); ctx.fill();
+  }
+
   // オレンジのほっぺ(ほおばると膨らむ)  
   const cheek = p.mouthful ? 9 : 5.5;  
   ctx.fillStyle = p.mouthful ? '#ffb74d' : '#ffa726';  
@@ -2026,9 +2222,10 @@ function drawHUD(){
   ctx.fillStyle = '#fff'; ctx.fillRect(bx+bw+5, by-8, 2, 22);
   ctx.fillStyle = '#ffb300';
   ctx.beginPath(); ctx.moveTo(bx+bw+7, by-8); ctx.lineTo(bx+bw+20, by-3); ctx.lineTo(bx+bw+7, by+2); ctx.closePath(); ctx.fill();
-  const mx = bx + bw*prog; // モグのしるし
+  const mx = bx + bw*prog; // リゼ丸のしるし
   ctx.fillStyle = '#aed572'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(mx, by+5, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7cb342'; ctx.beginPath(); ctx.moveTo(mx-6, by); ctx.quadraticCurveTo(mx+2, by-11, mx+11, by-3); ctx.quadraticCurveTo(mx+3, by-4, mx-6, by); ctx.fill();
   ctx.fillStyle = '#ffa726';
   ctx.beginPath(); ctx.arc(mx-4, by+7, 2, 0, Math.PI*2); ctx.arc(mx+4, by+7, 2, 0, Math.PI*2); ctx.fill();
   hudText('STAGE ' + (game.stage+1) + '/' + STAGES.length + ' ' + STAGES[Math.min(game.stage,STAGES.length-1)].name,
@@ -2123,7 +2320,7 @@ function drawLock(x, y){
 }
 const fmtTime = f=>{ const sec = Math.floor(f/60); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2, '0'); };
 
-// 画面の好きな位置にモグをかく(タイトル用)
+// 画面の好きな位置にリゼ丸をかく(タイトル用)
 function drawMogAt(x, y, s, cheeks){
   const bak = player;
   player = { x:x-20, y:y-19, w:40, h:38, vx:0, vy:0, dir:1, inv:0, puff:0,
@@ -2148,8 +2345,8 @@ function recordLine(y){
 function drawTitle(){
   overlay();
   const T = performance.now()/16.67;
-  bigText('ほおばりハムスター', 88, 50, '#ffd54f');
-  bigText('モグモグ大冒険', 146, 50, '#ffd54f');
+  bigText('ほおばりハムスター', 62, 22, '#fff3c4');
+  bigText('リゼ丸の冒険', 132, 64, '#ffd54f');
   bigText('てきを すいこんで ほおばろう! 全' + STAGES.length + 'ステージ', 188, 20, '#fff');
   drawMogAt(165, 318 - Math.abs(Math.sin(T*0.06))*16, 2.6, Math.floor(T/70)%2===0);
   drawEnemyAt('bee',    800, 250 + Math.sin(T*0.06)*12, 1.7, T);

@@ -1,7 +1,7 @@
 {
-  "name": "ほおばりハムスター モグモグ大冒険",
-  "short_name": "ほおばりハムスター",
-  "description": "ハムスターのモグを操作して、てきをほおばり、ボスをたおす ほおばりアクション!",
+  "name": "リゼ丸の冒険",
+  "short_name": "リゼ丸の冒険",
+  "description": "緑のリーゼントのハムスター「リゼ丸」を操作して、てきをほおばり、ボスをたおす ほおばりアクション!",
   "lang": "ja",
   "start_url": "https://raw.githack.com/yama5150/shouhei/main/hamster.html",
   "scope": "https://raw.githack.com/yama5150/shouhei/main/",
