@@ -845,7 +845,7 @@ function canvasPoint(e){
   const t = e.changedTouches ? e.changedTouches[0] : e;
   return { x:(t.clientX - r.left) * W / r.width, y:(t.clientY - r.top) * H / r.height };
 }
-const PAUSE_BTN = { x:648, y:8, w:44, h:40 }; // 画面上の ポーズボタン
+const PAUSE_BTN = { x:662, y:8, w:86, h:42 }; // 画面上の ポーズボタン
 const inRect = (pt, b)=> pt.x>=b.x && pt.x<=b.x+b.w && pt.y>=b.y && pt.y<=b.y+b.h;
 function menuTap(e){
   if(e.type==='touchstart' && e.cancelable) e.preventDefault();
@@ -2247,10 +2247,12 @@ function drawHUD(){
   // ポーズボタン
   if(game.state==='play'){
     const b = PAUSE_BTN;
-    ctx.fillStyle = 'rgba(40,25,60,.45)'; rounded(b.x, b.y, b.w, b.h, 10); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(b.x+14, b.y+11, 5, 18); ctx.fillRect(b.x+25, b.y+11, 5, 18);
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; rounded(b.x, b.y+3, b.w, b.h, 14); ctx.fill();
+    ctx.fillStyle = '#ffb300'; rounded(b.x, b.y, b.w, b.h, 14); ctx.fill();
+    ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#3e2723';
+    ctx.fillRect(b.x+13, b.y+12, 5, 18); ctx.fillRect(b.x+23, b.y+12, 5, 18);
+    ctx.font = 'bold 15px '+FONT; ctx.textAlign = 'left'; ctx.fillText('ポーズ', b.x+34, b.y+27);
   }
   // ボスHPバー
   if(game.bossActive && boss && boss.alive && boss.engaged){
