@@ -1880,7 +1880,7 @@ function drawPlayer(){
 
   // ── リーゼント(濃い緑のトゲトゲ前髪)。能力をコピーすると その色に そまる ──
   const wob = Math.sin(p.anim*1.6) * 1.2 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3); // 走るとゆれる
-  ctx.save(); ctx.translate(8, -12); ctx.scale(0.72, 0.72); ctx.translate(-8, 12);
+  ctx.save(); ctx.translate(8, -14); ctx.scale(0.5, 0.5); ctx.translate(-8, 14); // 小さめの前髪
   const hair = ctx.createLinearGradient(0, -32, 0, -6);
   if(ab){ hair.addColorStop(0, '#ffffff'); hair.addColorStop(0.3, ab.color); hair.addColorStop(1, ab.color); }
   else { hair.addColorStop(0, '#9ccc65'); hair.addColorStop(0.6, '#689f38'); hair.addColorStop(1, '#4e8a2a'); }
