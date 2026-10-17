@@ -35,9 +35,17 @@ CARD_TITLE = os.environ.get("CARD_TITLE", "バイキング 焼肉コーナー")
 CARD_LEAD = os.environ.get("CARD_LEAD", "リニューアル")
 CARD_NOTE = os.environ.get("CARD_NOTE", "詳しくはプロフィールから")
 
-# 音楽。空なら音楽版は作らない
-MUSIC = os.environ.get("MUSIC", "")
-MUSIC_START = float(os.environ.get("MUSIC_START", "0"))
+# 音楽。空なら無音版だけ作る。
+# MUSIC_START は曲のどこから使うか（秒）。レベルを1秒ごとに測ったところ
+# 60秒に区切りがあり、61秒から次のセクション。そこから74秒へ向けて
+# 曲がいちばん盛り上がるので、15秒だと「入って上がる」形になる。
+# 一定の強さで通したいなら 155（150〜154のブレイク明け）。
+MUSIC = os.environ.get("MUSIC", str(SRC / "5c40e34b-__________2.mp3"))
+MUSIC_START = float(os.environ.get("MUSIC_START", "61"))
+
+# このリールの元クリップは -36 LUFS のノイズフロアしか入っていない。
+# 混ぜると 14dB 持ち上げてヒスを足すだけなので、音楽版は曲だけで作る。
+USE_CLIP_AUDIO = False
 
 W, H, FPS = 1080, 1920, 30
 
@@ -114,8 +122,9 @@ CLIP_LUFS = -22.0
 
 FADE_IN = 0.0              # 1フレーム目から見せたいのでフェードなし
 FADE_OUT = 0.20            # ロゴ側にもフェードがあるので短め
-AUDIO_TAIL = 3.00          # ロゴを越えて最後の黒で鳴り終わる
-AUDIO_CURVE = "qsin"
+AUDIO_TAIL = 3.50          # 告知カードから引きはじめて、最後の黒で鳴り終わる
+AUDIO_CURVE = "tri"        # 15秒と短いので、直線のほうが引きはじめが分かる
+                           # (長い動画なら qsin のほうが終わり際が自然)
 
 
 def font():
@@ -350,20 +359,26 @@ def render_audio(with_music):
     chains.append("".join(labels) + f"concat=n={n}:v=0:a=1[acat]")
 
     if with_music:
-        # 混ぜる前に各系統を測って揃える。まとめてから正規化すると、ずっと
-        # 鳴っている曲に引っぱられて現場の音が埋もれる
-        clips_i = measure_lufs(inputs, chains, "acat", f"{kind}_clips")
         music_i = measure_music_lufs()
-        print(f"   クリップ {clips_i:.1f} → {CLIP_LUFS} LUFS / "
-              f"音楽 {music_i:.1f} → {MUSIC_LUFS} LUFS")
         inputs += ["-ss", f"{MUSIC_START}", "-t", f"{TOTAL}", "-i", MUSIC]
-        chains.append(f"[acat]volume={CLIP_LUFS - clips_i:+.2f}dB[clips]")
         chains.append(
             f"[{n}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             f"atrim=duration={TOTAL},asetpts=PTS-STARTPTS,"
             f"volume={MUSIC_LUFS - music_i:+.2f}dB[musicout]"
         )
-        chains.append("[clips][musicout]amix=inputs=2:duration=first:normalize=0[mix]")
+        if USE_CLIP_AUDIO:
+            # 混ぜる前に各系統を測って揃える。まとめてから正規化すると、
+            # ずっと鳴っている曲に引っぱられて現場の音が埋もれる
+            clips_i = measure_lufs(inputs[:-6], chains[:-1], "acat", f"{kind}_clips")
+            print(f"   クリップ {clips_i:.1f} → {CLIP_LUFS} LUFS / "
+                  f"音楽 {music_i:.1f} → {MUSIC_LUFS} LUFS")
+            chains.append(f"[acat]volume={CLIP_LUFS - clips_i:+.2f}dB[clips]")
+            chains.append(
+                "[clips][musicout]amix=inputs=2:duration=first:normalize=0[mix]")
+        else:
+            print(f"   音楽 {music_i:.1f} → {MUSIC_LUFS} LUFS（曲のみ）")
+            chains.append("[acat]anullsink")
+            chains.append("[musicout]anull[mix]")
     else:
         chains.append("[acat]anull[mix]")
 
@@ -411,11 +426,10 @@ if __name__ == "__main__":
     else:
         video = render_video()
 
-    # 元クリップの音は -36 LUFS のノイズフロアだけで、使える音が入っていない。
-    # 揃えようとすると 20dB 持ち上げてヒスを増幅するだけなので、無音を主にする
-    mux(video, None, "yakiniku_reel.mp4")
+    mux(video, None, "yakiniku_reel_muted.mp4")
     if MUSIC and Path(MUSIC).exists():
-        mux(video, render_audio(with_music=True), "yakiniku_reel_music.mp4")
+        mux(video, render_audio(with_music=True), "yakiniku_reel.mp4")
     else:
-        print("   （MUSIC が未指定なので音楽版は作っていない。"
-              "アプリ側で曲を乗せるか MUSIC=... を渡す）")
+        # 元クリップの音は使えないので、音源がなければ無音がそのまま本番
+        print("   （MUSIC が未指定。アプリ側で曲を乗せるか MUSIC=... を渡す）")
+        mux(video, None, "yakiniku_reel.mp4")

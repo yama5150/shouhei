@@ -7,16 +7,27 @@
 
 | ファイル | 中身 |
 |---|---|
-| `out/yakiniku_reel.mp4` | 本番用。**無音** |
-| `out/yakiniku_reel_music.mp4` | `MUSIC` を渡したときだけ出る |
+| `out/yakiniku_reel.mp4` | 本番用。BGM 入り |
+| `out/yakiniku_reel_muted.mp4` | 無音版。アプリ側で曲を乗せたいとき用 |
 
-**無音が既定**。元のクリップに入っている音は -36 LUFS のノイズフロアだけで、
-使える音が入っていない。-16 LUFS に揃えようとすると 20dB 持ち上げることに
-なり、ヒスを増幅するだけになる。Instagram のアプリ側で曲を乗せるか、
-`MUSIC` で音源を渡す。
+## 音
+
+元のクリップに入っている音は -36 LUFS のノイズフロアだけで、使える音が
+入っていない。混ぜると 14dB 持ち上げてヒスを足すだけなので、**音楽版は
+曲だけ**で作っている（`USE_CLIP_AUDIO = False`）。
+
+曲は 4 分 25 秒ある。レベルを 1 秒ごとに測ったところ 60 秒に区切りがあり、
+**61 秒から次のセクション**。そこから 74 秒へ向けて曲がいちばん盛り上がるので、
+15 秒だと「入って上がっていく」形になる。`MUSIC_START=61` が既定。
+一定の強さで通したいなら `MUSIC_START=155`（150〜154 のブレイク明け）。
+
+終わりは告知カードから引きはじめて、ロゴを越えて最後の黒で鳴り終わる
+（`AUDIO_TAIL = 3.5` 秒）。15 秒と短いのでカーブは直線（`tri`）にしてある。
+長い動画なら `qsin` のほうが終わり際が自然。
 
 ```bash
-MUSIC=/path/to/曲.mp3 MUSIC_START=30 python3 reel/build_yakiniku.py
+MUSIC=/path/to/別の曲.mp3 MUSIC_START=30 python3 reel/build_yakiniku.py
+MUSIC= python3 reel/build_yakiniku.py          # 無音だけにする
 ```
 
 ## 構成
@@ -78,6 +89,3 @@ CARD_NOTE="" python3 reel/build_yakiniku.py        # 誘導行を消す
 `loudnorm` は測定にだけ使い、書き出しには通していない。通すと動的モードに
 落ちて音が暴れるうえ、先読み 3 秒ぶん末尾が落ちることがある。測ってから
 静的ゲインで揃え、はみ出す瞬間だけ `alimiter` で止める。
-
-音楽版を作る場合、曲とクリップをそれぞれ測ってから混ぜる
-（`MUSIC_LUFS` / `CLIP_LUFS`）。全体は -16 LUFS。
