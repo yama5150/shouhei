@@ -12,8 +12,11 @@
     # テロップもカットも触っていないときは映像を作り直さない
     python3 reel/build_halloween.py --audio-only
 
-    # TikTok 寄りの速いテンポ版 (約14秒、カットを詰めて文字を大きく)
+    # TikTok 寄りの速いテンポ版 (カットを詰めて文字を大きく)
     python3 reel/build_halloween.py --fast
+
+    # サムネだけ作り直す (先に /usr/bin/python3 reel/make_title.py)
+    python3 reel/build_halloween.py --cover-only
 
 映像は 1 回だけエンコードして、音声違いを差し替えで書き出す。
 中間ファイルは寿司版 (build_reel.py) とぶつからないよう接頭辞を分けてある。
@@ -42,12 +45,12 @@ CARD_LEAD = os.environ.get("CARD_LEAD", "開催中")
 CARD_NOTE = os.environ.get("CARD_NOTE", "詳しくはプロフィールから")
 
 # 音楽。空なら無音版だけ作る。
-# MUSIC_START は曲のどこから使うか（秒）。レベルを1秒ごとに測ったところ
-# 60秒に区切りがあり、61秒から次のセクション。そこから74秒へ向けて
-# 曲がいちばん盛り上がるので、15秒だと「入って上がる」形になる。
-# 一定の強さで通したいなら 155（150〜154のブレイク明け）。
-MUSIC = os.environ.get("MUSIC", str(SRC / "5c40e34b-__________2.mp3"))
-MUSIC_START = float(os.environ.get("MUSIC_START", "61"))
+# MUSIC_START は曲のどこから使うか（秒）。Candlelit Banquet は 2分41秒。
+# レベルを1秒ごとに測ると 34〜35秒に区切りがあり、36秒から次のセクション。
+# そこから 55 秒あたりまで -17〜-20dB で安定しているので 37 秒から使う。
+# もっと厚いところが欲しければ 134（終盤のいちばん強い区間）。
+MUSIC = os.environ.get("MUSIC", str(SRC / "9e98a170-Candlelit_Banquet.mp3"))
+MUSIC_START = float(os.environ.get("MUSIC_START", "37"))
 
 # 元クリップの音は、ビビンバのカットが -33 LUFS のほぼ無音、
 # 生成動画のほうは AI がつけた音。どちらも曲と喧嘩するので混ぜない。
@@ -68,6 +71,8 @@ SOURCES = {
     "roll_p":   SRC / "8b355bc3-image.jpg",      # 巻き寿司の盛り
     "aburi_p":  SRC / "1353e30f-image.jpg",      # 炙りの一皿
     "chef_p":   SRC / "0a9bcf1d-image.jpg",      # 職人 + サーモントラウト（笑顔）
+    "salmon_p": SRC / "4590ad1b-image.jpg",      # サーモンの握り（魚卵のせ）
+    "crab_p":   SRC / "c5ee250e-image.jpg",      # 蟹鍋を持つスタッフ
     "sting_v":  SRC / "977d2986-DopVl3SCneao9y70kOk0dgISllqQ9S1lyIWkKfA8vKg.mp4",  # ロゴ 2s
 }
 
@@ -88,7 +93,7 @@ SEGMENTS = [
     dict(key="jump_v", kind="video", start=0.00, dur=1.80, fit="blur", lift=1.25,
          lines=[("ハロウィン、やってます。", 62, INK)]),
 
-    dict(key="jack1_p", kind="photo", dur=1.60, zoom=(1.06, 1.16), focus=(0.50, 0.45),
+    dict(key="jack1_p", kind="photo", dur=1.40, zoom=(1.06, 1.16), focus=(0.50, 0.45),
          lift=1.10,
          lines=[("愉快な仲間たちが お出迎え。", 56, INK)]),
 
@@ -96,7 +101,11 @@ SEGMENTS = [
          lift=1.05,
          lines=[("彩り、揃ってます。", 64, INK)]),
 
-    dict(key="aburi_p", kind="photo", dur=1.90, zoom=(1.04, 1.14), focus=(0.45, 0.50),
+    dict(key="salmon_p", kind="photo", dur=1.70, zoom=(1.02, 1.12), focus=(0.50, 0.48),
+         lift=1.18,
+         lines=[("握りも、ずらりと。", 64, INK)]),
+
+    dict(key="aburi_p", kind="photo", dur=1.70, zoom=(1.04, 1.14), focus=(0.45, 0.50),
          lift=1.25,
          lines=[("炙りも、ひと皿。", 64, INK)]),
 
@@ -104,11 +113,16 @@ SEGMENTS = [
          lift=1.18,
          lines=[("できたては、お席まで。", 62, INK)]),
 
+    # 蟹鍋。企画書の看板だった蟹がようやく画になった
+    dict(key="crab_p", kind="photo", dur=1.90, zoom=(1.04, 1.14), focus=(0.50, 0.55),
+         lift=1.28,
+         lines=[("蟹鍋も、あります。", 64, INK)]),
+
     # 間に挟む一拍。文字は乗せない
     dict(key="jack2_p", kind="photo", dur=1.40, zoom=(1.08, 1.18), focus=(0.48, 0.42),
          lift=1.22, lines=[]),
 
-    dict(key="chef_p", kind="photo", dur=2.20, zoom=(1.02, 1.10), focus=(0.50, 0.40),
+    dict(key="chef_p", kind="photo", dur=2.00, zoom=(1.02, 1.10), focus=(0.50, 0.40),
          lift=1.40,
          lines=[("ススデパで お待ちしてます。", 58, INK)]),
 
@@ -138,6 +152,10 @@ SEGMENTS_FAST = [
          lift=1.05,
          lines=[("彩り、揃ってます", 76, INK)]),
 
+    dict(key="salmon_p", kind="photo", dur=0.90, zoom=(1.04, 1.14), focus=(0.50, 0.48),
+         lift=1.18,
+         lines=[("握りもずらり", 80, INK)]),
+
     dict(key="aburi_p", kind="photo", dur=1.00, zoom=(1.06, 1.16), focus=(0.45, 0.50),
          lift=1.25,
          lines=[("炙りも ひと皿", 80, INK)]),
@@ -150,6 +168,10 @@ SEGMENTS_FAST = [
     dict(key="bibim_v", kind="video", start=7.00, dur=0.90, zoom=1.14, focus=(0.50, 0.50),
          lift=1.18,
          lines=[("石焼ビビンバ", 80, INK)]),
+
+    dict(key="crab_p", kind="photo", dur=1.00, zoom=(1.06, 1.16), focus=(0.50, 0.55),
+         lift=1.28,
+         lines=[("蟹鍋も", 84, INK)]),
 
     # 跳ねるかぼちゃの着地。文字なしで一拍
     dict(key="jump_v", kind="video", start=4.30, dur=0.90, fit="blur", lift=1.25,
@@ -327,6 +349,51 @@ def measure_music_lufs():
         "music",
     )
     return float(data["input_i"])
+
+
+# ---------------------------------------------------------------- サムネ
+# Instagram はプロフィールのグリッドでカバーの中央 1:1 を切り出す。
+# 1080x1920 なら y=420〜1500 がその範囲。タイトルはここに収める。
+GRID_TOP, GRID_BOTTOM = 420, 1500
+
+COVER_BASE = os.environ.get("COVER_BASE", "crab_p")   # 地に使う素材
+COVER_LIFT = float(os.environ.get("COVER_LIFT", "1.28"))
+COVER_TITLE_Y = int(os.environ.get("COVER_TITLE_Y", "470"))
+TITLE_PNG = OUT / "title.png"
+
+
+def build_cover(outfile="halloween_cover.jpg"):
+    """サムネを作る。タイトルは make_title.py が描いた PNG を重ねるだけ。
+
+    ffmpeg の drawtext はカラー絵文字を描けないので、文字と絵文字は
+    Pillow 側で作っている。縁取りと影も向こうで付いているため、
+    ここでは地の明るさだけ整えて重ねる。
+    """
+    OUT.mkdir(parents=True, exist_ok=True)
+    base = SOURCES[COVER_BASE]
+    if not base.exists():
+        sys.exit(f"素材が見つかりません: {base}")
+    if not TITLE_PNG.exists():
+        sys.exit(f"タイトルがありません。先に make_title.py を流す: {TITLE_PNG}")
+
+    graph = (
+        f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+        f"{grade(COVER_LIFT)},eq=brightness=-0.04[bg];"
+        f"[bg][1:v]overlay=x=(W-w)/2:y={COVER_TITLE_Y}[out]"
+    )
+    script = OUT / "filtergraph_halloween_cover.txt"
+    script.write_text(graph, encoding="utf-8")
+
+    dest = OUT / outfile
+    print("→ サムネを書き出し中…")
+    run(
+        ["ffmpeg", "-hide_banner", "-y", "-i", str(base), "-i", str(TITLE_PNG),
+         "-filter_complex_script", str(script), "-map", "[out]",
+         "-frames:v", "1", "-q:v", "2", str(dest)],
+        "サムネ",
+    )
+    print(f"   完成: {dest}  {dest.stat().st_size / 1e3:.0f}KB")
+    return dest
 
 
 def run(cmd, what):
@@ -511,6 +578,10 @@ def mux(video, audio, outfile):
 
 
 if __name__ == "__main__":
+    if "--cover-only" in sys.argv:
+        build_cover()
+        sys.exit(0)
+
     cached = OUT / ("_video_halloween_fast.mp4" if FAST else "_video_halloween.mp4")
     if "--audio-only" in sys.argv and cached.exists():
         print(f"→ 映像は既存のものを使う: {cached.name}")
@@ -525,3 +596,6 @@ if __name__ == "__main__":
         # 元クリップの音は使えないので、音源がなければ無音がそのまま本番
         print("   （MUSIC が未指定。アプリ側で曲を乗せるか MUSIC=... を渡す）")
         mux(video, None, ("halloween_reel_fast.mp4" if FAST else "halloween_reel.mp4"))
+
+    if TITLE_PNG.exists():
+        build_cover()
