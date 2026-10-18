@@ -6,8 +6,26 @@
 
 | ファイル | 中身 |
 |---|---|
-| `out/halloween_reel.mp4` | 本番用。BGM 入り |
-| `out/halloween_reel_muted.mp4` | 無音版。アプリ側で曲を乗せたいとき用 |
+| `out/halloween_reel.mp4` | 18.1秒版。BGM 入り |
+| `out/halloween_reel_fast.mp4` | **13.8秒版**。カットを詰めて文字を大きくした、TikTok 寄りのテンポ |
+| `out/halloween_reel_muted.mp4` / `_fast_muted.mp4` | それぞれの無音版 |
+
+速い版は `--fast` で出る。素材は同じで、切り方とテロップだけ違う。
+
+```bash
+python3 reel/build_halloween.py          # 18.1秒版
+python3 reel/build_halloween.py --fast   # 13.8秒版
+```
+
+| | 18.1秒版 | 13.8秒版 |
+|---|---|---|
+| カット数 | 10 | 12 |
+| 1カットの尺 | 1.4〜2.4秒 | 0.8〜1.4秒 |
+| テロップ | 56〜64px、下寄せ（下端 1410） | 76〜92px、やや上（下端 1270） |
+| 下地の濃さ | 60% | 70% |
+
+速い版は同じクリップの別の場面も使っている（ビビンバの寄り、跳ねる
+かぼちゃの着地）。カット数が増えたぶん、絵の種類は減っていない。
 
 ## 構成
 

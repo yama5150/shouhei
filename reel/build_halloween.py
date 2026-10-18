@@ -12,6 +12,9 @@
     # テロップもカットも触っていないときは映像を作り直さない
     python3 reel/build_halloween.py --audio-only
 
+    # TikTok 寄りの速いテンポ版 (約14秒、カットを詰めて文字を大きく)
+    python3 reel/build_halloween.py --fast
+
 映像は 1 回だけエンコードして、音声違いを差し替えで書き出す。
 中間ファイルは寿司版 (build_reel.py) とぶつからないよう接頭辞を分けてある。
 ffmpeg 6.x 以降 + 日本語フォントが必要。
@@ -24,6 +27,9 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------- 設定
+
+# --fast: カットを詰めて文字を大きくした版。TikTok でよくある速いテンポ向け
+FAST = "--fast" in sys.argv
 
 ROOT = Path(__file__).resolve().parent
 SRC = Path(os.environ.get("SRC", "/root/.claude/uploads/ebdc904f-5340-54cd-b0d4-2ab1002efa6a"))
@@ -115,12 +121,67 @@ SEGMENTS = [
     dict(key=None, kind="black", dur=0.50, lines=[]),
 ]
 
+# 速い版。同じ素材を 1 秒前後で切って、文字を大きく上げる。
+# 同じカットを 2 回使うところは、元動画の別の場面を取っている
+SEGMENTS_FAST = [
+    dict(key="jump_v", kind="video", start=0.00, dur=1.20, fit="blur", lift=1.25,
+         lines=[("ハロウィン", 92, INK), ("やってます", 92, INK)]),
+
+    dict(key="jack1_p", kind="photo", dur=1.00, zoom=(1.08, 1.18), focus=(0.50, 0.45),
+         lift=1.10,
+         lines=[("愉快な仲間たち", 80, INK)]),
+
+    dict(key="jack2_p", kind="photo", dur=0.80, zoom=(1.10, 1.20), focus=(0.48, 0.42),
+         lift=1.22, lines=[]),
+
+    dict(key="roll_p", kind="photo", dur=1.00, zoom=(1.04, 1.14), focus=(0.50, 0.50),
+         lift=1.05,
+         lines=[("彩り、揃ってます", 76, INK)]),
+
+    dict(key="aburi_p", kind="photo", dur=1.00, zoom=(1.06, 1.16), focus=(0.45, 0.50),
+         lift=1.25,
+         lines=[("炙りも ひと皿", 80, INK)]),
+
+    dict(key="bibim_v", kind="video", start=3.60, dur=1.40, zoom=1.10, focus=(0.50, 0.45),
+         lift=1.18,
+         lines=[("できたては", 80, INK), ("お席まで", 80, INK)]),
+
+    # 同じクリップの終盤、ビビンバの寄り
+    dict(key="bibim_v", kind="video", start=7.00, dur=0.90, zoom=1.14, focus=(0.50, 0.50),
+         lift=1.18,
+         lines=[("石焼ビビンバ", 80, INK)]),
+
+    # 跳ねるかぼちゃの着地。文字なしで一拍
+    dict(key="jump_v", kind="video", start=4.30, dur=0.90, fit="blur", lift=1.25,
+         lines=[]),
+
+    dict(key="chef_p", kind="photo", dur=1.30, zoom=(1.04, 1.12), focus=(0.50, 0.40),
+         lift=1.40,
+         lines=[("お待ちしてます", 80, INK)]),
+
+    dict(key="jack2_p", kind="card", dur=1.90, lift=1.25,
+         lines=[(CARD_TITLE, 54, INK), (CARD_LEAD, 88, GOLD), (CARD_NOTE, 44, INK)]),
+
+    dict(key="sting_v", kind="video", start=0.00, dur=2.00, plain=True, lines=[]),
+
+    dict(key=None, kind="black", dur=0.40, lines=[]),
+]
+
+if FAST:
+    SEGMENTS = SEGMENTS_FAST
+
 TOTAL = sum(s["dur"] for s in SEGMENTS)
 
 # ---------------------------------------------------------------- 見た目
 
 CAPTION_BOTTOM = 1410      # キャプション下端 (Instagram の UI を避ける)
 LINE_STEP = 118            # 行送り
+
+if FAST:
+    # 文字を大きくするぶん、下端を上げて行送りも広げる
+    CAPTION_BOTTOM = 1270
+    LINE_STEP = 150
+    CHIP = "0x101010@0.70"
 TEXT_IN = 0.15             # キャプション表示開始 (秒)
 
 CARD_LINE_STEP = 146       # 告知カードは少し広めに積む
@@ -219,7 +280,7 @@ def captions(seg, idx, fontfile, step=None, bottom=None):
     parts = []
     first_y = bottom - step * len(lines)
     for i, (txt, size, color) in enumerate(lines):
-        tf = TEXTDIR / f"hw{idx:02d}_{i}.txt"
+        tf = TEXTDIR / f"hw{'f' if FAST else ''}{idx:02d}_{i}.txt"
         tf.write_text(txt, encoding="utf-8")
         parts.append(
             f"drawtext=fontfile='{fontfile}':textfile='{tf}':"
@@ -247,7 +308,7 @@ def measure_lufs(inputs, chains, label, what):
     動的モードで音が暴れるうえ、先読み 3 秒ぶん末尾が落ちることがある。
     """
     graph = ";\n".join(chains + [f"[{label}]loudnorm=print_format=json[probe]"])
-    script = OUT / f"filtergraph_halloween_measure_{what}.txt"
+    script = OUT / f"filtergraph_halloween{'_fast' if FAST else ''}_measure_{what}.txt"
     script.write_text(graph, encoding="utf-8")
     data = _loudnorm_json(
         ["ffmpeg", "-hide_banner", "-nostats", "-y"] + inputs +
@@ -346,9 +407,9 @@ def render_video():
         f"[vcat]{fade_in}fade=t=out:st={TOTAL - FADE_OUT:.3f}:d={FADE_OUT}[vout]"
     )
 
-    script = OUT / "filtergraph_halloween_video.txt"
+    script = OUT / f"filtergraph_halloween{'_fast' if FAST else ''}_video.txt"
     script.write_text(";\n".join(chains), encoding="utf-8")
-    dest = OUT / "_video_halloween.mp4"
+    dest = OUT / ("_video_halloween_fast.mp4" if FAST else "_video_halloween.mp4")
 
     print(f"→ 映像 ({TOTAL:.1f}秒) をエンコード中…")
     run(
@@ -424,9 +485,9 @@ def render_audio(with_music):
         f"afade=t=out:st={TOTAL - AUDIO_TAIL:.3f}:d={AUDIO_TAIL}:curve={AUDIO_CURVE}[aout]"
     )
 
-    script = OUT / f"filtergraph_halloween_audio_{kind}.txt"
+    script = OUT / f"filtergraph_halloween{'_fast' if FAST else ''}_audio_{kind}.txt"
     script.write_text(";\n".join(chains), encoding="utf-8")
-    dest = OUT / f"_audio_halloween_{kind}.m4a"
+    dest = OUT / f"_audio_halloween{'_fast' if FAST else ''}_{kind}.m4a"
     run(
         ["ffmpeg", "-hide_banner", "-y"] + inputs +
         ["-filter_complex_script", str(script), "-map", "[aout]", "-vn",
@@ -450,17 +511,17 @@ def mux(video, audio, outfile):
 
 
 if __name__ == "__main__":
-    cached = OUT / "_video_halloween.mp4"
+    cached = OUT / ("_video_halloween_fast.mp4" if FAST else "_video_halloween.mp4")
     if "--audio-only" in sys.argv and cached.exists():
         print(f"→ 映像は既存のものを使う: {cached.name}")
         video = cached
     else:
         video = render_video()
 
-    mux(video, None, "halloween_reel_muted.mp4")
+    mux(video, None, ("halloween_reel_fast_muted.mp4" if FAST else "halloween_reel_muted.mp4"))
     if MUSIC and Path(MUSIC).exists():
-        mux(video, render_audio(with_music=True), "halloween_reel.mp4")
+        mux(video, render_audio(with_music=True), ("halloween_reel_fast.mp4" if FAST else "halloween_reel.mp4"))
     else:
         # 元クリップの音は使えないので、音源がなければ無音がそのまま本番
         print("   （MUSIC が未指定。アプリ側で曲を乗せるか MUSIC=... を渡す）")
-        mux(video, None, "halloween_reel.mp4")
+        mux(video, None, ("halloween_reel_fast.mp4" if FAST else "halloween_reel.mp4"))
