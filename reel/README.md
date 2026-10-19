@@ -1,8 +1,17 @@
-# 寿司・魚介リール動画
+# リール動画
 
-> このディレクトリにはリールが3本ある。
+> **新しく作るときは `.claude/skills/susudepa-reel/` のスキルを使う。**
+> 汎用ビルダーに構成ファイル（JSON）を渡す形になっていて、素材の下見・
+> 曲の使いどころ出し・サムネのタイトル描画までそろっている。
+> 作例は `configs/halloween.json` と `configs/halloween_fast.json`。
+>
+> 以下は 3 本作ったときの記録。各スクリプトはそのときの実装のまま残して
+> ある（ハロウィンの 2 本は汎用ビルダーでビット一致を確認済み）。
+> - 寿司・魚介（このファイル） … `build_reel.py`
 > - 焼肉コーナーのリニューアル告知 … `README_yakiniku.md` / `build_yakiniku.py`
 > - ハロウィン装飾 + 彩料理 … `README_halloween.md` / `build_halloween.py`
+
+## 寿司・魚介リール動画
 
 スマホで撮った仕込みの素材から、Instagram リール / TikTok / YouTube ショート用の
 縦動画（1080×1920 / 30fps / 33.3秒）を組み立てるビルドスクリプト。
