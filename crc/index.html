@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v72">
+<meta name="build" content="v73">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -3145,13 +3145,17 @@ let typing=false, typeTimer=null, curText="", curSpan=null, waitingTap=false;
 let started=false;
 
 /* ---- BGM (Web Audio API / ハムスター実績方式) ---- */
-let actx=null, bgmGain=null;
+let actx=null, bgmGain=null, duckGain=null;
 let curSrc=null, curBgmKey=null, playToken=0;
 const bufCache={};
 function ensureCtx(){
   if(!actx){
     actx=new (window.AudioContext||window.webkitAudioContext)();
-    bgmGain=actx.createGain(); bgmGain.connect(actx.destination);
+    // 読み上げ中に音楽を下げるための専用ノード。
+    // bgmGain / ambGain のゲインは5箇所から書き換えられるので、そこへ割り込むと
+    // 必ず喧嘩する。独立した段を挟んで、ここだけを触る。
+    duckGain=actx.createGain(); duckGain.gain.value=1; duckGain.connect(actx.destination);
+    bgmGain=actx.createGain(); bgmGain.connect(duckGain);
     // iOSアンロック: 無音バッファをユーザー操作内で一発鳴らす
     const b=actx.createBuffer(1,1,22050);
     const s=actx.createBufferSource(); s.buffer=b; s.connect(actx.destination); s.start(0);
@@ -3271,7 +3275,7 @@ async function startAmbient(){
   try{
     ensureCtx();
     ambGain=actx.createGain(); ambGain.gain.value=0;
-    ambGain.connect(actx.destination);
+    ambGain.connect(duckGain||actx.destination);   // 環境音も一緒に下げる
     const b64=ASSETS.bgmObscure;
     if(!b64||b64.startsWith("__")) return;
     ambBuf=await new Promise((res,rej)=>{ actx.decodeAudioData(b64ToAB(b64), res, rej); });
@@ -3384,12 +3388,25 @@ function speechText(t){
 
 let vsVoice=null, vsBusy=false, vsOnEnd=null, vsClip=null, vsGuard=null, vsToken=0;
 
+/* 読み上げ中は音楽を下げる。
+   下げないと声と曲が同じ音量帯でぶつかって、どちらも潰れる(相殺する)。
+   0.3 は約-10dB。曲が消えずに声が前に出る落としどころ。 */
+const VOICE_DUCK = 0.3;
+function voiceDuck(on){
+  if(!actx || !duckGain) return;
+  const t = actx.currentTime;
+  duckGain.gain.cancelScheduledValues(t);
+  // 下げるのは速く、戻すのはゆっくり。戻りが速いと曲が波打って聞こえる
+  duckGain.gain.setTargetAtTime(on ? VOICE_DUCK : 1, t, on ? 0.06 : 0.18);
+}
+
 /* 読み終わりを1回だけ通知する。
    TTSは端末によって onend が来ないことがある(日本語の声が無い、OSが発話を
    黙って捨てた、など)。来ないままだと AUTO送りがそこで永久に止まるので、
    見積もり時間で必ず蹴る見張りを併せて持つ。 */
 function vsDone(){
   if(vsGuard){ clearTimeout(vsGuard); vsGuard=null; }
+  voiceDuck(false);
   const f=vsOnEnd; vsOnEnd=null; vsBusy=false; vsClip=null;
   if(f) f();
 }
@@ -3414,6 +3431,7 @@ if(window.speechSynthesis){
 function stopVoice(){
   vsToken++;                                  // 進行中の連なりを無効にする
   if(vsGuard){ clearTimeout(vsGuard); vsGuard=null; }
+  voiceDuck(false);                           // 何があっても音楽は戻す
   vsOnEnd=null; vsBusy=false;
   if(vsClip){ try{ vsClip.pause(); }catch(e){} vsClip=null; }
   if(window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} }
@@ -3430,6 +3448,7 @@ function speakLine(cmd, onEnd){
     try{
       const a = new Audio(clip);
       vsClip=a; vsBusy=true; vsOnEnd=onEnd||null;
+      voiceDuck(true);
       a.onended = a.onerror = vsDone;
       vsArmGuard(String(cmd.t).length, 1);
       const pr=a.play(); if(pr&&pr.catch) pr.catch(vsDone);
@@ -3450,6 +3469,7 @@ function speakLine(cmd, onEnd){
 
   const token = ++vsToken;
   vsBusy=true; vsOnEnd=onEnd||null;
+  voiceDuck(true);                 // 1行のあいだは下げ続ける。間の最中も戻さない
   let k=0;
   const step = ()=>{
     if(token!==vsToken) return;                 // 別の行に移った / 止められた
