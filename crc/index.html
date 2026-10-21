@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v74">
+<meta name="build" content="v75">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -245,6 +245,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 #mrToggle:active{background:rgba(232,55,95,.22)!important;}
 
 /* ---- 解説 ---- */
+#mrSuno{display:block;width:100%;margin-top:16px;text-align:center;
+  padding:11px 0;border:1px solid rgba(255,143,176,.55);border-radius:22px;
+  color:#ff8fb0;font-size:12px;letter-spacing:.14em;text-decoration:none;
+  font-family:inherit;background:rgba(255,143,176,.07);}
+#mrSuno:active{background:rgba(255,143,176,.18);}
+#mrNote{width:100%;margin-top:9px;color:#8d7ba6;font-size:10.5px;
+  letter-spacing:.06em;line-height:1.7;text-align:center;}
 #mrDesc{width:100%;margin-top:20px;padding-top:15px;
   border-top:1px solid rgba(232,55,95,.18);
   color:#b9a6c9;font-size:12px;line-height:1.95;letter-spacing:.04em;text-align:left;
@@ -573,6 +580,8 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
         <button id="mrNext">▶▶</button>
       </div>
       <div id="mrDesc"></div>
+      <a id="mrSuno" href="https://suno.com/@shouyama" target="_blank" rel="noopener">♪ Sunoでフル音質を聴く</a>
+      <div id="mrNote">ここで鳴っているのは試聴音源です<br>作者のSunoに本来の音があります</div>
     </div>
     <div id="mrListWrap">
       <div id="mrListHead">ALL TRACKS</div>
@@ -4113,6 +4122,26 @@ const TRACKS=[
  ["gyakuten","逆転","第十話・対バン。支配は、セッションに入れない。BPM144──終端に向かって上がり続ける、逆転のかたちをした曲。"],
  ["requiem","秒 慟哭 紅い月","物語には登場しない。Cyber Roseたちと、312年の全ての魂のための鎮魂歌。obscureの原曲——世界は、気づかれない音量で、ずっと弔い続けていた。"]
 ];
+/* 曲 → Sunoの曲ページ。IDは各mp3のコメントに埋まっていたものを拾った。
+   本体の音は容量を切り詰めた試聴音源なので、本来の音はここへ聴きに行ってもらう。
+   requiem だけIDが無い(別経路で書き出したらしい)のでアーティストページに落とす。 */
+const SUNO_USER = "https://suno.com/@shouyama";
+const SUNO_ID = {
+  bara:     "7e15f374-b2bc-4e67-9df6-dee22ead9cdd",
+  crimson:  "5d8d0013-a8e7-4ff1-9bcc-51b2cd335205",
+  doukoku:  "98ccb235-92fc-421f-b339-3857d5dd0d8d",
+  ephemeral:"f5b573ec-7619-4e99-a3e8-8b112f7baa63",
+  gag:      "ad7eb6ad-aa90-46d5-8ca5-313bcfa19f25",
+  genkei:   "15b1778c-2e1f-434e-b093-0d8f9739903b",
+  gyakuten: "96f903da-1462-4ad3-8184-7316e5d434cc",
+  itami:    "e0614b57-22b3-4af2-931f-055fe474ebc6",
+  kodou:    "4160cfb0-3798-4dcb-a1df-90ccc4a4d4d6",
+  obscure:  "5344ec1e-7fa7-48b5-baca-a43548e40473"
+};
+function sunoLink(key){
+  return SUNO_ID[key] ? "https://suno.com/song/"+SUNO_ID[key] : SUNO_USER;
+}
+
 /* 曲 → ジャケット。ASSETSの既存画像を使うので容量は増えない */
 const MR_ART = {
   obscure:"imgKako",   gag:"imgKobo",      bara:"imgElza",
@@ -4160,6 +4189,12 @@ async function mrLoad(i, autoplay){
   $("mrBadge").textContent="TRACK "+String(mrIdx+1).padStart(2,"0");
   $("mrName").textContent=t[1];
   $("mrDesc").textContent=t[2];
+  const sn=$("mrSuno");
+  if(sn){
+    sn.href=sunoLink(t[0]);
+    sn.textContent = SUNO_ID[t[0]] ? "♪ この曲をSunoでフル音質で聴く"
+                                   : "♪ 作者のSunoを聴く";
+  }
   $("mrDots").querySelectorAll("i").forEach((d,j)=>d.classList.toggle("on", j===mrIdx));
   document.querySelectorAll(".mrRow").forEach((r,j)=>r.classList.toggle("on", j===mrIdx));
   $("mrSeekFill").style.width="0%"; $("mrSeekKnob").style.left="0%";
