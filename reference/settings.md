@@ -976,6 +976,9 @@ function sunoLink(key){
 **IDは各mp3のコメントに埋まっていたものを拾った。** Sunoが書き出し時に
 `made with suno; created=…; id=…` を埋めている。
 
+**URLの形は実機で確認済み**(翔平が `https://suno.com/song/<id>` を踏んで到達)。
+このコンテナからは suno.com に出られないので、**ここを変えたら翔平に踏んでもらうこと。**
+
 | | |
 |---|---|
 | 曲ページへ飛ぶ | 10曲 |
