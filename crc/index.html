@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v70">
+<meta name="build" content="v75">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -245,6 +245,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 #mrToggle:active{background:rgba(232,55,95,.22)!important;}
 
 /* ---- 解説 ---- */
+#mrSuno{display:block;width:100%;margin-top:16px;text-align:center;
+  padding:11px 0;border:1px solid rgba(255,143,176,.55);border-radius:22px;
+  color:#ff8fb0;font-size:12px;letter-spacing:.14em;text-decoration:none;
+  font-family:inherit;background:rgba(255,143,176,.07);}
+#mrSuno:active{background:rgba(255,143,176,.18);}
+#mrNote{width:100%;margin-top:9px;color:#8d7ba6;font-size:10.5px;
+  letter-spacing:.06em;line-height:1.7;text-align:center;}
 #mrDesc{width:100%;margin-top:20px;padding-top:15px;
   border-top:1px solid rgba(232,55,95,.18);
   color:#b9a6c9;font-size:12px;line-height:1.95;letter-spacing:.04em;text-align:left;
@@ -262,6 +269,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
   color:#cdbfda;font-size:12.5px;line-height:2.05;letter-spacing:.05em;}
 #linerBox.show{display:block;}
 #linerBox h4{color:var(--rose);font-size:12px;letter-spacing:.4em;margin:0 0 10px;}
+.logItem.jumpable{cursor:pointer;}
+.logItem.jumpable:active{background:rgba(232,55,95,.12);}
+.logJump{display:inline-block;margin-left:8px;font-size:10px;letter-spacing:.08em;
+  color:var(--rose);border:1px solid rgba(232,55,95,.45);border-radius:999px;
+  padding:1px 7px;vertical-align:2px;}
+.chMark{position:absolute;top:6px;right:6px;z-index:3;font-size:10px;letter-spacing:.08em;
+  padding:3px 7px;border-radius:999px;font-family:inherit;
+  background:rgba(8,3,16,.82);border:1px solid rgba(232,55,95,.5);color:var(--rose);}
+.chMark.done{color:#ffd9e4;border-color:rgba(255,217,228,.65);}
+.epBtn.hasRestart .ttl small{display:block;padding-right:34px;}
+.chRestart{position:absolute;bottom:6px;right:6px;z-index:4;
+  width:30px;height:30px;line-height:28px;text-align:center;border-radius:50%;
+  font-family:inherit;font-size:14px;padding:0;
+  background:rgba(8,3,16,.82);border:1px solid rgba(232,55,95,.5);color:var(--silver);cursor:pointer;}
 .epBtn{position:relative;display:flex;flex-direction:column;overflow:hidden;
   padding:0;text-align:left;color:var(--silver);background:#140920;
   border:1px solid rgba(232,55,95,.32);border-radius:7px;
@@ -422,7 +443,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 
 /* ===== メニューバー ===== */
 #menuBar{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;
-  display:flex;gap:8px;z-index:25;opacity:0;transition:opacity .5s;}
+  display:flex;gap:8px;z-index:25;opacity:0;transition:opacity .5s;
+  flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 20px);}
 #menuBar.show{opacity:1;}
 .mBtn{font-size:11px;letter-spacing:.12em;padding:7px 12px;color:var(--noise);
   border:1px solid rgba(123,94,167,.5);background:rgba(14,6,24,.7);cursor:pointer;}
@@ -518,6 +540,7 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
     <button class="mBtn" id="btnAuto">AUTO</button>
     <button class="mBtn" id="btnSkip">SKIP</button>
     <button class="mBtn" id="btnLog">LOG</button>
+    <button class="mBtn" id="btnVoice">声 OFF</button>
     <button class="mBtn" id="btnBgm">♪ ON</button>
     <button class="mBtn" id="btnTitle">TITLE</button>
   </div>
@@ -557,6 +580,8 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
         <button id="mrNext">▶▶</button>
       </div>
       <div id="mrDesc"></div>
+      <a id="mrSuno" href="https://suno.com/@shouyama" target="_blank" rel="noopener">♪ Sunoでフル音質を聴く</a>
+      <div id="mrNote">ここで鳴っているのは試聴音源です<br>作者のSunoに本来の音があります</div>
     </div>
     <div id="mrListWrap">
       <div id="mrListHead">ALL TRACKS</div>
@@ -3138,18 +3163,22 @@ let SC = EP1;
 const $ = id=>document.getElementById(id);
 const bgA=$("bgA"), bgB=$("bgB");
 let bgFront = bgA;
-const state = { i:0, flags:{}, auto:false, skip:false, bgmOn:true };
+const state = { i:0, flags:{}, auto:false, skip:false, bgmOn:true, voiceOn:false };
 let typing=false, typeTimer=null, curText="", curSpan=null, waitingTap=false;
 let started=false;
 
 /* ---- BGM (Web Audio API / ハムスター実績方式) ---- */
-let actx=null, bgmGain=null;
+let actx=null, bgmGain=null, duckGain=null;
 let curSrc=null, curBgmKey=null, playToken=0;
 const bufCache={};
 function ensureCtx(){
   if(!actx){
     actx=new (window.AudioContext||window.webkitAudioContext)();
-    bgmGain=actx.createGain(); bgmGain.connect(actx.destination);
+    // 読み上げ中に音楽を下げるための専用ノード。
+    // bgmGain / ambGain のゲインは5箇所から書き換えられるので、そこへ割り込むと
+    // 必ず喧嘩する。独立した段を挟んで、ここだけを触る。
+    duckGain=actx.createGain(); duckGain.gain.value=1; duckGain.connect(actx.destination);
+    bgmGain=actx.createGain(); bgmGain.connect(duckGain);
     // iOSアンロック: 無音バッファをユーザー操作内で一発鳴らす
     const b=actx.createBuffer(1,1,22050);
     const s=actx.createBufferSource(); s.buffer=b; s.connect(actx.destination); s.start(0);
@@ -3269,7 +3298,7 @@ async function startAmbient(){
   try{
     ensureCtx();
     ambGain=actx.createGain(); ambGain.gain.value=0;
-    ambGain.connect(actx.destination);
+    ambGain.connect(duckGain||actx.destination);   // 環境音も一緒に下げる
     const b64=ASSETS.bgmObscure;
     if(!b64||b64.startsWith("__")) return;
     ambBuf=await new Promise((res,rej)=>{ actx.decodeAudioData(b64ToAB(b64), res, rej); });
@@ -3282,14 +3311,239 @@ async function startAmbient(){
 }
 
 /* ---- テキスト表示 ---- */
+/* 今どんな世界が映っているか。LOGから読み直すときにここへ戻す。
+   setBg などの中ではなく run() の分岐側で持つ。bg が bgv を止めるといった
+   「命令の副作用」まで1箇所で見たいから。 */
+let curBgKey="", curBgDim=false, curSprKey="none", curBgvKey="",
+    curWash=false, curBattle=false;
+
+function worldNow(){
+  return {bg:curBgKey, dim:curBgDim, spr:curSprKey, bgm:curBgmKey||"",
+          bgv:curBgvKey, amb:!!state.ambOff, wash:curWash, bat:curBattle};
+}
+function worldRestore(w){
+  if(!w) return;
+  if(w.bg) setBg(w.bg, w.dim); else setBg("none");
+  curBgKey=w.bg||""; curBgDim=!!w.dim;
+  setSprite(w.spr||"none"); curSprKey=w.spr||"none";
+  if(w.bgv){ playBgv(w.bgv); } else { stopBgv(); }
+  curBgvKey=w.bgv||"";
+  if(w.bgm) playBgm(w.bgm); else stopBgm();
+  state.ambOff=!!w.amb; updateAmb();
+  $("crimsonWash").classList.toggle("on", !!w.wash); curWash=!!w.wash;
+  $("battleUI").classList.toggle("show", !!w.bat); curBattle=!!w.bat;
+}
+
 let backLog=[];
 function pushLog(cmd){
   if(cmd.t===undefined) return;
-  backLog.push({n:cmd.n||"", t:cmd.t});
+  // 位置と、その時の世界を一緒に残す。あとでここへ戻れるようにするため。
+  // 0〜iを再生し直す方式だと、通らなかった分岐のbgまで拾ってしまう
+  backLog.push({n:cmd.n||"", t:cmd.t, i:state.i, ep:state.ep, w:worldNow()});
   if(backLog.length>220) backLog.shift();
 }
+/* =========================================================
+   読み上げ ── フルボイス化の足場
+   speakLine() が唯一の入口。収録済みの音声があればそれを鳴らし、
+   無ければ端末のTTSで代読する。だから1行ずつ段階的に差し替えられる。
+   収録が1行入れば、その行だけ本物の声になる。
+   ========================================================= */
+
+/* 話者 → 配役キー。n は表示名そのものが入るのでここで対応させる */
+const VOICE_KEY = {
+  "":"narr", "ユウジ":"yu", "エルザ":"el", "ソメイ":"somei", "咲耶":"sakuya",
+  "潮":"ushio", "白仮面":"eleven", "白仮面のひとり":"eleven",
+  "《トランジスタ》":"tra", "源三の声":"genzo", "灰色の男":"hai",
+  "蔵馬":"kurama", "回収機体":"kikai", "???":"nazo"
+};
+
+/* 行の住所。
+   増築は「間に挟む」方式なので添字は必ずずれる。だから添字では住所にならない。
+   話者+本文のハッシュにすることで、行を挿しても既存のIDは動かない。
+   逆に本文を書き換えるとIDが変わる ── 録り直しが必要な行が自動で外れる、という意図。 */
+function voiceId(cmd){
+  const sp = VOICE_KEY[cmd.n||""] || "etc";
+  const src = (cmd.n||"") + "\u0001" + (cmd.t||"");
+  let h = 0x811c9dc5;                                  // FNV-1a 32bit
+  for(let k=0;k<src.length;k++){ h ^= src.charCodeAt(k); h = Math.imul(h, 0x01000193); }
+  return sp + "-" + (h>>>0).toString(16).padStart(8,"0");
+}
+
+/* 収録済み音声。キーは voiceId、値は再生できるURL(data URI でも可)。
+   ここが埋まった行だけ本物の声になる。空のうちは全行がTTSの代読。 */
+const VOICE_CLIPS = {};
+
+/* TTSの仮の配役。収録が入るまでの間に合わせ。
+   rate は速さ、pitch は高さ。エルザは低くゆっくり、ユウジは高く速く。 */
+const VOICE_CAST = {
+  narr:  {rate:1.00, pitch:0.95},
+  yu:    {rate:1.10, pitch:1.10},
+  el:    {rate:0.92, pitch:0.86},
+  somei: {rate:1.05, pitch:1.14},
+  sakuya:{rate:1.00, pitch:1.04},
+  ushio: {rate:0.98, pitch:0.94},
+  eleven:{rate:0.95, pitch:1.00},
+  tra:   {rate:0.88, pitch:0.70},
+  genzo: {rate:0.90, pitch:0.78},
+  hai:   {rate:0.94, pitch:0.74},
+  kurama:{rate:0.96, pitch:0.90},
+  kikai: {rate:1.00, pitch:0.66},
+  nazo:  {rate:0.94, pitch:0.80},
+  etc:   {rate:1.00, pitch:1.00}
+};
+
+/* 本文を「読む塊」と「沈黙」に割る。
+   この作品は台詞1507行の半分が ── か …… を含む。息はそこで作られている。
+   これを「、」に潰すと全部が同じ速さで平らに流れて、解説動画の読み上げになる。
+   だから区切りでは発話を切って、本当に黙る。 */
+function speechParts(t){
+  const src = String(t||"")
+    .replace(/[「」『』]/g,"")
+    .replace(/[（(]/g,"").replace(/[）)]/g,"");
+  const parts=[]; const re=/(──+|[…‥]{2,})/g;
+  let last=0, m;
+  while((m=re.exec(src))!==null){
+    const body=src.slice(last,m.index).trim();
+    if(body) parts.push({t:body});
+    // ── は踏み込む沈黙、…… は言いよどむ沈黙。長さを分ける
+    parts.push({pause: m[1].charAt(0)==="─" ? 520 : 360});
+    last=m.index+m[1].length;
+  }
+  const tail=src.slice(last).trim();
+  if(tail) parts.push({t:tail});
+
+  // 行頭の沈黙は「言いよどんでから話す」、行末は「言いかけて途切れる」。
+  // どちらもこの脚本では意味を持つので残す。
+  // ただし一言も喋らない行(「…………」など)は、そのままだと長さを失って
+  // AUTOが即送りしてしまう。間が主役の行なので、点の数で沈黙を伸ばす。
+  if(!parts.some(q=>q.t)){
+    const dots=(String(t||"").match(/[…‥─]/g)||[]).length;
+    return [{pause: Math.max(400, Math.min(1600, dots*240))}];
+  }
+  return parts;
+}
+
+/* TTSに渡す前の整形。括弧や罫線をそのまま読ませると不自然になる */
+function speechText(t){
+  return String(t||"")
+    .replace(/[「」『』]/g,"")
+    .replace(/[（(]/g,"").replace(/[）)]/g,"")
+    .replace(/──+/g,"、")
+    .replace(/[…‥]+/g,"、")
+    .replace(/、+/g,"、")
+    .trim();
+}
+
+let vsVoice=null, vsBusy=false, vsOnEnd=null, vsClip=null, vsGuard=null, vsToken=0;
+
+/* 読み上げ中は音楽を下げる。
+   下げないと声と曲が同じ音量帯でぶつかって、どちらも潰れる(相殺する)。
+   0.3 は約-10dB。曲が消えずに声が前に出る落としどころ。 */
+const VOICE_DUCK = 0.3;
+function voiceDuck(on){
+  if(!actx || !duckGain) return;
+  const t = actx.currentTime;
+  duckGain.gain.cancelScheduledValues(t);
+  // 下げるのは速く、戻すのはゆっくり。戻りが速いと曲が波打って聞こえる
+  duckGain.gain.setTargetAtTime(on ? VOICE_DUCK : 1, t, on ? 0.06 : 0.18);
+}
+
+/* 読み終わりを1回だけ通知する。
+   TTSは端末によって onend が来ないことがある(日本語の声が無い、OSが発話を
+   黙って捨てた、など)。来ないままだと AUTO送りがそこで永久に止まるので、
+   見積もり時間で必ず蹴る見張りを併せて持つ。 */
+function vsDone(){
+  if(vsGuard){ clearTimeout(vsGuard); vsGuard=null; }
+  voiceDuck(false);
+  const f=vsOnEnd; vsOnEnd=null; vsBusy=false; vsClip=null;
+  if(f) f();
+}
+function vsArmGuard(chars, rate, fn){
+  if(vsGuard) clearTimeout(vsGuard);
+  // 日本語の読み上げは概ね 7.5字/秒。余裕を3秒とり、最低4秒は待つ
+  const est = (chars/7.5)/(rate||1) + 3;
+  vsGuard = setTimeout(fn||vsDone, Math.max(4, est)*1000);
+}
+
+function vsPickJa(){
+  if(!window.speechSynthesis) return null;
+  const vs = speechSynthesis.getVoices() || [];
+  return vs.find(v=>/^ja/i.test(v.lang)) || null;
+}
+if(window.speechSynthesis){
+  vsVoice = vsPickJa();
+  // getVoices() は非同期に埋まる。iOSは特に遅れる
+  speechSynthesis.onvoiceschanged = ()=>{ vsVoice = vsPickJa() || vsVoice; };
+}
+
+function stopVoice(){
+  vsToken++;                                  // 進行中の連なりを無効にする
+  if(vsGuard){ clearTimeout(vsGuard); vsGuard=null; }
+  voiceDuck(false);                           // 何があっても音楽は戻す
+  vsOnEnd=null; vsBusy=false;
+  if(vsClip){ try{ vsClip.pause(); }catch(e){} vsClip=null; }
+  if(window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} }
+}
+
+/* 1行を声にする。収録済みが有ればそれを、無ければTTS。
+   onEnd は「読み終わった」ときに呼ばれる。AUTO送りがこれを待つ。 */
+function speakLine(cmd, onEnd){
+  stopVoice();
+  if(!state.voiceOn || state.skip || !cmd || !cmd.t){ if(onEnd) onEnd(); return; }
+
+  const clip = VOICE_CLIPS[voiceId(cmd)];
+  if(clip){                                  // ── 収録済み: 本物の声
+    try{
+      const a = new Audio(clip);
+      vsClip=a; vsBusy=true; vsOnEnd=onEnd||null;
+      voiceDuck(true);
+      a.onended = a.onerror = vsDone;
+      vsArmGuard(String(cmd.t).length, 1);
+      const pr=a.play(); if(pr&&pr.catch) pr.catch(vsDone);
+      return;
+    }catch(e){ vsBusy=false; vsClip=null; }
+  }
+
+  if(!window.speechSynthesis){ if(onEnd) onEnd(); return; }   // ── TTS非対応端末
+  const parts = speechParts(cmd.t);
+  if(!parts.length){ if(onEnd) onEnd(); return; }
+  const cast = VOICE_CAST[VOICE_KEY[cmd.n||""] || "etc"] || VOICE_CAST.etc;
+  const raw = String(cmd.t);
+  const quiet = /^[「(（]*[(（]/.test(raw);      // ユウジの心の声は少し引いて読む
+  // 短い行は溜めて、長い行は流す。全部同じ速さだと平らになる
+  const n = raw.length;
+  const adj = n<=14 ? 0.93 : (n>=60 ? 1.04 : 1.00);
+  const rate = cast.rate * adj * (quiet ? 0.96 : 1);
+
+  const token = ++vsToken;
+  vsBusy=true; vsOnEnd=onEnd||null;
+  voiceDuck(true);                 // 1行のあいだは下げ続ける。間の最中も戻さない
+  let k=0;
+  const step = ()=>{
+    if(token!==vsToken) return;                 // 別の行に移った / 止められた
+    if(vsGuard){ clearTimeout(vsGuard); vsGuard=null; }   // onendと見張りの二重発火を防ぐ
+    if(k>=parts.length){ vsDone(); return; }
+    const pt = parts[k++];
+    if(pt.pause){ vsGuard=setTimeout(step, pt.pause); return; }   // ここで本当に黙る
+    try{
+      const u = new SpeechSynthesisUtterance(pt.t);
+      if(vsVoice) u.voice = vsVoice;
+      u.lang  = vsVoice ? vsVoice.lang : "ja-JP";
+      u.rate  = rate;
+      u.pitch = cast.pitch;
+      if(quiet) u.volume = 0.8;
+      u.onend = u.onerror = step;
+      vsArmGuard(pt.t.length, rate, step);
+      speechSynthesis.speak(u);
+      try{ speechSynthesis.resume(); }catch(e){}  // iOSでcancel後に詰まることがある
+    }catch(e){ step(); }
+  };
+  step();
+}
+
 function showText(cmd){
   pushLog(cmd);
+  speakLine(cmd);                 // 打鍵と同時に読み始める(収録済みが有ればそれを鳴らす)
   $("nameTag").textContent = cmd.n||"";
   const av=$("yuAva");
   if(cmd.n===YU){
@@ -3318,8 +3572,13 @@ function showText(cmd){
       $("nextCursor").classList.add("on");
       waitingTap=true;
       if(state.auto||state.skip){
-        setTimeout(()=>{ if(waitingTap&&(state.auto||state.skip)) advance(); },
-          state.skip?90:1400+curText.length*40);
+        if(state.auto && state.voiceOn && vsBusy){
+          // 声を最後まで聴かせる。文の途中で次へ行かないように
+          vsOnEnd = ()=>{ if(waitingTap&&state.auto) advance(); };
+        }else{
+          setTimeout(()=>{ if(waitingTap&&(state.auto||state.skip)) advance(); },
+            state.skip?90:1400+curText.length*40);
+        }
       }
     }
   },speed);
@@ -3350,17 +3609,18 @@ function run(){
       state.i++; if(c.chapter) return; else continue;
     }
     if(c.jump){ state.i=findLabel(c.jump); continue; }
-    if(c.bg!==undefined){ setBg(c.bg,c.dim); state.i++; continue; }
-    if(c.spr!==undefined){ setSprite(c.spr); state.i++; continue; }
+    if(c.bg!==undefined){ setBg(c.bg,c.dim); curBgKey=c.bg; curBgDim=!!c.dim; curBgvKey=""; state.i++; continue; }
+    if(c.spr!==undefined){ setSprite(c.spr); curSprKey=c.spr; state.i++; continue; }
     if(c.bgm){ playBgm(c.bgm); state.i++; continue; }
     if(c.bgmStop){ stopBgm(); state.i++; continue; }
     if(c.amb!==undefined){ state.ambOff=!c.amb; updateAmb(); state.i++; continue; }
     if(c.bgv!==undefined){ 
       if(c.bgv) playBgv(c.bgv); else stopBgv();
+      curBgvKey=c.bgv||"";
       state.i++; continue; }
     if(c.battle!==undefined){ 
       if(c.battle){ document.querySelector("#gArmor .bgLabel").textContent="機神装甲"; document.querySelector("#gReso .bgLabel").textContent="共鳴余力"; }
-      $("battleUI").classList.toggle("show", !!c.battle); state.i++; continue; }
+      $("battleUI").classList.toggle("show", !!c.battle); curBattle=!!c.battle; state.i++; continue; }
     if(c.gaugeLabel){
       if(c.gaugeLabel.a) document.querySelector("#gArmor .bgLabel").textContent=c.gaugeLabel.a;
       if(c.gaugeLabel.b) document.querySelector("#gReso .bgLabel").textContent=c.gaugeLabel.b;
@@ -3370,12 +3630,13 @@ function run(){
       if(c.gauge.reso!==undefined)  document.querySelector("#gReso .bgFill").style.width=c.gauge.reso+"%";
       state.i++; continue; }
     if(c.ifFlag){ state.i = state.flags[c.ifFlag] ? findLabel(c.jump) : state.i+1; continue; }
-    if(c.wash!==undefined){ $("crimsonWash").classList.toggle("on",c.wash); state.i++; continue; }
+    if(c.wash!==undefined){ $("crimsonWash").classList.toggle("on",c.wash); curWash=!!c.wash; state.i++; continue; }
     if(c.glitch){ doGlitch(); state.i++; continue; }
     if(c.curtain!==undefined){ showCurtain(c.curtain); return; }
     if(c.choice){ showChoice(c.choice); return; }
     if(c.ed){ startEd(); return; }
     if(c.fin){
+      markDone(state.ep);
       localStorage.removeItem("crc_save");
       const cur=$("curtain");
       $("curtainText").textContent="◆ おわり ◆";
@@ -3429,17 +3690,57 @@ function showChoice(list){
 }
 
 /* ---- セーブ ---- */
+/* ---- 進行データ ----
+   枠を3つ並べるのではなく「話ごとに位置と読了を覚える」形にした。
+   不満の中身は「やり直すと上書きされる」なので、第一話を遊び直しても
+   最終話の位置が死なない方が効く。チャプターの読了印も同じデータで済む。 */
+const PROG_KEY="crc_prog";
+function loadProg(){
+  try{
+    const p=JSON.parse(localStorage.getItem(PROG_KEY));
+    if(p && p.eps) return p;
+  }catch(e){}
+  // 旧 crc_save からの引き継ぎ。既存プレイヤーの位置を失わせないため
+  const p={v:1, eps:{}, last:null};
+  try{
+    const old=JSON.parse(localStorage.getItem("crc_save"));
+    if(old && typeof old.i==="number"){
+      const k=String(old.ep||"1");
+      p.eps[k]={i:old.i|0, done:false, at:Date.now()};
+      p.last=k;
+    }
+  }catch(e){}
+  return p;
+}
+function saveProg(p){ try{ localStorage.setItem(PROG_KEY, JSON.stringify(p)); }catch(e){} }
+
+function progOf(ep){
+  const p=loadProg();
+  return (p.eps&&p.eps[String(ep)]) || null;
+}
+/* 話を読み切った印。位置は消す(次に選んだら頭から始まる) */
+function markDone(ep){
+  const p=loadProg(); const k=String(ep);
+  p.eps[k]=Object.assign({}, p.eps[k], {done:true, i:0, at:Date.now()});
+  saveProg(p);
+}
+
 function save(){
   try{
+    const p=loadProg(); const k=String(state.ep);
+    const was=p.eps[k]||{};
+    p.eps[k]={i:state.i, done:!!was.done, at:Date.now()};
+    p.last=k;
+    saveProg(p);
+    // 旧キーも書き続ける。前の版に戻しても位置を失わないため(数十バイト)
     localStorage.setItem("crc_save", JSON.stringify({ep:state.ep,i:state.i,flags:state.flags}));
     localStorage.setItem("crc_flags", JSON.stringify(state.flags));
   }catch(e){}
 }
 function loadSave(){
-  try{
-    const d=JSON.parse(localStorage.getItem("crc_save"));
-    if(d && typeof d.i==="number") return d;
-  }catch(e){}
+  const p=loadProg();
+  const k=p.last && p.eps[p.last] ? p.last : null;
+  if(k && typeof p.eps[k].i==="number") return {ep:k, i:p.eps[k].i, flags:loadFlags()};
   return null;
 }
 function loadFlags(){
@@ -3499,6 +3800,8 @@ function startPv(){
   next();
 }
 function startEd(){
+  stopVoice();
+  markDone(state.ep);
   $("msgWin").classList.remove("show");
   $("menuBar").classList.remove("show");
   $("sprite").classList.remove("show");
@@ -3561,6 +3864,8 @@ function updateMenuBtns(){
   $("btnAuto").classList.toggle("on",state.auto);
   $("btnSkip").classList.toggle("on",state.skip);
   $("btnBgm").textContent = state.bgmOn?"♪ ON":"♪ OFF";
+  $("btnVoice").textContent = state.voiceOn?"声 ON":"声 OFF";
+  $("btnVoice").classList.toggle("on",state.voiceOn);
 }
 $("btnAuto").onclick=e=>{e.stopPropagation();state.auto=!state.auto;state.skip=false;updateMenuBtns();if(state.auto&&waitingTap)advance();};
 $("btnSkip").onclick=e=>{e.stopPropagation();state.skip=!state.skip;state.auto=false;updateMenuBtns();if(state.skip&&waitingTap)advance();};
@@ -3569,6 +3874,27 @@ $("btnBgm").onclick=e=>{
   state.bgmOn=!state.bgmOn;
   if(bgmGain&&actx){ bgmGain.gain.cancelScheduledValues(actx.currentTime); bgmGain.gain.value=state.bgmOn?0.9:0; }
   updateAmb();
+  updateMenuBtns();
+};
+$("btnVoice").onclick=e=>{
+  e.stopPropagation();
+  state.voiceOn=!state.voiceOn;
+  if(state.voiceOn){
+    // iOSは「最初の発話がユーザー操作由来」でないと以後ずっと鳴らない。
+    // このクリックの中で一度空打ちして解錠しておく
+    if(window.speechSynthesis){
+      try{
+        vsVoice = vsVoice || vsPickJa();
+        const warm=new SpeechSynthesisUtterance(" ");
+        warm.volume=0; if(vsVoice) warm.voice=vsVoice;
+        speechSynthesis.speak(warm);
+      }catch(err){}
+    }
+    // 今表示中の行から読み始める
+    const cmd=SC&&SC[state.i]; if(cmd&&cmd.t) speakLine(cmd);
+  }else{
+    stopVoice();
+  }
   updateMenuBtns();
 };
 let titleArm=false, titleArmT=null;
@@ -3594,8 +3920,12 @@ $("stage").addEventListener("click",()=>{
 });
 
 /* ---- 起動 ---- */
-function startGame(ep, fromSave){
+/* fresh=true なら進行を無視して頭から。
+   チャプターをタップしたときは「途中なら続き、読了済みなら頭から」にする。
+   どちらになるかはボタンの印で見えているので、驚かない。 */
+function startGame(ep, fromSave, fresh){
   started=true;
+  backLog=[];                      // 話が変わったらLOGは引き継がない
   $("title").classList.add("hide");
   $("epSelect").classList.remove("show");
   { const hv=$("chHeroVid"); if(hv){ try{hv.pause()}catch(e){} } }
@@ -3606,7 +3936,9 @@ function startGame(ep, fromSave){
     const d=loadSave();
     if(d){ state.ep=String(d.ep||"1"); state.i=d.i; state.flags=d.flags||{}; }
   }else{
-    state.i=0; state.flags=loadFlags();
+    state.flags=loadFlags();
+    const pr=fresh ? null : progOf(ep);
+    state.i = (pr && !pr.done && pr.i>0) ? pr.i : 0;
   }
   SC=EPISODES[state.ep]||EP1;
   ensureCtx();
@@ -3634,10 +3966,34 @@ function paintChapters(){
     const pr=hv.play(); if(pr&&pr.catch) pr.catch(()=>{});
   }
   document.querySelectorAll(".epBtn[data-th]").forEach(b=>{
-    if(b.dataset.painted) return;
-    const t=b.querySelector(".thumb"), src=ASSETS[b.dataset.th];
-    if(t&&src){ t.style.backgroundImage="url("+src+")"; b.dataset.painted="1"; }
+    if(!b.dataset.painted){
+      const t=b.querySelector(".thumb"), src=ASSETS[b.dataset.th];
+      if(t&&src){ t.style.backgroundImage="url("+src+")"; b.dataset.painted="1"; }
+    }
+    paintChapterMark(b);          // 印は毎回描き直す(遊ぶたびに変わる)
   });
+}
+
+/* 読了印と「途中」表示。どこまで観たかが一覧で分かるようにする */
+function paintChapterMark(b){
+  const ep=b.dataset.ep; if(!ep) return;
+  b.querySelectorAll(".chMark,.chRestart").forEach(x=>x.remove());
+  b.classList.remove("hasRestart");
+  const pr=progOf(ep); if(!pr) return;
+  const total=(EPISODES[ep]||[]).length || 1;
+  const mk=document.createElement("span");
+  mk.className="chMark";
+  if(pr.done){
+    mk.classList.add("done"); mk.textContent="✓ 読了";
+  }else if(pr.i>0){
+    mk.textContent="▶ "+Math.max(1,Math.min(99,Math.round(100*pr.i/total)))+"%";
+    // 途中の話は、頭から読み直す道も残す
+    const rs=document.createElement("button");
+    rs.className="chRestart"; rs.textContent="↺"; rs.title="最初から";
+    rs.onclick=ev=>{ ev.stopPropagation(); startGame(ep,false,true); };
+    b.appendChild(rs); b.classList.add("hasRestart");   // 説明文が↺の下に潜らないように
+  }else return;
+  b.appendChild(mk);
 }
 $("btnNew").onclick=e=>{e.stopPropagation();ensureCtx();startAmbient();paintChapters(); $("epSelect").classList.add("show"); $("epSelect").scrollTop=0;};
 /* チャプターメニュー → タイトル。まだ何も始まっていないので閉じるだけ */
@@ -3648,6 +4004,16 @@ function closeChapters(){
 $("chBack").onclick=e=>{e.stopPropagation(); closeChapters();};
 $("chBackFoot").onclick=e=>{e.stopPropagation(); closeChapters();};
 $("btnCont").onclick=e=>{e.stopPropagation();startGame("1",true);};
+/* どの話が再開するのかをボタンに書く。last が入れ替わっても驚かないため */
+function updateContBtn(){
+  const b=$("btnCont"); if(!b) return;
+  const d=loadSave();
+  if(!d){ b.style.display="none"; return; }
+  b.style.display="";
+  const t=EP_TITLES[d.ep];
+  b.textContent = t ? "つづきから　――　"+t[0] : "つづきから";
+}
+updateContBtn();
 
 /* ---- ED終了後の導線 ---- */
 function showEdBtns(){
@@ -3704,13 +4070,40 @@ $("edMenu").onclick=e=>{
 /* ---- バックログ ---- */
 function openLog(){
   const body=$("logBody");
-  body.innerHTML = backLog.map(e=>{
+  body.innerHTML = backLog.map((e,k)=>{
     const t=e.t.replace(/</g,"&lt;");
-    return e.n ? `<p class="logItem"><span class="who">${e.n}</span>${t}</p>`
-               : `<p class="logItem narr">${t}</p>`;
+    // 戻れるのは同じ話の中だけ。別の話へ飛ぶとフラグと世界が噛み合わない
+    const can = e.ep===state.ep && typeof e.i==="number" && e.i<SC.length;
+    const cls = (e.n?"logItem":"logItem narr") + (can?" jumpable":"");
+    const tag = can ? '<span class="logJump">ここから</span>' : "";
+    const who = e.n ? `<span class="who">${e.n}</span>` : "";
+    return `<p class="${cls}" data-k="${k}">${who}${t}${tag}</p>`;
   }).join("");
+  body.querySelectorAll(".logItem.jumpable").forEach(el=>{
+    el.onclick=ev=>{ ev.stopPropagation(); jumpToLog(+el.dataset.k); };
+  });
   $("logView").classList.add("show");
   requestAnimationFrame(()=>{ body.scrollTop = body.scrollHeight; });
+}
+
+/* LOGのその行から読み直す。
+   0〜iを再生し直すのではなく、表示した時に控えた世界をそのまま戻す。
+   再生し直す方式だと、通らなかった分岐の背景や曲まで拾ってしまう。
+   フラグは巻き戻さない ── 既に起きたことは起きたままにする。 */
+function jumpToLog(k){
+  const e=backLog[k];
+  if(!e || e.ep!==state.ep || typeof e.i!=="number" || e.i>=SC.length) return;
+  stopVoice();
+  clearInterval(typeTimer); typing=false; waitingTap=false;
+  state.auto=false; state.skip=false; updateMenuBtns();
+  $("logView").classList.remove("show");
+  $("choiceBox").classList.remove("show");
+  worldRestore(e.w);
+  backLog.length = k;              // 戻った先から先の記録は捨てる(重複を残さない)
+  state.i = e.i;
+  const c=SC[state.i];
+  if(c && c.t!==undefined){ showText(c); save(); }
+  else { run(); }
 }
 $("btnLog").onclick=e=>{e.stopPropagation(); openLog();};
 $("logClose").onclick=e=>{e.stopPropagation(); $("logView").classList.remove("show");};
@@ -3729,6 +4122,26 @@ const TRACKS=[
  ["gyakuten","逆転","第十話・対バン。支配は、セッションに入れない。BPM144──終端に向かって上がり続ける、逆転のかたちをした曲。"],
  ["requiem","秒 慟哭 紅い月","物語には登場しない。Cyber Roseたちと、312年の全ての魂のための鎮魂歌。obscureの原曲——世界は、気づかれない音量で、ずっと弔い続けていた。"]
 ];
+/* 曲 → Sunoの曲ページ。IDは各mp3のコメントに埋まっていたものを拾った。
+   本体の音は容量を切り詰めた試聴音源なので、本来の音はここへ聴きに行ってもらう。
+   requiem だけIDが無い(別経路で書き出したらしい)のでアーティストページに落とす。 */
+const SUNO_USER = "https://suno.com/@shouyama";
+const SUNO_ID = {
+  bara:     "7e15f374-b2bc-4e67-9df6-dee22ead9cdd",
+  crimson:  "5d8d0013-a8e7-4ff1-9bcc-51b2cd335205",
+  doukoku:  "98ccb235-92fc-421f-b339-3857d5dd0d8d",
+  ephemeral:"f5b573ec-7619-4e99-a3e8-8b112f7baa63",
+  gag:      "ad7eb6ad-aa90-46d5-8ca5-313bcfa19f25",
+  genkei:   "15b1778c-2e1f-434e-b093-0d8f9739903b",
+  gyakuten: "96f903da-1462-4ad3-8184-7316e5d434cc",
+  itami:    "e0614b57-22b3-4af2-931f-055fe474ebc6",
+  kodou:    "4160cfb0-3798-4dcb-a1df-90ccc4a4d4d6",
+  obscure:  "5344ec1e-7fa7-48b5-baca-a43548e40473"
+};
+function sunoLink(key){
+  return SUNO_ID[key] ? "https://suno.com/song/"+SUNO_ID[key] : SUNO_USER;
+}
+
 /* 曲 → ジャケット。ASSETSの既存画像を使うので容量は増えない */
 const MR_ART = {
   obscure:"imgKako",   gag:"imgKobo",      bara:"imgElza",
@@ -3776,6 +4189,12 @@ async function mrLoad(i, autoplay){
   $("mrBadge").textContent="TRACK "+String(mrIdx+1).padStart(2,"0");
   $("mrName").textContent=t[1];
   $("mrDesc").textContent=t[2];
+  const sn=$("mrSuno");
+  if(sn){
+    sn.href=sunoLink(t[0]);
+    sn.textContent = SUNO_ID[t[0]] ? "♪ この曲をSunoでフル音質で聴く"
+                                   : "♪ 作者のSunoを聴く";
+  }
   $("mrDots").querySelectorAll("i").forEach((d,j)=>d.classList.toggle("on", j===mrIdx));
   document.querySelectorAll(".mrRow").forEach((r,j)=>r.classList.toggle("on", j===mrIdx));
   $("mrSeekFill").style.width="0%"; $("mrSeekKnob").style.left="0%";
