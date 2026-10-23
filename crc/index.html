@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v75">
+<meta name="build" content="v76">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -4070,13 +4070,16 @@ $("edMenu").onclick=e=>{
 /* ---- バックログ ---- */
 function openLog(){
   const body=$("logBody");
+  // 本文も話者名も必ず通す。今は作者が書いた定数しか入らないが、
+  // 片方だけ守っていると、後から口が増えたときに気づけない
+  const esc=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   body.innerHTML = backLog.map((e,k)=>{
-    const t=e.t.replace(/</g,"&lt;");
+    const t=esc(e.t);
     // 戻れるのは同じ話の中だけ。別の話へ飛ぶとフラグと世界が噛み合わない
     const can = e.ep===state.ep && typeof e.i==="number" && e.i<SC.length;
     const cls = (e.n?"logItem":"logItem narr") + (can?" jumpable":"");
     const tag = can ? '<span class="logJump">ここから</span>' : "";
-    const who = e.n ? `<span class="who">${e.n}</span>` : "";
+    const who = e.n ? `<span class="who">${esc(e.n)}</span>` : "";
     return `<p class="${cls}" data-k="${k}">${who}${t}${tag}</p>`;
   }).join("");
   body.querySelectorAll(".logItem.jumpable").forEach(el=>{
