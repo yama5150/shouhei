@@ -19,6 +19,7 @@
 - [13. 読み上げで「間」を潰すと解説動画になる](#13-読み上げで間を潰すと解説動画になる)
 - [14. BGMのゲインは5箇所から書かれている](#14-bgmのゲインは5箇所から書かれている)
 - [15. 位置を戻すとき、頭から再生し直してはいけない](#15-位置を戻すとき頭から再生し直してはいけない)
+- [16. .epBtn の一括バインドは data-ep を持たないボタンを壊す](#16-epbtn-の一括バインドは-data-ep-を持たないボタンを壊す)
 - [12. TTS の onend は来ないことがある](#12-tts-の-onend-は来ないことがある)
 
 ---
@@ -368,3 +369,35 @@ backLog.push({n, t, i:state.i, ep:state.ep, w:worldNow()});
 
 既に起きたことは起きたままにする。巻き戻すと `ifFlag` の分岐が変わって、
 戻る前と違う道を通ってしまう。
+
+## 16. `.epBtn` の一括バインドは data-ep を持たないボタンを壊す
+
+チャプター画面のボタンはまとめて `onclick` を張られている:
+
+```js
+document.querySelectorAll(".epBtn").forEach(b=>{
+  if(b.id==="btnMusic"||b.id==="btnLiner") return;   // ← 除外が要る
+  b.onclick=e=>{ startGame(b.dataset.ep,false); };
+});
+```
+
+`.epBtn` の見た目を使いたいだけのボタン(MUSIC ROOM、LINER NOTES)は
+`data-ep` を持たない。除外し忘れると **`startGame(undefined)` が呼ばれる**。
+`EPISODES[undefined]` は `EP1` にフォールバックするので、
+**エラーも出ずに第一話が始まる** ── 一番気づきにくい壊れ方。
+
+**`.epBtn` を付けたボタンを足したら、必ずこの除外リストにも足す。**
+
+### 同じ囲いの id 重複にも注意
+
+`chGrid` は id として4回使われていた。CSSセレクタは重複idにも全部当たるので
+**見た目では気づけない**。気づいたのは、id を持たず class だけの5つ目が
+`display:block` になってボタンの幅が半分になっていたから。
+
+**グリッドの指定は id ではなく class で書くこと**(`.chGrid`)。
+id の重複はこれで確認できる:
+
+```js
+const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);
+ids.filter((v,i)=>ids.indexOf(v)!==i);
+```
