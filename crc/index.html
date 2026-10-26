@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v76">
+<meta name="build" content="v77">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -38,6 +38,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 /* ===== 立ち絵 ===== */
 #logView{position:absolute;inset:0;z-index:46;display:none;flex-direction:column;
   background:rgba(8,3,16,.97);}
+/* ライナーノーツ。MUSIC ROOM の中ではなく独立した画面 */
+#linerView{position:absolute;inset:0;z-index:47;display:none;flex-direction:column;
+  background:#080310;}
+#linerView.show{display:flex;}
+#linerHead{flex-shrink:0;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
+  color:var(--rose);font-size:13px;letter-spacing:.35em;text-align:center;}
+#linerBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:0 16px 12px;display:flex;flex-direction:column;align-items:center;}
+#linerClose{flex-shrink:0;margin:14px auto calc(18px + env(safe-area-inset-bottom));
+  padding:10px 30px;background:none;border:1px solid rgba(232,55,95,.5);
+  border-radius:20px;color:var(--silver);font-size:12px;letter-spacing:.18em;
+  font-family:inherit;cursor:pointer;}
 #logView.show{display:flex;}
 #logHead{flex-shrink:0;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
   color:var(--rose);font-size:13px;letter-spacing:.35em;text-align:center;}
@@ -113,7 +125,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 #epSelectTitle{color:var(--rose);font-size:14px;letter-spacing:.34em;margin:0;
   text-shadow:0 2px 18px rgba(0,0,0,.95);}
 #chHeroSub{color:#cdbfda;font-size:10px;letter-spacing:.3em;margin-top:7px;
-  text-shadow:0 2px 14px rgba(0,0,0,.95);}
+  text-shadow:0 2px 14px rgba(0,0,0,.95);
+  background:none;border:0;font-family:inherit;cursor:pointer;display:block;
+  width:100%;padding:6px 0 0;}
+/* 扉絵の中の「読み始める」。
+   ここに置かないと、上半分が表紙に見えて下のリストまで手が伸びない。
+   初見は16個から選ばなくていいように、1タップで始まる道を用意する。 */
+#chStart{display:inline-block;margin-top:11px;padding:11px 26px;
+  font-family:inherit;font-size:13px;letter-spacing:.14em;
+  color:#ffd9e4;background:rgba(10,4,18,.72);
+  border:1px solid rgba(232,55,95,.75);border-radius:24px;cursor:pointer;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  box-shadow:0 2px 20px rgba(0,0,0,.6);}
+#chStart:active{background:rgba(232,55,95,.25);}
 #chBody{width:min(560px,94vw);display:flex;flex-direction:column;
   align-items:stretch;gap:0;margin-top:-6px;}
 .epSection{color:var(--rose);font-size:10.5px;letter-spacing:.4em;
@@ -121,7 +145,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
   display:flex;align-items:center;gap:10px;}
 .epSection::after{content:"";flex:1;height:1px;
   background:linear-gradient(90deg,rgba(232,55,95,.4),transparent);}
-#chGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.chGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 #chBack{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;z-index:4;
   font-family:inherit;font-size:11px;letter-spacing:.2em;padding:7px 14px;
   color:var(--silver);background:rgba(8,3,16,.62);
@@ -264,10 +288,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
   font-family:inherit;cursor:pointer;}
 #mrActions button:active{background:rgba(232,55,95,.2);}
 
-#linerBox{display:none;width:min(560px,92vw);flex-shrink:0;margin-top:24px;padding:18px;
+#linerBox{display:block;width:min(560px,92vw);flex-shrink:0;margin-top:4px;padding:18px;
   border-top:1px solid rgba(232,55,95,.3);
   color:#cdbfda;font-size:12.5px;line-height:2.05;letter-spacing:.05em;}
-#linerBox.show{display:block;}
+
 #linerBox h4{color:var(--rose);font-size:12px;letter-spacing:.4em;margin:0 0 10px;}
 .logItem.jumpable{cursor:pointer;}
 .logItem.jumpable:active{background:rgba(232,55,95,.12);}
@@ -300,9 +324,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 .epBtn.wide{grid-column:1 / -1;}
 .epBtn.wide .thumb{aspect-ratio:21/6;}
 /* MUSIC ROOM の入口だけ別扱い */
-#btnMusic{grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:center;
-  padding:15px;font-size:13px;letter-spacing:.24em;background:rgba(28,10,30,.8);
-  border-color:rgba(232,55,95,.5);border-radius:22px;margin-top:6px;}
+/* MUSIC ROOM と LINER NOTES は横並びの半分ずつ。
+   片方だけ全幅にすると、もう片方が左に寄って不格好になる */
+#btnMusic,#btnLiner{flex-direction:row;align-items:center;justify-content:center;
+  padding:15px 8px;font-size:12px;letter-spacing:.14em;background:rgba(28,10,30,.8);
+  border-color:rgba(232,55,95,.5);border-radius:22px;margin-top:6px;
+  text-align:center;line-height:1.5;}
 #nameTag{display:inline-block;font-size:15px;letter-spacing:.18em;
   color:var(--rose);border-bottom:1px solid var(--crimson);
   padding:0 6px 2px;margin-bottom:9px;min-height:1.2em;}
@@ -591,6 +618,13 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
       <button id="mrLiner">LINER NOTES</button>
       <button id="mrClose">とじる</button>
     </div>
+  </div>
+
+  <!-- ライナーノーツは曲の解説ではなく作者自身の言葉なので、
+       MUSIC ROOM の曲リストの下に埋めず独立した画面にした -->
+  <div id="linerView">
+    <div id="linerHead">― LINER NOTES ―</div>
+    <div id="linerBody">
     <div id="linerBox">
       <h4>LINER NOTES</h4>
       <div>青春時代に好きだった、夢中になった漫画、音楽、アドベンチャーゲームなんか…色々。<br><br>
@@ -615,6 +649,8 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
       <a href="https://suno.com/@shouyama" target="_blank" rel="noopener" style="color:#ff8fb0;text-decoration:none;">♪ フル音質の楽曲はSunoで → suno.com/@shouyama</a>
       </span></div>
     </div>
+    </div>
+    <button id="linerClose">とじる</button>
   </div>
   <div id="pv">
     <div class="pvImg" id="pvA"></div>
@@ -658,12 +694,13 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
       <button id="chBack" aria-label="タイトルへ戻る">‹　TITLE</button>
       <div id="chHeroTxt">
         <div id="epSelectTitle">― CYBER ROSE CRIMSON ―</div>
-        <div id="chHeroSub">SELECT CHAPTER</div>
+        <button id="chStart">▶　第一話から読む</button>
+        <button id="chHeroSub">▼　話を選ぶ</button>
       </div>
     </div>
     <div id="chBody">
       <div class="epSection">第一部　出会い編</div>
-      <div id="chGrid" class="chGrid">
+      <div class="chGrid">
         <button class="epBtn" data-ep="1" data-th="imgSea"><span class="thumb"></span><span class="cno">CH 01</span><span class="ttl">第一話　紅い月のサルベージ<small>深度470。海の底の棺と、紅い月。</small></span></button>
         <button class="epBtn" data-ep="2" data-th="sdDesk"><span class="thumb"></span><span class="cno">CH 02</span><span class="ttl">第二話　専属リペアマンの受難<small>同居生活と、はじめての味噌汁。そして──</small></span></button>
         <button class="epBtn" data-ep="m1" data-th="sdAmai"><span class="thumb"></span><span class="cno">CH 03</span><span class="ttl">幕間　甘味の秘匿<small>SDコメディ小話。深夜の冷蔵庫にて。</small></span></button>
@@ -671,7 +708,7 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
         <button class="epBtn" data-ep="3" data-th="imgCore"><span class="thumb"></span><span class="cno">CH 05</span><span class="ttl">第四話　薔薇と鎖<small>無音の夜。真空管に火が入る。</small></span></button>
       </div>
       <div class="epSection">第二部　ロザリウム編</div>
-      <div id="chGrid" class="chGrid">
+      <div class="chGrid">
         <button class="epBtn" data-ep="4" data-th="imgCity"><span class="thumb"></span><span class="cno">CH 06</span><span class="ttl">第五話　刻の裂け目<small>白い仮面は言った。「帰りましょう、姉様」</small></span></button>
         <button class="epBtn" data-ep="m2" data-th="sdCook"><span class="thumb"></span><span class="cno">CH 07</span><span class="ttl">幕間　厨房の暗黒物質<small>エルザ、初めての手料理。生存者はいるのか。</small></span></button>
         <button class="epBtn" data-ep="en4" data-th="sdSleep"><span class="thumb"></span><span class="cno">CH 08</span><span class="ttl">第六話　守られる側の話<small>路地の刃。震える手。そして、膝枕。</small></span></button>
@@ -679,20 +716,21 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
         <button class="epBtn" data-ep="5" data-th="imgKakukai"><span class="thumb"></span><span class="cno">CH 10</span><span class="ttl">第八話　ナンバーズ<small>紅い月の夜。十二の白い仮面。</small></span></button>
       </div>
       <div class="epSection">第三部　空白期編</div>
-      <div id="chGrid" class="chGrid">
+      <div class="chGrid">
         <button class="epBtn" data-ep="6" data-th="imgKako"><span class="thumb"></span><span class="cno">CH 11</span><span class="ttl">第九話　空白期<small>文明が音を失った日。源三の遺言。</small></span></button>
         <button class="epBtn" data-ep="7" data-th="imgSoshisha"><span class="thumb"></span><span class="cno">CH 12</span><span class="ttl">第十話　運命を繰り返す<small>核界の底。すべての答えと、7回目の初めまして。</small></span></button>
         <button class="epBtn" data-ep="en3" data-th="imgUshio"><span class="thumb"></span><span class="cno">CH 13</span><span class="ttl">第十一話　Bluerose<small>蒼き薔薇の一派、来襲。剣を抜かない戦い──対バン。</small></span></button>
         <button class="epBtn" data-ep="8" data-th="imgDaiseido"><span class="thumb"></span><span class="cno">CH 14</span><span class="ttl">最終話　Cyber Rose Crimson<small>紅い月の下、最後のライブが始まる。</small></span></button>
       </div>
       <div class="epSection">後日談・隠し章</div>
-      <div id="chGrid" class="chGrid">
+      <div class="chGrid">
         <button class="epBtn" data-ep="m3" data-th="imgFunyu"><span class="thumb"></span><span class="cno">CH 15</span><span class="ttl">後日談　ココア・オーバーフロー<small>甘い夜の演算超過。※最終話クリア後推奨</small></span></button>
         <button class="epBtn" data-ep="x1" data-th="imgAzure"><span class="thumb"></span><span class="cno">CH 16</span><span class="ttl">隠し章　深度470のログ<small>彼女の側の、第一話。※最終話クリア後、必ず。</small></span></button>
       </div>
-      <div class="epSection">MUSIC ROOM</div>
+      <div class="epSection">おまけ</div>
       <div class="chGrid">
         <button class="epBtn" id="btnMusic">♪　MUSIC ROOM</button>
+        <button class="epBtn" id="btnLiner">◆　LINER NOTES</button>
       </div>
       <button id="chBackFoot">‹　タイトルへ戻る</button>
     </div>
@@ -3952,8 +3990,31 @@ function startGame(ep, fromSave, fresh){
     setTimeout(()=>run(),300);
   }
 }
+/* 扉絵の「読み始める」。
+   進行があれば続きへ、無ければ第一話へ。何が起きるかを文字に出しておく。
+   ここが無いと、上半分が表紙に見えて下のリストまで手が伸びない。 */
+function paintHeroStart(){
+  const btn=$("chStart"); if(!btn) return;
+  const d=loadSave();
+  if(d && EPISODES[d.ep]){
+    const t=EP_TITLES[d.ep];
+    btn.textContent = "▶　つづきから　――　" + (t ? t[0] : "");
+    btn.onclick = ev=>{ ev.stopPropagation(); startGame("1", true); };
+  }else{
+    btn.textContent = "▶　第一話から読む";
+    btn.onclick = ev=>{ ev.stopPropagation(); startGame("1", false, true); };
+  }
+}
+/* 「▼ 話を選ぶ」。押したら一覧まで送る ── 飾りではなく導線にする */
+$("chHeroSub").onclick=e=>{
+  e.stopPropagation();
+  const g=document.querySelector("#chBody .epSection");
+  if(g) g.scrollIntoView({behavior:"smooth", block:"start"});
+};
+
 /* チャプターメニュー: ヒーロー画像とサムネイルを流し込む */
 function paintChapters(){
+  paintHeroStart();
   const hero=$("chHero");
   if(hero && !hero.dataset.done && ASSETS.imgChapter){
     hero.style.backgroundImage="url("+ASSETS.imgChapter+")"; hero.dataset.done="1";
@@ -4266,10 +4327,8 @@ $("mrToggle").onclick=e=>{e.stopPropagation(); mrToggle();};
 $("mrPrev").onclick=e=>{e.stopPropagation(); mrLoad(mrIdx-1, mrOn||mrOff>0);};
 $("mrNext").onclick=e=>{e.stopPropagation(); mrLoad(mrIdx+1, mrOn||mrOff>0);};
 $("mrArt").onclick=e=>{e.stopPropagation(); mrToggle();};
-$("mrLiner").onclick=e=>{e.stopPropagation();
-  const b=$("linerBox"); b.classList.toggle("show");
-  if(b.classList.contains("show")) setTimeout(()=>b.scrollIntoView({behavior:"smooth",block:"start"}),60);
-};
+/* MUSIC ROOM からも同じ独立画面を開く(入口は2つ、中身は1つ) */
+$("mrLiner").onclick=e=>{e.stopPropagation(); openLiner();};
 
 /* シーク */
 (function(){
@@ -4310,7 +4369,7 @@ $("mrLiner").onclick=e=>{e.stopPropagation();
 
 /* btnMusicバインドは.epBtn一括処理の後で実施 */
 document.querySelectorAll(".epBtn").forEach(b=>{
-  if(b.id==="btnMusic") return;  // MUSIC ROOMは専用処理(上書き禁止)
+  if(b.id==="btnMusic"||b.id==="btnLiner") return;  // 専用処理(上書き禁止)
   b.onclick=e=>{e.stopPropagation();startGame(b.dataset.ep,false);};
 });
 let mrPrevAmb=false;
@@ -4318,6 +4377,9 @@ $("btnMusic").onclick=e=>{e.stopPropagation(); ensureCtx(); startAmbient();
   mrPrevAmb=state.ambOff; state.ambOff=true; updateAmb();   // 部屋にいる間は環境音を切る
   $("linerBox").classList.remove("show"); renderMr();
   $("musicRoom").classList.add("show"); $("musicRoom").scrollTop=0;};
+function openLiner(){ $("linerView").classList.add("show"); $("linerBody").scrollTop=0; }
+$("btnLiner").onclick=e=>{e.stopPropagation(); openLiner();};
+$("linerClose").onclick=e=>{e.stopPropagation(); $("linerView").classList.remove("show");};
 $("mrClose").onclick=e=>{e.stopPropagation(); mrStopSrc(); stopBgm();
   state.ambOff=mrPrevAmb; updateAmb();                      // 出たら元通り
   $("musicRoom").classList.remove("show");};

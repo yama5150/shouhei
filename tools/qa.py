@@ -18,7 +18,10 @@ tools/verify.cjs が「参照が実在するか」を見るのに対し、こっ
 import json, subprocess, sys, time, os
 
 HTML = os.path.join(os.path.dirname(__file__), "..", "crc", "index.html")
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+# Chromium の版は環境で変わるので固定しない(1194 → 1243 で一度壊れた)
+import glob as _glob
+_c = sorted(_glob.glob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"))
+CHROME = _c[-1] if _c else "chromium"
 
 # ページ内で完結させる。1行ごとに CDP を往復すると桁違いに遅くなる
 DRIVER = r"""

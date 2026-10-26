@@ -1,0 +1,33 @@
+# Netlify で公開するときの設定。
+#
+# ⚠️ これが無いと Netlify は vite.config.js を見つけて勝手に npm run build を走らせ、
+#    dist/app.html(焼肉ロス管理アプリ)だけを公開する。ゲームは1バイトも含まれない。
+#    build.command を明示すると自動判別が止まるので、何もしないコマンドを置いてある。
+
+[build]
+  command = "echo 'ビルドしない。リポジトリの中身をそのまま配る'"
+  publish = "."
+
+# 巨大な index.html は絶対にキャッシュさせない。
+# この作品は「更新したのに古い版が出る」を過去2回踏んでいる。
+[[headers]]
+  for = "/crc/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/crc/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# アイコンやスプラッシュは変わらないので長く持たせてよい
+[[headers]]
+  for = "/crc/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# /crimson でもゲームに入れるようにしておく(人に口頭で伝えやすい)
+[[redirects]]
+  from = "/crimson"
+  to = "/crc/index.html"
+  status = 200
