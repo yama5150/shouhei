@@ -4,131 +4,57 @@
   "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
   "out": "../out",
   "sources": {
-    "sep": "susudepa_9gatsu.mov",
-    "card": "still_serve.png",
-    "cov": "still_nigiri.png",
-    "logo": "logo_sting.mp4"
+    "sep":    "susudepa_9gatsu.mov",
+    "sengyo": "sengyo.jpg",
+    "buffet": "buffet.jpg",
+    "kaki":   "kaki.jpg",
+    "kuma":   "kuma.jpg",
+    "card":   "still_serve.png",
+    "logo":   "logo_sting.mp4"
   },
-  "music": {
-    "file": "bgm.mp3",
-    "start": 155,
-    "use_clip_audio": false
-  },
-  "audio_tail": 3.0,
+  "music": { "file": "bgm2.mp3", "start": 172, "use_clip_audio": false },
+  "audio_tail": 3.2,
   "segments": [
-    {
-      "src": "sep",
-      "kind": "video",
-      "start": 12.15,
-      "dur": 1.35,
-      "lift": 1.12,
-      "lines": [
-        [
-          "目の前で、握ります。",
-          62,
-          "ink"
-        ]
-      ]
-    },
-    {
-      "src": "sep",
-      "kind": "video",
-      "start": 3.1,
-      "dur": 1.6,
-      "lift": 1.05,
-      "lines": [
-        [
-          "ワゴンが、お席まで。",
-          62,
-          "ink"
-        ]
-      ]
-    },
-    {
-      "src": "sep",
-      "kind": "video",
-      "start": 13.7,
-      "dur": 1.3,
-      "lift": 1.08
-    },
-    {
-      "src": "sep",
-      "kind": "video",
-      "start": 21.6,
-      "dur": 2.1,
-      "lift": 1.52,
-      "lines": [
-        [
-          "炙り肉寿司、一貫ずつ。",
-          60,
-          "ink"
-        ]
-      ],
-      "zoom": 1.12,
-      "focus": [
-        0.5,
-        0.62
-      ]
-    },
-    {
-      "src": "sep",
-      "kind": "video",
-      "start": 35.55,
-      "dur": 1.8,
-      "lift": 1.58,
-      "lines": [
-        [
-          "出汁巻きも、ワゴンで。",
-          60,
-          "ink"
-        ]
-      ],
-      "zoom": 1.1,
-      "focus": [
-        0.5,
-        0.62
-      ]
-    },
-    {
-      "src": "card",
-      "kind": "card",
-      "dur": 2.6,
-      "lift": 1.2,
-      "lines": [
-        [
-          "お席まで、運びます",
-          48,
-          "ink"
-        ],
-        [
-          "北海道グルメフェア",
-          76,
-          "accent"
-        ],
-        [
-          "11月2日スタート",
-          54,
-          "ink"
-        ]
-      ]
-    },
-    {
-      "src": "logo",
-      "kind": "video",
-      "start": 0,
-      "dur": 2.0,
-      "plain": true
-    },
-    {
-      "kind": "black",
-      "dur": 0.5
-    }
+    { "src": "sengyo", "kind": "photo", "dur": 2.00,
+      "zoom": [1.04, 1.16], "focus": [0.52, 0.45], "lift": 1.22,
+      "lines": [["北海道の、海から。", 62, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 12.15, "dur": 1.35, "lift": 1.12,
+      "lines": [["目の前で、握ります。", 62, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 3.10, "dur": 1.60, "lift": 1.05,
+      "lines": [["ワゴンが、お席まで。", 62, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 13.70, "dur": 1.30, "lift": 1.08 },
+
+    { "src": "sep", "kind": "video", "start": 21.60, "dur": 2.10, "lift": 1.52,
+      "zoom": 1.12, "focus": [0.5, 0.62],
+      "lines": [["炙り肉寿司、一貫ずつ。", 60, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 35.55, "dur": 1.80, "lift": 1.58,
+      "zoom": 1.10, "focus": [0.5, 0.62],
+      "lines": [["出汁巻きも、ワゴンで。", 60, "ink"]] },
+
+    { "src": "buffet", "kind": "photo", "dur": 2.00,
+      "zoom": [1.18, 1.30], "focus": [0.58, 0.62], "lift": 1.20,
+      "lines": [["前菜も、サラダも。", 62, "ink"]] },
+
+    { "src": "kaki", "kind": "photo", "dur": 1.90,
+      "zoom": [1.06, 1.18], "focus": [0.50, 0.42], "lift": 1.18,
+      "lines": [["季節のひと皿。", 62, "ink"]] },
+
+    { "src": "kuma", "kind": "photo", "dur": 1.60,
+      "zoom": [1.10, 1.02], "focus": [0.38, 0.42], "lift": 1.40 },
+
+    { "src": "card", "kind": "card", "dur": 2.60, "lift": 1.20,
+      "lines": [["北海道を、ひと巡り", 48, "ink"],
+                ["北海道グルメフェア", 76, "accent"],
+                ["11月2日スタート", 54, "ink"]] },
+
+    { "src": "logo", "kind": "video", "start": 0, "dur": 2.00, "plain": true },
+
+    { "kind": "black", "dur": 0.50 }
   ],
-  "cover": {
-    "base": "cov",
-    "lift": 1.25,
-    "title_y": 470,
-    "title": "nenmatsu_title.png",
-    "file": "nenmatsu_demo_cover.jpg"
-  }
+  "cover": { "base": "sengyo", "lift": 1.25, "title_y": 470,
+             "title": "nenmatsu_title.png", "file": "nenmatsu_demo_cover.jpg" }
 }
