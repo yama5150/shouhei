@@ -1,0 +1,123 @@
+{
+  "name": "maguro",
+  "basename": "maguro_reel",
+  "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
+  "out": "../out",
+  "sources": {
+    "mag": "maguro.mov",
+    "card": "still_maguro.png",
+    "logo": "logo_sting.mp4",
+    "cov": "still_maguro2.png"
+  },
+  "music": {
+    "file": "bgm2.mp3",
+    "start": 174,
+    "use_clip_audio": false
+  },
+  "audio_tail": 3.0,
+  "segments": [
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 0.3,
+      "dur": 1.6,
+      "lines": [
+        [
+          "マグロ、一本まるごと。",
+          60,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 9.0,
+      "dur": 1.5,
+      "zoom": 1.1,
+      "focus": [
+        0.45,
+        0.35
+      ]
+    },
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 16.5,
+      "dur": 1.8,
+      "lines": [
+        [
+          "頭から、尾まで。",
+          62,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 21.5,
+      "dur": 1.7,
+      "zoom": 1.08,
+      "focus": [
+        0.5,
+        0.6
+      ],
+      "lines": [
+        [
+          "丸のまま、入ります。",
+          60,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 29.2,
+      "dur": 1.4,
+      "zoom": 1.06
+    },
+    {
+      "src": "card",
+      "kind": "card",
+      "dur": 2.8,
+      "lift": 0.58,
+      "lines": [
+        [
+          "ススデパの 寿司コーナー",
+          46,
+          "ink"
+        ],
+        [
+          "毎週 月曜・金曜",
+          72,
+          "accent"
+        ],
+        [
+          "マグロを一本、捌きます",
+          50,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "logo",
+      "kind": "video",
+      "start": 0,
+      "dur": 2.0,
+      "plain": true
+    },
+    {
+      "kind": "black",
+      "dur": 0.5
+    }
+  ],
+  "cover": {
+    "base": "cov",
+    "lift": 1.0,
+    "title_y": 520,
+    "title": "maguro_title.png",
+    "file": "maguro_cover.jpg"
+  }
+}
