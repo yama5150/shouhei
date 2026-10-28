@@ -10,6 +10,7 @@
 > - 寿司・魚介（このファイル） … `build_reel.py`
 > - 焼肉コーナーのリニューアル告知 … `README_yakiniku.md` / `build_yakiniku.py`
 > - ハロウィン装飾 + 彩料理 … `README_halloween.md` / `build_halloween.py`
+> - 年末年始の告知（デモ） … `README_nenmatsu.md` / `configs/nenmatsu_demo.json`
 
 ## 寿司・魚介リール動画
 
