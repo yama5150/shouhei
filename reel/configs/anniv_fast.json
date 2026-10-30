@@ -1,0 +1,84 @@
+{
+  "name": "anniv_fast",
+  "basename": "anniv_reel_fast",
+  "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
+  "out": "../out",
+  "chip": "0x000000@0.00",
+  "caption_border": 8,
+  "caption_border_color": "black@0.80",
+  "caption_bottom": 1100,
+  "card_line_step": 146,
+  "audio_tail": 3.0,
+  "audio_curve": "tri",
+  "sources": {
+    "sep":    "susudepa_9gatsu.mov",
+    "mag":    "maguro.mov",
+    "sengyo": "sengyo.jpg",
+    "buffet": "buffet.jpg",
+    "kaki":   "kaki.jpg",
+    "kuma":   "kuma.jpg",
+    "card":   "still_serve.png",
+    "logo":   "logo_sting.mp4"
+  },
+  "music": { "file": "bgm2.mp3", "start": 89, "use_clip_audio": false },
+  "segments": [
+    { "src": "mag", "kind": "video", "start": 16.50, "dur": 1.20,
+      "lines": [["マグロ、一本。", 62, "ink"]] },
+
+    { "src": "mag", "kind": "video", "start": 0.30, "dur": 1.00,
+      "lines": [["まるごと、入ります。", 58, "ink"]] },
+
+    { "src": "mag", "kind": "video", "start": 25.00, "dur": 1.10,
+      "zoom": 1.08, "focus": [0.5, 0.55],
+      "lines": [["毎週 月曜と、金曜。", 58, "ink"]] },
+
+    { "src": "sengyo", "kind": "photo", "dur": 1.20,
+      "zoom": [1.06, 1.14], "focus": [0.52, 0.45], "lift": 1.22,
+      "lines": [["鮮魚も、北海道から。", 58, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 12.15, "dur": 1.00, "lift": 1.12,
+      "lines": [["目の前で、握って、", 58, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 13.70, "dur": 1.00, "lift": 1.08,
+      "lines": [["その場で、炙って、", 58, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 3.10, "dur": 1.10, "lift": 1.05,
+      "lines": [["ワゴンで、お席まで。", 58, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 21.60, "dur": 1.20, "lift": 1.52,
+      "zoom": 1.12, "focus": [0.5, 0.62],
+      "lines": [["炙り肉寿司。", 62, "ink"]] },
+
+    { "src": "sep", "kind": "video", "start": 35.55, "dur": 1.10, "lift": 1.58,
+      "zoom": 1.10, "focus": [0.5, 0.62],
+      "lines": [["出汁巻きも、ワゴンで。", 58, "ink"]] },
+
+    { "src": "buffet", "kind": "photo", "dur": 1.10,
+      "zoom": [1.22, 1.30], "focus": [0.58, 0.62], "lift": 1.20,
+      "lines": [["前菜も、サラダも。", 58, "ink"]] },
+
+    { "src": "kaki", "kind": "photo", "dur": 1.10,
+      "zoom": [1.08, 1.16], "focus": [0.50, 0.42], "lift": 1.18,
+      "lines": [["季節の一皿も。", 58, "ink"]] },
+
+    { "src": "kuma", "kind": "photo", "dur": 1.00,
+      "zoom": [1.10, 1.04], "focus": [0.38, 0.42], "lift": 1.40,
+      "lines": [["北海道、まるごと。", 58, "ink"]] },
+
+    { "src": "card", "kind": "card", "dur": 2.20, "lift": 1.20,
+      "lines": [["北海道グルメフェア 開催中", 46, "ink"],
+                ["12月は、さらに特別。", 72, "accent"]] },
+
+    { "src": "card", "kind": "card", "dur": 3.00, "lift": 1.20,
+      "lines": [["2周年記念イベント", 54, "accent"],
+                ["12月4日(金) → 6日(日)", 46, "ink"],
+                ["クリスマス", 54, "accent"],
+                ["12月24日(木) ・ 25日(金)", 46, "ink"]] },
+
+    { "src": "logo", "kind": "video", "start": 0, "dur": 2.00, "plain": true },
+
+    { "kind": "black", "dur": 0.50 }
+  ],
+  "cover": { "base": "kaki", "lift": 1.18, "title_y": 430,
+             "title": "anniv_title.png", "file": "anniv_fast_cover.jpg" }
+}

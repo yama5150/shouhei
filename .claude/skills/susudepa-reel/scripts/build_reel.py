@@ -38,6 +38,9 @@ DEFAULTS = {
     "card_line_step": 146,
     "text_in": 0.15,
     "chip": "0x101010@0.60",
+    # 下地を敷かずに縁取りで読ませたいとき用。0 なら縁取り無し（既定）
+    "caption_border": 0,
+    "caption_border_color": "black@0.85",
     "ink": "white",
     "accent": "0xF0C071",
     # 前後
@@ -169,6 +172,10 @@ class Reel:
             return ""
         step = step or self.c["line_step"]
         first_y = self.c["caption_bottom"] - step * len(lines)
+        # 下地を薄くする／外すときは、縁取りが無いと明るい絵の上で消える
+        bw = self.c["caption_border"]
+        border = (f"borderw={bw}:bordercolor={self.c['caption_border_color']}:"
+                  if bw else "")
         parts = []
         for i, line in enumerate(lines):
             text = line[0]
@@ -181,6 +188,7 @@ class Reel:
                 f"drawtext=fontfile='{self.font}':textfile='{tf}':"
                 f"fontsize={size}:fontcolor={color}:"
                 f"box=1:boxcolor={self.c['chip']}:boxborderw=24:"
+                f"{border}"
                 f"shadowcolor=black@0.5:shadowx=0:shadowy=3:"
                 f"x='(w-text_w)/2':y={first_y + step * i}:"
                 f"enable='gte(t,{self.c['text_in']})'"
