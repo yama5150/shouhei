@@ -25,6 +25,12 @@ FONT_CANDIDATES = [
     "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
 ]
 
+# 構成ファイルの "font" で選ぶ。maru は丸ゴシックで、ふざけた見出し向き
+FONTS = {
+    "gothic": FONT_CANDIDATES[0],
+    "maru": "/usr/share/fonts/truetype/motoya-l-maruberi/MTLmr3m.ttf",
+}
+
 DEFAULTS = {
     "size": [1080, 1920],
     "fps": 30,
@@ -41,6 +47,10 @@ DEFAULTS = {
     # 下地を敷かずに縁取りで読ませたいとき用。0 なら縁取り無し（既定）
     "caption_border": 0,
     "caption_border_color": "black@0.85",
+    # 影。ド派手にするときは y を 8〜10 まで落とす
+    "caption_shadow": [0, 3],
+    "caption_shadow_color": "black@0.5",
+    "font": None,                  # "maru" / "gothic" / フォントのパス
     "ink": "white",
     "accent": "0xF0C071",
     # 前後
@@ -94,7 +104,12 @@ class Reel:
         self.segments = self.c["segments"]
         self.total = round(sum(s["dur"] for s in self.segments), 3)
 
-        self.font = next((f for f in FONT_CANDIDATES if Path(f).exists()), None)
+        want = self.c.get("font")
+        picked = FONTS.get(want, want) if want else None
+        if picked and not Path(picked).exists():
+            die(f"フォントが見つかりません: {picked}")
+        self.font = picked or next(
+            (f for f in FONT_CANDIDATES if Path(f).exists()), None)
         if not self.font:
             die("日本語フォントが見つかりません (fonts-noto-cjk を入れてください)")
 
@@ -176,6 +191,7 @@ class Reel:
         bw = self.c["caption_border"]
         border = (f"borderw={bw}:bordercolor={self.c['caption_border_color']}:"
                   if bw else "")
+        sx, sy = self.c["caption_shadow"]
         parts = []
         for i, line in enumerate(lines):
             text = line[0]
@@ -189,7 +205,8 @@ class Reel:
                 f"fontsize={size}:fontcolor={color}:"
                 f"box=1:boxcolor={self.c['chip']}:boxborderw=24:"
                 f"{border}"
-                f"shadowcolor=black@0.5:shadowx=0:shadowy=3:"
+                f"shadowcolor={self.c['caption_shadow_color']}:"
+                f"shadowx={sx}:shadowy={sy}:"
                 f"x='(w-text_w)/2':y={first_y + step * i}:"
                 f"enable='gte(t,{self.c['text_in']})'"
             )
