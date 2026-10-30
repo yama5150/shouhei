@@ -1,0 +1,183 @@
+{
+  "name": "anniv",
+  "basename": "anniv_reel",
+  "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
+  "out": "../out",
+  "chip": "0x101010@0.42",
+  "caption_bottom": 1380,
+  "audio_tail": 3.5,
+  "audio_curve": "qsin",
+  "sources": {
+    "sep": "susudepa_9gatsu.mov",
+    "mag": "maguro.mov",
+    "sengyo": "sengyo.jpg",
+    "buffet": "buffet.jpg",
+    "kaki": "kaki.jpg",
+    "kuma": "kuma.jpg",
+    "card": "still_serve.png",
+    "logo": "logo_sting.mp4"
+  },
+  "music": {
+    "file": "bgm2.mp3",
+    "start": 89,
+    "use_clip_audio": false
+  },
+  "segments": [
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 16.5,
+      "dur": 1.8
+    },
+    {
+      "src": "sengyo",
+      "kind": "photo",
+      "dur": 1.6,
+      "zoom": [
+        1.04,
+        1.12
+      ],
+      "focus": [
+        0.52,
+        0.45
+      ],
+      "lift": 1.22,
+      "lines": [
+        [
+          "北海道を、ひと皿ずつ。",
+          56,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "mag",
+      "kind": "video",
+      "start": 0.3,
+      "dur": 1.3
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 12.15,
+      "dur": 1.4,
+      "lift": 1.12
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 3.1,
+      "dur": 1.5,
+      "lift": 1.05,
+      "lines": [
+        [
+          "席まで、運びます。",
+          56,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 21.6,
+      "dur": 1.7,
+      "lift": 1.52,
+      "zoom": 1.12,
+      "focus": [
+        0.5,
+        0.62
+      ]
+    },
+    {
+      "src": "buffet",
+      "kind": "photo",
+      "dur": 1.6,
+      "zoom": [
+        1.2,
+        1.28
+      ],
+      "focus": [
+        0.58,
+        0.62
+      ],
+      "lift": 1.2
+    },
+    {
+      "src": "kaki",
+      "kind": "photo",
+      "dur": 1.5,
+      "zoom": [
+        1.06,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.42
+      ],
+      "lift": 1.18,
+      "lines": [
+        [
+          "秋から、冬へ。",
+          56,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "kuma",
+      "kind": "photo",
+      "dur": 1.5,
+      "zoom": [
+        1.1,
+        1.03
+      ],
+      "focus": [
+        0.38,
+        0.42
+      ],
+      "lift": 1.4
+    },
+    {
+      "src": "card",
+      "kind": "card",
+      "dur": 2.8,
+      "lift": 1.2,
+      "lines": [
+        [
+          "北海道グルメフェア 開催中",
+          46,
+          "ink"
+        ],
+        [
+          "2周年記念イベント",
+          80,
+          "accent"
+        ],
+        [
+          "12月4日(金) → 6日(日)",
+          54,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "logo",
+      "kind": "video",
+      "start": 0,
+      "dur": 2.0,
+      "plain": true
+    },
+    {
+      "kind": "black",
+      "dur": 0.5
+    }
+  ],
+  "cover": {
+    "base": "kaki",
+    "lift": 1.18,
+    "title_y": 430,
+    "title": "anniv_title.png",
+    "file": "anniv_cover.jpg"
+  }
+}

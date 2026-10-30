@@ -12,6 +12,7 @@
 > - ハロウィン装飾 + 彩料理 … `README_halloween.md` / `build_halloween.py`
 > - 年末年始の告知（デモ） … `README_nenmatsu.md` / `configs/nenmatsu_demo.json`
 > - マグロ一本の告知 … `README_maguro.md` / `configs/maguro.json`
+> - 総集編＋2周年記念イベント … `README_anniv.md` / `configs/anniv.json`
 
 ## 寿司・魚介リール動画
 
