@@ -11,11 +11,13 @@
     "sep": "susudepa_9gatsu.mov",
     "mag": "maguro.mov",
     "sengyo": "sengyo.jpg",
-    "buffet": "buffet.jpg",
     "kaki": "kaki.jpg",
     "kuma": "kuma.jpg",
     "card": "still_serve.png",
-    "logo": "logo_sting.mp4"
+    "logo": "logo_sting.mp4",
+    "kani": "kani.jpg",
+    "butadon": "butadon.jpg",
+    "temaki": "temaki.jpg"
   },
   "music": {
     "file": "bgm2.mp3",
@@ -27,12 +29,12 @@
       "src": "mag",
       "kind": "video",
       "start": 16.5,
-      "dur": 1.6
+      "dur": 1.4
     },
     {
       "src": "sengyo",
       "kind": "photo",
-      "dur": 1.45,
+      "dur": 1.3,
       "zoom": [
         1.04,
         1.12
@@ -51,23 +53,58 @@
       ]
     },
     {
+      "src": "kani",
+      "kind": "photo",
+      "dur": 1.45,
+      "zoom": [
+        1.04,
+        1.13
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.16,
+      "lines": [
+        [
+          "蟹は、脚のまま。",
+          56,
+          "ink"
+        ]
+      ]
+    },
+    {
       "src": "mag",
       "kind": "video",
       "start": 0.3,
-      "dur": 1.3
+      "dur": 1.15
     },
     {
       "src": "sep",
       "kind": "video",
       "start": 12.15,
-      "dur": 1.25,
+      "dur": 1.1,
       "lift": 1.12
+    },
+    {
+      "src": "temaki",
+      "kind": "photo",
+      "dur": 1.3,
+      "zoom": [
+        1.05,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.16
     },
     {
       "src": "sep",
       "kind": "video",
       "start": 3.1,
-      "dur": 1.5,
+      "dur": 1.3,
       "lift": 1.05,
       "lines": [
         [
@@ -81,7 +118,7 @@
       "src": "sep",
       "kind": "video",
       "start": 21.6,
-      "dur": 1.55,
+      "dur": 1.35,
       "lift": 1.52,
       "zoom": 1.12,
       "focus": [
@@ -90,23 +127,23 @@
       ]
     },
     {
-      "src": "buffet",
+      "src": "butadon",
       "kind": "photo",
-      "dur": 1.45,
+      "dur": 1.3,
       "zoom": [
-        1.2,
-        1.28
+        1.05,
+        1.14
       ],
       "focus": [
-        0.58,
-        0.62
+        0.5,
+        0.5
       ],
-      "lift": 1.2
+      "lift": 1.1
     },
     {
       "src": "kaki",
       "kind": "photo",
-      "dur": 1.5,
+      "dur": 1.3,
       "zoom": [
         1.06,
         1.14
@@ -127,7 +164,7 @@
     {
       "src": "kuma",
       "kind": "photo",
-      "dur": 1.35,
+      "dur": 1.2,
       "zoom": [
         1.1,
         1.03
