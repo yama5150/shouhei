@@ -27,12 +27,12 @@
       "src": "mag",
       "kind": "video",
       "start": 16.5,
-      "dur": 1.8
+      "dur": 1.6
     },
     {
       "src": "sengyo",
       "kind": "photo",
-      "dur": 1.6,
+      "dur": 1.45,
       "zoom": [
         1.04,
         1.12
@@ -60,7 +60,7 @@
       "src": "sep",
       "kind": "video",
       "start": 12.15,
-      "dur": 1.4,
+      "dur": 1.25,
       "lift": 1.12
     },
     {
@@ -81,7 +81,7 @@
       "src": "sep",
       "kind": "video",
       "start": 21.6,
-      "dur": 1.7,
+      "dur": 1.55,
       "lift": 1.52,
       "zoom": 1.12,
       "focus": [
@@ -92,7 +92,7 @@
     {
       "src": "buffet",
       "kind": "photo",
-      "dur": 1.6,
+      "dur": 1.45,
       "zoom": [
         1.2,
         1.28
@@ -127,7 +127,7 @@
     {
       "src": "kuma",
       "kind": "photo",
-      "dur": 1.5,
+      "dur": 1.35,
       "zoom": [
         1.1,
         1.03
@@ -141,7 +141,7 @@
     {
       "src": "card",
       "kind": "card",
-      "dur": 2.8,
+      "dur": 2.4,
       "lift": 1.2,
       "lines": [
         [
@@ -150,13 +150,36 @@
           "ink"
         ],
         [
+          "12月は、さらに特別。",
+          72,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "card",
+      "kind": "card",
+      "dur": 3.4,
+      "lift": 1.2,
+      "lines": [
+        [
           "2周年記念イベント",
-          80,
+          54,
           "accent"
         ],
         [
           "12月4日(金) → 6日(日)",
+          46,
+          "ink"
+        ],
+        [
+          "クリスマス",
           54,
+          "accent"
+        ],
+        [
+          "12月24日(木) ・ 25日(金)",
+          46,
           "ink"
         ]
       ]
