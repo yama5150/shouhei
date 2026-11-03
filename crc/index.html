@@ -6,10 +6,25 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v77">
+<meta name="build" content="v78">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
+<meta name="description" content="「薔薇は、愛か、呪いか。」電脳の海の底から引き揚げた、一輪の薔薇。全16話のビジュアルノベル。">
+<!-- SNSに貼ったときのカード。画像は実ファイルでないとクローラーが取れないので data: は使えない -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cyber Rose Crimson">
+<meta property="og:title" content="Cyber Rose Crimson — 紅い月のサルベージ">
+<meta property="og:description" content="「薔薇は、愛か、呪いか。」電脳の海の底から引き揚げた、一輪の薔薇。全16話のビジュアルノベル。">
+<meta property="og:image" content="https://rawcdn.githack.com/yama5150/shouhei/main/crc/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="628">
+<meta property="og:url" content="https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cyber Rose Crimson — 紅い月のサルベージ">
+<meta name="twitter:description" content="「薔薇は、愛か、呪いか。」電脳の海の底から引き揚げた、一輪の薔薇。全16話のビジュアルノベル。">
+<meta name="twitter:image" content="https://rawcdn.githack.com/yama5150/shouhei/main/crc/ogp.jpg">
 <style>
 :root{
   --abyss:#12081c;
@@ -414,6 +429,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 #titleBtns{position:relative;display:flex;flex-direction:column;align-items:center;
   gap:11px;margin-top:30px;}
 
+/* 読み込み中の表示。
+   本体は34.9MBあり、回線によっては読み終わるまで1分かかる。
+   タイトルはCSSだけで出来ているので0.2秒で完成して見えてしまい、
+   「見た目は完成しているのにボタンが効かない」時間が生まれる。
+   黙っていると壊れていると思われるので、待てばいいと分かるようにする。 */
+#titleLoading{position:relative;margin-top:30px;text-align:center;
+  color:#b9a6d6;font-size:12px;letter-spacing:.2em;line-height:2;}
+#titleLoading small{display:block;font-size:10px;color:#8d7ba6;letter-spacing:.1em;}
+#titleLoading i{display:inline-block;font-style:normal;animation:ldot 1.2s infinite;}
+#titleLoading i:nth-child(2){animation-delay:.2s;}
+#titleLoading i:nth-child(3){animation-delay:.4s;}
+@keyframes ldot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+/* 準備できるまでボタンは触れない。押せるのに効かない、が一番たちが悪い */
+body:not(.ready) #titleBtns{display:none;}
+body.ready #titleLoading{display:none;}
+
 /* ---- ボタン ---- */
 .tBtn{position:relative;font-size:16px;letter-spacing:.32em;padding:13px 40px;margin:0;
   color:var(--silver);border:1px solid rgba(232,55,95,.5);background:rgba(20,9,32,.55);
@@ -679,6 +710,8 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
     <div id="titleSub">— Visual Novel Series —</div>
     <div id="titleRule"></div>
   <div id="epigraph">ノイズ混じりの星々が　運命を繰り返す<br>刻の裂け目で　君を探す</div>
+    <div id="titleLoading">読み込み中<i>・</i><i>・</i><i>・</i>
+      <small>初回は少し時間がかかります</small></div>
     <div id="titleBtns">
       <button class="tBtn" id="btnNew">物語をはじめる</button>
       <button class="tBtn dis" id="btnCont">つづきから</button>
@@ -4451,6 +4484,7 @@ window.addEventListener("load",()=>{
     if(t){ t.classList.add("intro"); setTimeout(()=>t.classList.remove("intro"), 3600); }
   })();
   if(loadSave()) $("btnCont").classList.remove("dis");
+  document.body.classList.add("ready");   // ここで初めてボタンを出す
 });
 </script>
 <script>
