@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>DIRT AND SMOKE — PV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#d8d1c5;--dim:#7d776e;--blue:#7899b8;--red:#ad5558;--white:#d8d1c5;--purple:#a987b5}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;overflow:hidden}
+body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+#app{position:fixed;inset:0;background:#000;overflow:hidden}
+#band{position:absolute;left:0;right:0;top:7%;height:54%;margin:0 auto;max-width:720px;overflow:hidden;z-index:1;transition:scale .45s}
+#band img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.4s ease,filter 1.4s}
+#band img.on{opacity:1;animation:kb 14s linear forwards}
+#band img.snap{transition:opacity .35s ease}
+@keyframes kb{from{transform:scale(1.0)}to{transform:scale(1.09)}}
+#band::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 16%,rgba(0,0,0,0) 80%,#000 100%),
+  linear-gradient(to right,#000 0%,rgba(0,0,0,0) 10%,rgba(0,0,0,0) 90%,#000 100%),
+  radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)}
+.f-night{filter:brightness(.55) saturate(.7)} .f-dark{filter:brightness(.38) saturate(.6)}
+.f-smoke{filter:brightness(.5) contrast(1.25) saturate(.4) blur(.6px)}
+#tint{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s;background:radial-gradient(ellipse at 50% 40%,rgba(140,20,30,.35),rgba(60,0,10,.6));mix-blend-mode:multiply}
+#tint.on{opacity:1}
+#band.bulge{scale:1.035}
+#moon{position:absolute;z-index:2;top:10%;right:12%;width:11%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 40%,#9a2a30,#5e1218);box-shadow:0 0 40px rgba(150,30,40,.55);opacity:0;transition:opacity 3s}
+#moon.on{opacity:.9}
+#ash{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;transition:opacity 2s}
+#text{position:absolute;left:0;right:0;top:64%;z-index:6;padding:0 28px;text-align:center;font-size:17px;line-height:2.1;letter-spacing:.08em}
+#text.center{top:50%;transform:translateY(-50%)}
+@media (orientation:landscape){#band{top:40%;transform:translateY(-50%);height:auto;aspect-ratio:16/9;max-height:70%;max-width:1100px} #text{top:79%}}
+.line{opacity:0;animation:fin 1.2s forwards;white-space:pre-wrap}
+.line.out{animation:fout 1s forwards}
+@keyframes fin{to{opacity:1}} @keyframes fout{from{opacity:1}to{opacity:0}}
+.nm{display:block;font-size:11px;letter-spacing:.35em;color:var(--dim);line-height:1.6}
+.c-blue{color:var(--blue)} .c-red{color:var(--red)} .c-white{color:var(--white)} .c-purple{color:var(--purple);font-size:1.3em}
+.ch{opacity:1}
+.fake{display:inline-block;border:1px solid #3c3741;padding:6px 30px;margin:6px 10px;font-size:15px;letter-spacing:.3em}
+#flash{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0}
+#flash.go{animation:flash .9s ease-out}
+@keyframes flash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}
+#boot{position:absolute;inset:0;z-index:20;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transition:opacity 1.6s}
+#boot h1{font-weight:400;font-size:22px;letter-spacing:.3em;color:#cfc8bc;margin-bottom:26px}
+#boot p{font-size:13px;color:#8b858e;line-height:2.3;letter-spacing:.12em}
+#boot .tap{margin-top:34px;font-size:12px;color:#5c5761;animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.hidden{opacity:0!important;pointer-events:none!important}
+#credits{position:absolute;left:0;right:0;top:66%;z-index:7;text-align:center;font-size:12px;line-height:2.6;letter-spacing:.25em;color:#9a948c;opacity:0;transition:opacity 3s}
+#credits.on{opacity:1}
+#credits b{display:block;font-weight:400;font-size:18px;letter-spacing:.3em;color:#cfc8bc;margin-bottom:10px}
+#again{position:absolute;left:0;right:0;bottom:12%;z-index:8;text-align:center;font-size:11px;letter-spacing:.3em;color:#4a4650;opacity:0;transition:opacity 3s}
+#again.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="band"><img id="imA" alt=""><img id="imB" alt=""><div id="tint"></div><div id="moon"></div></div>
+  <canvas id="ash"></canvas>
+  <div id="text"></div>
+  <div id="credits"></div>
+  <div id="again">タップでもう一度</div>
+  <div id="flash"></div>
+  <div id="boot"><div>
+    <h1>DIRT AND SMOKE</h1>
+    <p>約6分半の映像です。音が出ます。<br>ヘッドホンを推奨します。<br>部屋を暗くして、どうぞ。</p>
+    <div class="tap">画面をタップして再生</div></div></div>
+</div>
+<script>
+(()=>{
+'use strict';
+const Q=new URLSearchParams(location.search);
+const SPEED=+(Q.get('speed')||1);   // 検証用：早送り倍率
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ================= タイムライン =================
+   秒数は「再生開始からの秒」。主題歌が始まってからは「曲の秒 + T0」で数える。
+   主題歌の区切り（Aメロ・サビなど）は音量から推定した値。総監督の確認待ち。
+   命令: img 絵 [night|dark|smoke|red] / none, T 文（入れ替え）, + 文（追加）, C（消す）,
+         bgm 曲 / stop / fade / cut, se 効果音, flash red|white, bulge, moon, nomoon,
+         rw 新しい文（直前の文を書き換え）, center / low（文字の位置）, credits, ash on|off           */
+const T0=94;               // 主題歌が始まる秒
+const S=t=>T0+t;           // 曲の中の秒 → 全体の秒
+const CUES=[
+ // ---- 前奏：目覚め ----
+ [0,'ash','on'],[0.5,'se','bell'],[0.5,'center'],
+ [2.5,'T','@OPENING'],[8.5,'C'],
+ [9,'img','lab night'],[9,'se','wind'],[9,'low'],
+ [12,'T','縫い目を数える。'],[16,'T','二十三本。'],[20,'C'],
+ [21,'img','mirror1b'],[24,'T','これが、この顔。'],[27.5,'C'],
+ [28,'img','mirror1a'],[31.5,'img','mirror1b'],[34,'img','none'],
+ // ---- 博士 ----
+ [35.5,'img','lab'],[35.5,'bgm','liar'],[35.5,'se','door'],
+ [38,'T','博士「……目を覚ましたか」'],[43.5,'T','名前は、呼ばれなかった。'],
+ [49,'T','博士「覆ってある鏡には、触れないこと」'],[53,'bulge'],[56,'C'],[56,'bgm','fade'],
+ // ---- 夜 ----
+ [58,'img','bedroom dark'],[58.5,'se','cough'],
+ [61,'T','鏡の方は、見ない。'],[65.5,'rw','鏡の方を、見ている。'],[72,'C'],
+ // ---- 記録帳 ----
+ [73,'img','study'],[73,'se','clock'],[73,'bgm','obscure_far'],
+ [75,'img','record'],[76,'T','――私《青》は、彼女に歌わせない。'],
+ [82,'T','――今、帳面を読んでいる。'],[87,'+','インクが、まだ乾いていなかった。'],
+ [91.5,'bgm','cut'],[91.5,'C'],[91.5,'img','none'],
+ // ---- 主題歌 ----
+ [S(0),'bgm','theme'],
+ [S(6),'img','city'],
+ [S(16),'img','window dark'],[S(19),'T','私《赤》。'],[S(27),'T','「私《赤》は、ここにいる」'],[S(36),'C'],
+ [S(44),'img','mirror_finger'],[S(49),'T','鏡の中の少女の薬指に、糸。'],[S(56),'+','自分の指には、まだない。'],[S(63),'C'],
+ [S(65),'img','bedroom dark'],[S(67),'T','@CHOICE'],[S(78),'T','選んだのは、どちらだったろう。'],[S(87),'C'],
+ [S(90),'img','tools smoke'],[S(90),'flash','red'],[S(95),'T','手が、口を塞ぐ。'],[S(103),'T','糸の音がする。'],[S(109),'+','一本。'],[S(115),'C'],
+ [S(120),'img','window dark'],[S(120),'moon'],[S(127),'img','stitch'],[S(127),'nomoon'],[S(128),'T','二十四本。'],[S(132),'+','昨日は、二十三本だった。'],
+ [S(136),'img','lab dark'],[S(137),'T','博士「……明日、少し、直そう」'],[S(143),'T','博士「歌わないように」'],
+ [S(150),'img','flowers red'],[S(151),'T','三体目は、歌った。'],[S(156),'+','廃棄。'],
+ [S(161),'img','chair dark'],[S(162),'T','博士「恨んでいるか」'],[S(168),'T','答えのかわりに、わたしは歌った。'],
+ [S(175),'img','hall'],[S(175),'C'],[S(181),'img','mirror_back'],[S(181),'flash','white'],[S(184.5),'img','hall'],[S(189),'img','none'],
+ [S(195),'img','chair dark'],[S(197),'T','「私《白》は、眠るのが怖い」'],[S(201.5),'+','「私《白》も」'],[S(207),'T','どちらの手が。'],[S(212),'C'],
+ [S(214),'img','chair'],[S(215),'T','肘掛けの上に、手袋が片方だけ。'],
+ [S(219),'img','mirror1b'],[S(219),'T','「あなたは、誰？」'],[S(222.5),'img','mirror8a'],[S(222.5),'C'],[S(225.5),'img','mirror8b'],
+ [S(227),'T','心の闇が\n本当の私《紫》'],[S(236),'C'],
+ [S(239),'img','entrance'],[S(244),'img','ending'],[S(244),'moon'],[S(249),'credits'],[S(262),'img','none'],[S(262),'nomoon'],
+ [S(272),'ash','off'],[S(272),'center'],[S(274),'T','おやすみ。'],[S(279),'END'],
+];
+
+/* ---------- 文字 ---------- */
+const COLORS={'青':'c-blue','赤':'c-red','白':'c-white','紫':'c-purple'};
+function html(text){
+  const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let m=text.match(/^(博士)(「.*)$/s), name='';
+  if(m){ name='<span class="nm">博士</span>'; text=m[2]; }
+  return name+esc(text).replace(/私《(青|赤|白|紫)》/g,(_,c)=>'<span class="'+COLORS[c]+'">私</span>').replace(/\n/g,'<br>');
+}
+const textEl=$('text');
+function clearText(){ for(const l of textEl.children) l.classList.add('out'); const old=[...textEl.children]; setTimeout(()=>old.forEach(o=>o.remove()),1000); }
+function addLine(t){
+  if(t==='@OPENING') t=store.get('ds_pv_seen')==='1'?'灰と煙の中で、私《白》は、また目を覚ました。':'灰と煙の中で、私《白》は目を覚ました。';
+  const d=document.createElement('div'); d.className='line';
+  d.innerHTML=t==='@CHOICE'?'<span class="fake">眠る</span><span class="fake">眠る</span>':html(t);
+  textEl.appendChild(d); return d;
+}
+function replaceLine(t){ clearText(); const d=addLine(t); d.style.animationDelay='.9s'; }
+async function rewrite(t){
+  const last=[...textEl.children].filter(x=>!x.classList.contains('out')).pop(); if(!last) return addLine(t);
+  const chars=[...last.textContent]; 
+  for(let i=chars.length;i>=0;i--){ last.textContent=chars.slice(0,i).join(''); await wait(80); }
+  await wait(500);
+  for(const ch of t){ last.textContent+=ch; await wait(130); }
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms/SPEED));
+
+/* ---------- 絵 ---------- */
+const imA=$('imA'), imB=$('imB'); let front=imA, cur='none';
+function setImg(spec){
+  const [name,f]=spec.split(' ');
+  $('tint').classList.toggle('on',f==='smoke'||f==='red');
+  if(name==='none'){ imA.classList.remove('on'); imB.classList.remove('on'); cur='none'; return; }
+  const snap=/^mirror/.test(name)&&/^mirror/.test(cur);
+  const back=front===imA?imB:imA;
+  back.src='../game/img/'+name+'.jpg'; back.className=(snap?'snap ':'')+'on'+(f&&f!=='red'?' f-'+f:'');
+  front.classList.remove('on'); if(snap) front.classList.add('snap');
+  front=back; cur=name;
+}
+function flash(c){ const f=$('flash'); f.style.background=c==='red'?'#7d1820':'#e8e2d8'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+async function bulge(){ $('band').classList.add('bulge'); await wait(450); $('band').classList.remove('bulge'); }
+
+/* ---------- 灰 ---------- */
+const ash=$('ash'), g=ash.getContext('2d'); let flakes=[];
+function sizeAsh(){ ash.width=ash.clientWidth*devicePixelRatio; ash.height=ash.clientHeight*devicePixelRatio; }
+for(let i=0;i<80;i++) flakes.push({x:Math.random(),y:Math.random(),r:.6+Math.random()*1.8,v:.00025+Math.random()*.0006,d:Math.random()*6.28,a:.15+Math.random()*.35});
+(function draw(){ g.clearRect(0,0,ash.width,ash.height);
+  for(const f of flakes){ f.y+=f.v; f.d+=.01; f.x+=Math.sin(f.d)*.0003; if(f.y>1.02){f.y=-.02;f.x=Math.random();}
+    g.globalAlpha=f.a; g.fillStyle='#b9b3ab'; g.beginPath(); g.arc(f.x*ash.width,f.y*ash.height,f.r*devicePixelRatio,0,6.283); g.fill(); }
+  requestAnimationFrame(draw); })();
+addEventListener('resize',sizeAsh); sizeAsh();
+
+/* ---------- 音 ---------- */
+let ctx=null, noiseBuf=null; const tracks={}; let curBgm=null;
+const TRACK={lullaby:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.8,loopEnd:58},
+             liar:{src:'../audio/liar_remastered.mp3',vol:.55,loop:true},
+             obscure:{src:'../audio/obscure.mp3',vol:.8,loop:true},
+             obscure_far:{src:'../audio/obscure.mp3',vol:.22,loop:true,far:true},
+             title:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.55,loopEnd:40},
+             theme:{src:'../audio/dirt_and_smoke_guitar_ballad.mp3',vol:.95}};
+function initAudio(){
+  if(ctx) return; try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ctx=null; return; }
+  noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+}
+function track(name){
+  const def=TRACK[name]; const key=def.src+(def.far?'#far':'');
+  let t=tracks[key];
+  if(!t){ const a=new Audio(def.src); a.preload='auto'; a.loop=!!def.loop; a.crossOrigin='anonymous';
+    t={a,key};
+    if(ctx){ const s=ctx.createMediaElementSource(a); const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=def.far?420:20000;
+      const gn=ctx.createGain(); gn.gain.value=0; s.connect(f).connect(gn).connect(ctx.destination); t.gain=gn; }
+    else a.volume=0;
+    if(def.loopEnd) a.addEventListener('timeupdate',()=>{ if(a.currentTime>def.loopEnd){ a.currentTime=0.5; } });
+    tracks[key]=t; }
+  t.def=def; return t;
+}
+function vol(t,v,sec){
+  if(t.gain){ const p=t.gain.gain; p.cancelScheduledValues(ctx.currentTime); p.setValueAtTime(p.value,ctx.currentTime); p.linearRampToValueAtTime(v,ctx.currentTime+sec); }
+  else t.a.volume=v;
+}
+function bgm(cmd){
+  if(cmd==='stop'||cmd==='fade'||cmd==='cut'){
+    stopClock();
+    if(!curBgm) return; const t=curBgm; curBgm=null; const sec=cmd==='cut'?0.02:cmd==='fade'?3:1.2;
+    vol(t,0,sec); setTimeout(()=>{ if(curBgm!==t) t.a.pause(); },sec*1000+80); return;
+  }
+  stopWind();
+  const t=track(cmd); if(curBgm===t) return;
+  if(curBgm){ const o=curBgm; vol(o,0,1); setTimeout(()=>{ if(curBgm!==o) o.a.pause(); },1100); }
+  curBgm=t; if(!t.a.loop||t.def.loopEnd) t.a.currentTime=0;
+  t.a.play().catch(()=>{}); vol(t,t.def.vol,1.5);
+  return t;
+}
+/* 効果音（仮：その場で合成している。本番の音が届いたら差し替える） */
+function env(node,t0,a,peak,dec){ const gn=ctx.createGain(); gn.gain.setValueAtTime(0,t0); gn.gain.linearRampToValueAtTime(peak,t0+a); gn.gain.exponentialRampToValueAtTime(.0001,t0+a+dec); node.connect(gn).connect(ctx.destination); return gn; }
+function noise(t0,dur,type,freq,q,peak,a,dec){ const s=ctx.createBufferSource(); s.buffer=noiseBuf; const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q||1; s.connect(f); env(f,t0,a,peak,dec); s.start(t0); s.stop(t0+dur); return f; }
+function tone(t0,freq,type,peak,a,dec){ const o=ctx.createOscillator(); o.type=type||'sine'; o.frequency.value=freq; env(o,t0,a,peak,dec); o.start(t0); o.stop(t0+a+dec+.05); return o; }
+let windNode=null, clockTimer=null;
+function stopWind(){ if(windNode){ const w=windNode; windNode=null; w.g.gain.linearRampToValueAtTime(0,ctx.currentTime+1.5); setTimeout(()=>w.s.stop(),1600);} }
+function stopClock(){ clearInterval(clockTimer); clockTimer=null; }
+const SE={
+  cough(t){ noise(t,.3,'bandpass',700,1.2,.5,.01,.17); noise(t+.24,.3,'bandpass',600,1.2,.35,.01,.2); tone(t,95,'sine',.18,.01,.15); noise(t+.6,.3,'bandpass',650,1.4,.2,.01,.16); },
+  step(t){ for(let i=0;i<4;i++){ const u=t+i*.62; noise(u,.15,'lowpass',220,1,.55,.005,.09); tone(u,58,'sine',.3,.004,.1); } },
+  door(t){ const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(70,t); o.frequency.linearRampToValueAtTime(120,t+.5); o.frequency.linearRampToValueAtTime(85,t+.9);
+    const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=6; o.connect(f); env(f,t,.08,.12,.9); o.start(t); o.stop(t+1.1);
+    noise(t+1,.3,'lowpass',160,1,.6,.005,.25); },
+  chair(t){ const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(55,t); o.frequency.linearRampToValueAtTime(75,t+.4); const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=700; f.Q.value=8; o.connect(f); env(f,t,.05,.1,.45); o.start(t); o.stop(t+.6); },
+  clink(t){ [0,.16,.29,.38].forEach((d,i)=>{ const p=.25/(i+1); tone(t+d,2350,'sine',p,.002,.5); tone(t+d,3710,'sine',p*.6,.002,.35); }); },
+  cloth(t){ noise(t,.9,'highpass',1400,.7,.22,.18,.55); noise(t+.5,.4,'lowpass',300,1,.25,.01,.25); },
+  candle(t){ noise(t,.4,'lowpass',900,1,.35,.02,.25); },
+  bell(t){ [220,441,662,883].forEach((f,i)=>tone(t,f,'sine',.16/(i+1),.01,4.5)); },
+  thread(t){ const f=noise(t,1.2,'bandpass',2600,14,.35,.25,.8); f.frequency.linearRampToValueAtTime(4600,t+1.1); },
+  slam(t){ noise(t,.4,'lowpass',200,1,.9,.002,.3); },
+  wind(){ if(windNode) return; const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=380;
+    const gn=ctx.createGain(); gn.gain.value=0; s.connect(f).connect(gn).connect(ctx.destination); s.start(); gn.gain.linearRampToValueAtTime(.16,ctx.currentTime+3);
+    const l=ctx.createOscillator(); l.frequency.value=.13; const lg=ctx.createGain(); lg.gain.value=160; l.connect(lg).connect(f.frequency); l.start(); windNode={s,g:gn}; },
+  clock(){ stopClock(); let n=0; clockTimer=setInterval(()=>{ if(!ctx||++n>40){stopClock();return;} noise(ctx.currentTime,.05,'highpass',3000,1,.12,.001,.03); },1000); },
+};
+function se(name){ if(!ctx||!SE[name]) return; if(name==='wind'||name==='clock') return SE[name](); SE[name](ctx.currentTime+.02); }
+
+
+
+/* ---------- 再生 ---------- */
+let t0=0, theme=null, idx=0, ended=false;
+let themeAt=0, themePerf=0;
+function now(){
+  const p=(performance.now()-t0)/1000*SPEED;
+  if(theme&&theme.a.currentTime>0){
+    if(!theme.a.paused&&!theme.a.ended){ themeAt=T0+theme.a.currentTime; themePerf=p; return themeAt; }  // 曲が鳴っている間は曲に合わせる
+    return themeAt+(p-themePerf);                                                                   // 曲が終わったら、そこから数える
+  }
+  return p;
+}
+function exec([t,c,a]){
+  switch(c){
+    case 'img': setImg(a); break;
+    case 'T': replaceLine(a); break;
+    case '+': addLine(a); break;
+    case 'C': clearText(); break;
+    case 'rw': rewrite(a); break;
+    case 'bgm': { const r=bgm(a); if(a==='theme'){ theme=r; if(SPEED!==1&&r) r.a.playbackRate=Math.min(SPEED,16); } break; }
+    case 'se': se(a); break;
+    case 'flash': flash(a); break;
+    case 'bulge': bulge(); break;
+    case 'moon': $('moon').classList.add('on'); break;
+    case 'nomoon': $('moon').classList.remove('on'); break;
+    case 'center': textEl.className='center'; break;
+    case 'low': textEl.className=''; break;
+    case 'ash': ash.style.opacity=a==='on'?1:0; break;
+    case 'credits': { const C=$('credits'); C.innerHTML='<b>DIRT AND SMOKE</b>総監督・音楽　shouyama<br>ビジュアル　ChatGPT<br>シナリオ　Claude'; C.classList.add('on'); setTimeout(()=>C.classList.remove('on'),11000/SPEED); break; }
+    case 'END': ended=true; store.set('ds_pv_seen','1'); $('again').classList.add('on'); document.title='END'; break;
+  }
+}
+function loop(){
+  const t=now();
+  while(idx<CUES.length && t>=CUES[idx][0]){
+    // 主題歌の前に曲の中の命令まで進まないよう、曲が始まるまでは T0 で止める
+    if(CUES[idx][0]>T0 && !(theme&&theme.a.currentTime>0) && t<T0+3) break;
+    exec(CUES[idx++]);
+  }
+  window.__t=t; window.__idx=idx;
+  if(!ended) requestAnimationFrame(loop);
+}
+$('boot').addEventListener('pointerdown',ev=>{
+  ev.stopPropagation(); initAudio(); if(ctx&&ctx.state==='suspended') ctx.resume();
+  for(const k of Object.keys(TRACK)){ const t=track(k); t.a.play().then(()=>{ if(curBgm!==t) t.a.pause(); }).catch(()=>{}); }
+  const b=$('boot'); b.classList.add('hidden'); setTimeout(()=>b.remove(),1700);
+  setTimeout(()=>{ t0=performance.now(); loop(); },1200);
+},{once:true});
+$('app').addEventListener('pointerdown',()=>{ if(ended) location.reload(); });
+if(Q.has('auto')) setTimeout(()=>$('boot').dispatchEvent(new Event('pointerdown')),100);
+})();
+</script>
+</body>
+</html>
