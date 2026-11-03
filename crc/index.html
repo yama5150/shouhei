@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v78">
+<meta name="build" content="v79">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -3283,7 +3283,13 @@ async function playBgm(key, loop=true){
   curBgmKey=key;
   try{
     const buf=await getBuffer(key);
-    if(token!==playToken||!buf) return; // 追い越し・失敗防止
+    if(token!==playToken) return;       // 追い越し防止
+    if(!buf){
+      // デコードに失敗した。curBgmKey を握ったままだと
+      // 冒頭の同一キー判定で弾かれて、以後その曲が二度と鳴らない
+      if(curBgmKey===key) curBgmKey=null;
+      return;
+    }
     const s=actx.createBufferSource();
     s.buffer=buf; s.loop=loop;
     s.connect(bgmGain);
@@ -3292,7 +3298,9 @@ async function playBgm(key, loop=true){
     s.start();
     curSrc=s;
     updateAmb();
-  }catch(e){}
+  }catch(e){
+    if(curBgmKey===key) curBgmKey=null;  // 例外のときも再試行できるようにする
+  }
 }
 function stopBgm(){
   playToken++;
@@ -3388,9 +3396,16 @@ async function startAmbient(){
 let curBgKey="", curBgDim=false, curSprKey="none", curBgvKey="",
     curWash=false, curBattle=false;
 
+/* 戦闘ゲージは命令ではなくDOMの幅で持っているので、ここで読み取る */
+function gaugeNow(){
+  const a=document.querySelector("#gArmor .bgFill");
+  const r=document.querySelector("#gReso .bgFill");
+  return {a:a?a.style.width:"", r:r?r.style.width:""};
+}
 function worldNow(){
   return {bg:curBgKey, dim:curBgDim, spr:curSprKey, bgm:curBgmKey||"",
-          bgv:curBgvKey, amb:!!state.ambOff, wash:curWash, bat:curBattle};
+          bgv:curBgvKey, amb:!!state.ambOff, wash:curWash, bat:curBattle,
+          g:gaugeNow()};
 }
 function worldRestore(w){
   if(!w) return;
@@ -3403,6 +3418,12 @@ function worldRestore(w){
   state.ambOff=!!w.amb; updateAmb();
   $("crimsonWash").classList.toggle("on", !!w.wash); curWash=!!w.wash;
   $("battleUI").classList.toggle("show", !!w.bat); curBattle=!!w.bat;
+  if(w.g){   // 戻った先の残量に合わせる。今の値のままだと戦況が食い違う
+    const a=document.querySelector("#gArmor .bgFill");
+    const r=document.querySelector("#gReso .bgFill");
+    if(a && w.g.a) a.style.width=w.g.a;
+    if(r && w.g.r) r.style.width=w.g.r;
+  }
 }
 
 let backLog=[];
@@ -3728,17 +3749,31 @@ function doGlitch(){
   g.classList.add("burst");
   if(navigator.vibrate) navigator.vibrate(40);
 }
+/* 幕の演出タイマー。
+   幕(z-index 15)はメニューバー(25)より下なので、幕の最中でもLOGが開ける。
+   そこで巻き戻すと、後から発火した幕のタイマーが state.i を進めて
+   戻った位置を壊す。進行を別経路で動かしたら、古い幕は無効にする。 */
+let fxTimer=null, fxGen=0;
+function cancelFx(){
+  if(fxTimer){ clearTimeout(fxTimer); fxTimer=null; }
+  fxGen++;
+}
+function fxAfter(ms, fn){
+  const g=++fxGen;
+  if(fxTimer) clearTimeout(fxTimer);
+  fxTimer=setTimeout(()=>{ fxTimer=null; if(g===fxGen) fn(); }, ms);
+}
 function showChapter(txt){
   const cur=$("curtain");
   $("curtainText").textContent=txt;
   cur.classList.add("on");
-  setTimeout(()=>{ cur.classList.remove("on"); run(); },1900);
+  fxAfter(1900, ()=>{ cur.classList.remove("on"); run(); });
 }
 function showCurtain(txt){
   const cur=$("curtain");
   $("curtainText").textContent=txt;
   cur.classList.add("on");
-  setTimeout(()=>{ cur.classList.remove("on"); state.i++; run(); },1600);
+  fxAfter(1600, ()=>{ cur.classList.remove("on"); state.i++; run(); });
 }
 function showChoice(list){
   state.skip=false; updateMenuBtns();
@@ -3982,7 +4017,16 @@ $("btnTitle").onclick=e=>{
 };
 
 /* ---- タップ進行 ---- */
+/* iOSは別アプリに移ると AudioContext を止める。戻っても自力では起きない。
+   復帰の合図と、最初のタップ(iOSが要求する操作由来のきっかけ)で起こす。 */
+function wakeAudio(){
+  if(actx && actx.state==="suspended"){ try{ actx.resume(); }catch(e){} }
+}
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) wakeAudio(); });
+window.addEventListener("pageshow", wakeAudio);
+
 $("stage").addEventListener("click",()=>{
+  wakeAudio();
   if(!started) return;
   if($("choiceBox").classList.contains("show")) return;
   if($("ed").classList.contains("show")) return;
@@ -3996,6 +4040,7 @@ $("stage").addEventListener("click",()=>{
    どちらになるかはボタンの印で見えているので、驚かない。 */
 function startGame(ep, fromSave, fresh){
   started=true;
+  cancelFx();                      // 前の話の幕タイマーを持ち込まない
   backLog=[];                      // 話が変わったらLOGは引き継がない
   $("title").classList.add("hide");
   $("epSelect").classList.remove("show");
@@ -4018,7 +4063,7 @@ function startGame(ep, fromSave, fresh){
     const et=EP_TITLES[state.ep]||["",""];
     $("curtainText").textContent=et[0]+"　"+et[1];
     $("curtain").classList.add("on");
-    setTimeout(()=>{ $("curtain").classList.remove("on"); run(); },2300);
+    fxAfter(2300, ()=>{ $("curtain").classList.remove("on"); run(); });
   }else{
     setTimeout(()=>run(),300);
   }
@@ -4191,6 +4236,7 @@ function jumpToLog(k){
   const e=backLog[k];
   if(!e || e.ep!==state.ep || typeof e.i!=="number" || e.i>=SC.length) return;
   stopVoice();
+  cancelFx();                      // 幕の最中に巻き戻されても壊れないように
   clearInterval(typeTimer); typing=false; waitingTap=false;
   state.auto=false; state.skip=false; updateMenuBtns();
   $("logView").classList.remove("show");
