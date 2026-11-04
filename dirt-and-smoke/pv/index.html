@@ -18,6 +18,8 @@ body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:
 #band img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.4s ease,filter 1.4s}
 #band img.on{opacity:1;animation:kb 14s linear forwards}
 #band img.snap{transition:opacity .35s ease}
+#band video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s;z-index:2}
+#band video.on{opacity:1}
 #band #cut{z-index:3;opacity:0;transition:none;animation:none;transform:scale(1.04)}
 #band #cut.show{opacity:1}
 @keyframes kb{from{transform:scale(1.0)}to{transform:scale(1.09)}}
@@ -62,7 +64,7 @@ body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:
 </head>
 <body>
 <div id="app">
-  <div id="band"><img id="imA" alt=""><img id="imB" alt=""><img id="cut" alt=""><div id="tint"></div><div id="moon"></div></div>
+  <div id="band"><img id="imA" alt=""><img id="imB" alt=""><video id="vid" muted playsinline preload="auto"></video><img id="cut" alt=""><div id="tint"></div><div id="moon"></div></div>
   <canvas id="ash"></canvas>
   <div id="text"></div>
   <div id="credits"></div>
@@ -102,7 +104,7 @@ const CUES=[
  // ---- 博士 ----
  [35.5,'img','lab'],[35.5,'bgm','liar'],[35.5,'se','door'],
  [38,'T','博士「……目を覚ましたか」'],[43.5,'T','名前は、呼ばれなかった。'],
- [49,'T','博士「覆ってある鏡には、触れないこと」'],[53,'bulge'],[56,'C'],[56,'bgm','fade'],
+ [48.5,'img','cloth_before'],[49,'T','博士「覆ってある鏡には、触れないこと」'],[53,'cut','cloth_after'],[53.7,'cut','off'],[56,'C'],[56,'bgm','fade'],
  // ---- 夜 ----
  [58,'img','bedroom dark'],[58.5,'se','cough'],
  [61,'T','鏡の方は、見ない。'],[65.5,'rw','鏡の方を、見ている。'],[72,'C'],
@@ -115,23 +117,23 @@ const CUES=[
  [S(0),'bgm','theme'],
  [S(6),'img','city'],[S(11),'img','girl_lab'],
  [S(16),'img','window dark'],[S(19),'T','私《赤》。'],[S(27),'T','「私《赤》は、ここにいる」'],[S(36),'C'],
- [S(44),'img','girl_mirror'],[S(52),'img','mirror_finger'],[S(53),'T','鏡の中の少女の薬指に、糸。'],[S(58),'+','自分の指には、まだない。'],[S(63),'C'],
- [S(65),'img','bedroom dark'],[S(67),'T','@CHOICE'],...burst(S(70.5),[['eyes',.55],['mirror1a',.45],['stitch',.42],['wet_ink',.38],['girl_mirror',.34],['eyes',.3]]),
+ [S(44),'img','girl_mirror'],[S(52),'img','mirror_finger'],[S(53),'T','鏡の中の少女の薬指に、糸。'],[S(58),'+','自分の指には、まだない。'],[S(58),'vid','mirror_moves'],[S(63),'C'],
+ [S(65),'img','bedroom dark'],[S(67),'T','@CHOICE'],...burst(S(70.5),[['eyes',.55],['eyes_hollow',.45],['mirror1a',.42],['needle',.38],['wet_ink',.34],['eyes_red',.3]]),
  [S(78),'T','選んだのは、どちらだったろう。'],[S(87),'C'],
- [S(90),'img','tools smoke'],[S(90),'flash','red'],[S(95),'T','手が、口を塞ぐ。'],[S(103),'T','糸の音がする。'],[S(109),'+','一本。'],[S(115),'C'],
- [S(120),'img','window dark'],[S(120),'moon'],[S(127),'img','stitch'],[S(127),'nomoon'],[S(128),'T','二十四本。'],[S(132),'+','昨日は、二十三本だった。'],
+ [S(90),'img','nm_smoke'],[S(90),'flash','red'],[S(94.5),'img','mouth'],[S(95),'T','手が、口を塞ぐ。'],[S(102.5),'img','needle'],[S(103),'T','糸の音がする。'],[S(109),'+','一本。'],[S(115),'C'],
+ [S(120),'img','window dark'],[S(120),'moon'],[S(124),'nomoon'],[S(127),'img','ring'],[S(128),'T','二十四本。'],[S(132),'+','昨日は、二十三本だった。'],
  [S(136),'img','lab dark'],[S(137),'T','博士「……明日、少し、直そう」'],[S(143),'T','博士「歌わないように」'],
  [S(150),'img','flowers red'],[S(151),'T','三体目は、歌った。'],[S(156),'+','廃棄。'],
- [S(161),'img','chair dark'],[S(162),'T','博士「恨んでいるか」'],[S(167.5),'img','singing'],[S(168),'T','答えのかわりに、わたしは歌った。'],
+ [S(161),'img','chair dark'],[S(162),'T','博士「恨んでいるか」'],[S(167.5),'img','singing'],[S(168),'T','答えのかわりに、わたしは歌った。'],[S(171.5),'img','kitchen'],
  [S(175),'img','covered_hall'],[S(175),'C'],[S(180.3),'flash','white'],
- ...burst(S(180.4),[['mirror_moon',.6],['eyes',.45],['wet_ink',.38],['mirror1a',.32],['stitch',.27],['tools',.22],['girl_mirror',.18],['empty_mirror',.15],['eyes',.12],['mirror_moon',.1],['mirror_back',.1],['eyes',.08],['mirror1a',.08],['eyes',.08]]),
- [S(184),'img','none'],
+ ...burst(S(180.4),[['mirror_moon',.6],['eyes',.45],['nm_smoke',.38],['wet_ink',.32],['needle',.27],['mouth',.22],['cloth_after',.18],['nm_lying',.15],['eyes_hollow',.12],['mirror_back',.1],['empty_mirror',.1],['eyes_red',.08],['mirror1a',.08],['eyes_red',.08]]),
+ [S(184),'img','none'],[S(188),'img','corridor_reflect'],
  [S(195),'img','chair dark'],[S(197),'T','「私《白》は、眠るのが怖い」'],[S(201.5),'+','「私《白》も」'],[S(207),'T','どちらの手が。'],[S(212),'C'],
- [S(214),'img','chair'],[S(215),'T','肘掛けの上に、手袋が片方だけ。'],
- [S(213.6),'cut','eyes'],[S(213.68),'cut','off'],[S(216.3),'cut','mirror_moon'],[S(216.38),'cut','off'],[S(218.2),'cut','eyes'],[S(218.28),'cut','off'],
+ [S(214),'img','gloves'],[S(215),'T','肘掛けの上に、手袋が片方だけ。'],
+ [S(213.6),'cut','eyes_red'],[S(213.68),'cut','off'],[S(216.3),'cut','mirror_moon'],[S(216.38),'cut','off'],[S(218.2),'cut','eyes_red'],[S(218.28),'cut','off'],
  [S(219),'img','empty_mirror'],[S(219),'T','「あなたは、誰？」'],[S(222.5),'img','mirror8a'],[S(222.5),'C'],[S(225.5),'img','mirror8b'],
  [S(227),'T','心の闇が\n本当の私《紫》'],[S(236),'C'],
- [S(239),'img','entrance'],[S(244),'img','ending'],[S(244),'moon'],[S(249),'credits'],[S(262),'img','none'],[S(262),'nomoon'],
+ [S(239),'img','entrance'],[S(244),'img','ending_new'],[S(249),'credits'],[S(262),'img','none'],[S(262),'nomoon'],
  [S(272),'ash','off'],[S(272),'center'],[S(274),'T','おやすみ。'],[S(279),'END'],
 ].sort((a,b)=>a[0]-b[0]);
 
@@ -163,7 +165,10 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms/SPEED));
 
 /* ---------- 絵 ---------- */
 const imA=$('imA'), imB=$('imB'); let front=imA, cur='none';
+const vidEl=$('vid');
+function vid(n){ vidEl.src='../game/img/'+n+'.mp4'; vidEl.currentTime=0; vidEl.classList.add('on'); vidEl.play().catch(()=>{}); }
 function setImg(spec){
+  if(vidEl.classList.contains('on')){ vidEl.classList.remove('on'); setTimeout(()=>vidEl.pause(),900); }
   const [name,f]=spec.split(' ');
   $('tint').classList.toggle('on',f==='smoke'||f==='red');
   if(name==='none'){ imA.classList.remove('on'); imB.classList.remove('on'); cur='none'; return; }
@@ -280,6 +285,7 @@ function exec([t,c,a]){
     case 'se': se(a); break;
     case 'flash': flash(a); break;
     case 'cut': cut(a); break;
+    case 'vid': vid(a); break;
     case 'bulge': bulge(); break;
     case 'moon': $('moon').classList.add('on'); break;
     case 'nomoon': $('moon').classList.remove('on'); break;
