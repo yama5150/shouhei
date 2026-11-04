@@ -28,6 +28,7 @@ body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:
   linear-gradient(to right,#000 0%,rgba(0,0,0,0) 10%,rgba(0,0,0,0) 90%,#000 100%),
   radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)}
 .f-fit{object-fit:contain}
+.f-cold{filter:saturate(.22) brightness(.82) contrast(1.06)}
 .f-night{filter:brightness(.55) saturate(.7)} .f-dark{filter:brightness(.38) saturate(.6)}
 .f-smoke{filter:brightness(.5) contrast(1.25) saturate(.4) blur(.6px)}
 #tint{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s;background:radial-gradient(ellipse at 50% 40%,rgba(140,20,30,.35),rgba(60,0,10,.6));mix-blend-mode:multiply}
@@ -102,9 +103,9 @@ const CUES=[
  [21,'img','mirror1b'],[24,'T','これが、この顔。'],[27.5,'C'],
  [28,'img','mirror1a'],[31.5,'img','mirror1b'],[34,'img','none'],
  // ---- 博士 ----
- [35.5,'img','lab'],[35.5,'bgm','liar'],[35.5,'se','door'],
+ [35.5,'img','lab cold'],[35.5,'bgm','liar'],[35.5,'se','door'],
  [38,'T','博士「……目を覚ましたか」'],[43.5,'T','名前は、呼ばれなかった。'],
- [48.5,'img','cloth_before'],[49,'T','博士「覆ってある鏡には、触れないこと」'],[53,'cut','cloth_after'],[53.7,'cut','off'],[56,'C'],[56,'bgm','fade'],
+ [48.5,'img','cloth_before cold'],[49,'T','博士「覆ってある鏡には、触れないこと」'],[53,'cut','cloth_after'],[53.7,'cut','off'],[56,'C'],[56,'bgm','fade'],
  // ---- 夜 ----
  [58,'img','bedroom dark'],[58.5,'se','cough'],
  [61,'T','鏡の方は、見ない。'],[65.5,'rw','鏡の方を、見ている。'],[72,'C'],
@@ -113,27 +114,31 @@ const CUES=[
  [75,'img','record'],[76,'T','――私《青》は、彼女に歌わせない。'],
  [81,'C'],[81.5,'img','wet_ink fit'],[87,'T','インクが、まだ乾いていなかった。'],
  [91.5,'bgm','cut'],[91.5,'C'],[91.5,'img','none'],
- // ---- 主題歌 ----
+ // ---- 主題歌：前半は冷たい灰色の美しさと、少しだけの違和感 ----
  [S(0),'bgm','theme'],
- [S(6),'img','city'],[S(11),'img','girl_lab'],
+ [S(6),'img','city cold'],[S(11),'img','girl_lab cold'],
  [S(16),'img','window dark'],[S(19),'T','私《赤》。'],[S(27),'T','「私《赤》は、ここにいる」'],[S(36),'C'],
- [S(44),'img','girl_mirror'],[S(52),'img','mirror_finger'],[S(53),'T','鏡の中の少女の薬指に、糸。'],[S(58),'+','自分の指には、まだない。'],[S(58),'vid','mirror_moves'],[S(63),'C'],
- [S(65),'img','bedroom dark'],[S(67),'T','@CHOICE'],...burst(S(70.5),[['eyes',.55],['eyes_hollow',.45],['mirror1a',.42],['needle',.38],['wet_ink',.34],['eyes_red',.3]]),
- [S(78),'T','選んだのは、どちらだったろう。'],[S(87),'C'],
- [S(90),'img','nm_smoke'],[S(90),'flash','red'],[S(94.5),'img','mouth'],[S(95),'T','手が、口を塞ぐ。'],[S(102.5),'img','needle'],[S(103),'T','糸の音がする。'],[S(109),'+','一本。'],[S(115),'C'],
- [S(120),'img','window dark'],[S(120),'moon'],[S(124),'nomoon'],[S(127),'img','ring'],[S(128),'T','二十四本。'],[S(132),'+','昨日は、二十三本だった。'],
+ [S(44),'img','girl_mirror cold'],[S(52),'img','mirror_finger cold'],[S(53),'T','鏡の中の少女の薬指に、糸。'],[S(58),'+','自分の指には、まだない。'],[S(58),'vid','mirror_moves'],[S(63),'C'],
+ [S(65),'img','bedroom dark'],[S(67),'T','@CHOICE'],[S(78),'T','選んだのは、どちらだったろう。'],[S(87),'C'],
+ [S(90),'img','cloth_before cold'],[S(93),'T','覆われた鏡が、並んでいる。'],[S(100),'img','record cold'],[S(101),'T','――私《青》は、彼女に歌わせない。'],[S(110),'C'],
+ [S(120),'img','window dark'],[S(120),'moon'],[S(124),'nomoon'],[S(127),'img','ring cold'],[S(128),'T','二十四本。'],[S(132),'+','昨日は、二十三本だった。'],
  [S(136),'img','lab dark'],[S(137),'T','博士「……明日、少し、直そう」'],[S(143),'T','博士「歌わないように」'],
- [S(150),'img','flowers red'],[S(151),'T','三体目は、歌った。'],[S(156),'+','廃棄。'],
- [S(161),'img','chair dark'],[S(162),'T','博士「恨んでいるか」'],[S(167.5),'img','singing'],[S(168),'T','答えのかわりに、わたしは歌った。'],[S(171.5),'img','kitchen'],
- [S(175),'img','covered_hall'],[S(175),'C'],[S(180.3),'flash','white'],
- ...burst(S(180.4),[['mirror_moon',.6],['eyes',.45],['nm_smoke',.38],['wet_ink',.32],['needle',.27],['mouth',.22],['cloth_after',.18],['nm_lying',.15],['eyes_hollow',.12],['mirror_back',.1],['empty_mirror',.1],['eyes_red',.08],['mirror1a',.08],['eyes_red',.08]]),
- [S(184),'img','none'],[S(188),'img','corridor_reflect'],
- [S(195),'img','chair dark'],[S(197),'T','「私《白》は、眠るのが怖い」'],[S(201.5),'+','「私《白》も」'],[S(207),'T','どちらの手が。'],[S(212),'C'],
- [S(214),'img','gloves'],[S(215),'T','肘掛けの上に、手袋が片方だけ。'],
- [S(213.6),'cut','eyes_red'],[S(213.68),'cut','off'],[S(216.3),'cut','mirror_moon'],[S(216.38),'cut','off'],[S(218.2),'cut','eyes_red'],[S(218.28),'cut','off'],
- [S(219),'img','empty_mirror'],[S(219),'T','「あなたは、誰？」'],[S(222.5),'img','mirror8a'],[S(222.5),'C'],[S(225.5),'img','mirror8b'],
- [S(227),'T','心の闇が\n本当の私《紫》'],[S(236),'C'],
- [S(239),'img','entrance'],[S(244),'img','ending_new'],[S(249),'credits'],[S(262),'img','none'],[S(262),'nomoon'],
+ [S(150),'img','flowers'],[S(151),'T','三体目は、歌った。'],[S(156),'+','廃棄。'],
+ // ---- 一番あたたかい記憶 ----
+ [S(161),'img','chair dark'],[S(162),'T','博士「恨んでいるか」'],
+ [S(167.5),'img','singing'],[S(168),'T','答えのかわりに、わたしは歌った。'],
+ [S(176),'img','kitchen'],[S(177),'T','「わたしの、かわいい子」'],[S(186),'C'],
+ [S(188),'img','gloves'],[S(195),'T','「私《白》は、眠るのが怖い」'],[S(199.5),'+','「私《白》も」'],[S(203.5),'T','手を握った。'],
+ // ---- 予告なしに崩れる（曲で一番静かなところ）----
+ [S(206.6),'mute'],[S(206.6),'cut','black'],[S(206.6),'C'],
+ ...burst(S(207.4),[['mouth',.34],['nm_smoke',.3],['needle',.26],['eyes_red',.22],['cloth_after',.18],['nm_lying',.15],['eyes_hollow',.12],['mirror_back',.1],['eyes',.08],['mirror_moon',.08],['eyes_red',.08]]),
+ [S(207.4),'unmute'],[S(209.3),'img','none'],[S(210.5),'T','どちらの手が。'],[S(213.5),'C'],
+ // ---- 余波：もう美しい絵には戻らない ----
+ [S(214.5),'img','mirror_back'],[S(216.5),'cut','eyes_red'],[S(216.58),'cut','off'],
+ [S(218),'vid','mirror_moves'],[S(219.2),'cut','eyes_red'],[S(219.28),'cut','off'],
+ [S(221.5),'img','empty_mirror'],[S(222),'T','「あなたは、誰？」'],[S(224.5),'img','mirror8a'],[S(224.5),'C'],[S(227),'img','mirror8b'],
+ [S(227.5),'T','心の闇が\n本当の私《紫》'],[S(236),'C'],
+ [S(239),'img','corridor_reflect'],[S(244),'img','ending_new'],[S(249),'credits'],[S(262),'img','none'],[S(262),'nomoon'],
  [S(272),'ash','off'],[S(272),'center'],[S(274),'T','おやすみ。'],[S(279),'END'],
 ].sort((a,b)=>a[0]-b[0]);
 
@@ -179,7 +184,9 @@ function setImg(spec){
   front=back; cur=name;
 }
 const cutEl=$('cut');
-function cut(n){ if(n==='off'){ cutEl.classList.remove('show'); return; } cutEl.src='../game/img/'+n+'.jpg'; cutEl.classList.add('show'); }
+function cut(n){ if(n==='off'){ cutEl.classList.remove('show'); return; }
+  if(n==='black'){ cutEl.src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E"; cutEl.classList.add('show'); return; }
+  cutEl.src='../game/img/'+n+'.jpg'; cutEl.classList.add('show'); }
 function flash(c){ const f=$('flash'); f.style.background=c==='red'?'#7d1820':'#e8e2d8'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
 async function bulge(){ $('band').classList.add('bulge'); await wait(450); $('band').classList.remove('bulge'); }
 
@@ -286,6 +293,8 @@ function exec([t,c,a]){
     case 'flash': flash(a); break;
     case 'cut': cut(a); break;
     case 'vid': vid(a); break;
+    case 'mute': if(curBgm) vol(curBgm,0,.02); break;          // 曲の音を一瞬で消す（曲そのものは進み続ける）
+    case 'unmute': if(curBgm) vol(curBgm,curBgm.def.vol,.05); break;
     case 'bulge': bulge(); break;
     case 'moon': $('moon').classList.add('on'); break;
     case 'nomoon': $('moon').classList.remove('on'); break;
@@ -311,7 +320,7 @@ $('boot').addEventListener('pointerdown',ev=>{
   for(const k of Object.keys(TRACK)){ const t=track(k); t.a.play().then(()=>{ if(curBgm!==t) t.a.pause(); }).catch(()=>{}); }
   const b=$('boot'); b.classList.add('hidden'); setTimeout(()=>b.remove(),1700);
   // 一瞬だけ出す絵が間に合うよう、使う絵を先に全部読み込んでおく
-  const names=new Set(CUES.filter(c=>c[1]==='img'||c[1]==='cut').map(c=>c[2].split(' ')[0]).filter(n=>n!=='none'&&n!=='off'));
+  const names=new Set(CUES.filter(c=>c[1]==='img'||c[1]==='cut').map(c=>c[2].split(' ')[0]).filter(n=>n!=='none'&&n!=='off'&&n!=='black'));
   window.__pre=[...names].map(n=>{ const i=new Image(); i.src='../game/img/'+n+'.jpg'; return i; });
   setTimeout(()=>{ t0=performance.now(); loop(); },1200);
 },{once:true});
