@@ -1,0 +1,359 @@
+{
+  "name": "kaisen",
+  "basename": "kaisen_reel",
+  "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
+  "out": "../out",
+  "chip": "0x000000@0.00",
+  "caption_border": 16,
+  "caption_border_color": "0x281038@0.95",
+  "caption_bottom": 1260,
+  "card_line_step": 150,
+  "audio_tail": 3.0,
+  "audio_curve": "tri",
+  "sources": {
+    "sep": "susudepa_9gatsu.mov",
+    "sashimi": "sashimi.jpg",
+    "saku": "saku.jpg",
+    "kaisendon": "kaisendon.jpg",
+    "kanigunkan": "kanigunkan.jpg",
+    "temaki": "temaki.jpg",
+    "tempura": "tempura.jpg",
+    "kani": "kani.jpg",
+    "sengyo": "sengyo.jpg",
+    "fukujin": "shichifukujin.jpg",
+    "card": "still_serve.png",
+    "logo": "logo_sting.mp4"
+  },
+  "music": {
+    "file": "bgm2.mp3",
+    "start": 136,
+    "use_clip_audio": false
+  },
+  "segments": [
+    {
+      "src": "sashimi",
+      "kind": "photo",
+      "dur": 1.2,
+      "zoom": [
+        1.05,
+        1.13
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.08,
+      "lines": [
+        [
+          "盛り合わせ",
+          58,
+          "ink"
+        ],
+        [
+          "刺身",
+          132,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "saku",
+      "kind": "photo",
+      "dur": 1.1,
+      "zoom": [
+        1.05,
+        1.13
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.14,
+      "lines": [
+        [
+          "切りたて",
+          58,
+          "ink"
+        ],
+        [
+          "サク",
+          128,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 12.15,
+      "dur": 1.05,
+      "lift": 1.12,
+      "lines": [
+        [
+          "目の前で握る",
+          84,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "kaisendon",
+      "kind": "photo",
+      "dur": 1.2,
+      "zoom": [
+        1.05,
+        1.14
+      ],
+      "focus": [
+        0.48,
+        0.5
+      ],
+      "lift": 1.2,
+      "lines": [
+        [
+          "海鮮丼",
+          120,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "kanigunkan",
+      "kind": "photo",
+      "dur": 1.15,
+      "zoom": [
+        1.05,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.16,
+      "lines": [
+        [
+          "蟹と、いくら。",
+          86,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "temaki",
+      "kind": "photo",
+      "dur": 1.1,
+      "zoom": [
+        1.06,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.16,
+      "lines": [
+        [
+          "自分で巻く",
+          58,
+          "ink"
+        ],
+        [
+          "手巻き",
+          116,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "tempura",
+      "kind": "photo",
+      "dur": 1.1,
+      "zoom": [
+        1.05,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.12,
+      "lines": [
+        [
+          "揚げたて",
+          58,
+          "ink"
+        ],
+        [
+          "天ぷら",
+          120,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "kani",
+      "kind": "photo",
+      "dur": 1.15,
+      "zoom": [
+        1.06,
+        1.14
+      ],
+      "focus": [
+        0.5,
+        0.5
+      ],
+      "lift": 1.16,
+      "lines": [
+        [
+          "脚のまま",
+          58,
+          "ink"
+        ],
+        [
+          "蟹",
+          142,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "sengyo",
+      "kind": "photo",
+      "dur": 1.1,
+      "zoom": [
+        1.06,
+        1.13
+      ],
+      "focus": [
+        0.52,
+        0.45
+      ],
+      "lift": 1.22,
+      "lines": [
+        [
+          "北海道の鮮魚",
+          84,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 13.7,
+      "dur": 1.05,
+      "lift": 1.08,
+      "lines": [
+        [
+          "その場で炙る",
+          84,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "sep",
+      "kind": "video",
+      "start": 21.6,
+      "dur": 1.15,
+      "lift": 1.52,
+      "lines": [
+        [
+          "炙り",
+          58,
+          "ink"
+        ],
+        [
+          "肉寿司",
+          122,
+          "accent"
+        ]
+      ],
+      "zoom": 1.12,
+      "focus": [
+        0.5,
+        0.62
+      ]
+    },
+    {
+      "src": "fukujin",
+      "kind": "photo",
+      "dur": 1.15,
+      "fit": "blur",
+      "lift": 1.26
+    },
+    {
+      "src": "card",
+      "kind": "card",
+      "dur": 2.3,
+      "lift": 1.2,
+      "lines": [
+        [
+          "北海道グルメフェア 開催中",
+          50,
+          "ink"
+        ],
+        [
+          "12月は、さらに特別。",
+          86,
+          "accent"
+        ]
+      ]
+    },
+    {
+      "src": "card",
+      "kind": "card",
+      "dur": 3.1,
+      "lift": 1.2,
+      "lines": [
+        [
+          "2周年記念イベント",
+          64,
+          "accent"
+        ],
+        [
+          "12月4日(金) → 6日(日)",
+          50,
+          "ink"
+        ],
+        [
+          "クリスマス",
+          64,
+          "accent"
+        ],
+        [
+          "12月24日(木) ・ 25日(金)",
+          50,
+          "ink"
+        ]
+      ]
+    },
+    {
+      "src": "logo",
+      "kind": "video",
+      "start": 0,
+      "dur": 2.0,
+      "plain": true
+    },
+    {
+      "kind": "black",
+      "dur": 0.5
+    }
+  ],
+  "cover": {
+    "base": "sashimi",
+    "lift": 1.1,
+    "title_y": 430,
+    "title": "kaisen_title.png",
+    "file": "kaisen_cover.jpg"
+  },
+  "font": "maru",
+  "ink": "0xFFF8E6",
+  "accent": "0xFF8C1A",
+  "caption_shadow": [
+    0,
+    9
+  ],
+  "caption_shadow_color": "black@0.55",
+  "line_step": 140
+}
