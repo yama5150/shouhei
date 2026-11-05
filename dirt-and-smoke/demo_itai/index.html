@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>イタイ — 第五章デモ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#d8d1c5;--blue:#7899b8;--red:#ad5558;--white:#d8d1c5}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;overflow:hidden}
+body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+#app{position:fixed;inset:0;overflow:hidden;background:#000}
+#bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 4s,filter 4s;filter:brightness(.32) saturate(.5)}
+#bg.on{opacity:1}
+#bg.gone{opacity:0;transition:opacity .05s}
+#vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 35%,#000 100%);pointer-events:none}
+#text{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);padding:0 7vw;text-align:center;font-size:clamp(17px,4.6vw,26px);line-height:2.1;letter-spacing:.06em}
+.l{display:block;min-height:1em;opacity:0;animation:fin .6s forwards}
+.l.fast{animation-duration:.05s}
+@keyframes fin{to{opacity:1}}
+.r{color:var(--red)} .b{color:var(--blue)} .w{color:var(--white)} .n{color:#8e887f}
+.jit{display:inline-block;animation:jit .09s steps(2) infinite}
+@keyframes jit{0%{transform:translate(0,0)}50%{transform:translate(1px,-1px)}100%{transform:translate(-1px,1px)}}
+.flood{position:absolute;inset:0;padding:4vh 4vw;font-size:clamp(18px,4.4vw,28px);line-height:1.45;letter-spacing:.02em;word-break:break-all;text-align:left;overflow:hidden;opacity:.92}
+ruby rt{font-size:.45em;letter-spacing:.25em;color:#8e887f}
+.small{font-size:.8em}
+#boot{position:absolute;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center;text-align:center;transition:opacity 1.5s}
+#boot p{font-size:13px;color:#8b858e;line-height:2.4;letter-spacing:.12em}
+#boot .tap{margin-top:30px;font-size:12px;color:#5c5761;animation:bl 2s infinite}
+@keyframes bl{50%{opacity:.25}}
+.hidden{opacity:0;pointer-events:none}
+#again{position:absolute;bottom:8%;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.3em;color:#3f3b44;opacity:0;transition:opacity 3s}
+#again.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <img id="bg" src="../game/img/gloves.jpg" alt="">
+  <div id="vig"></div>
+  <div id="text"></div>
+  <div id="again">タップでもう一度</div>
+  <div id="boot"><div><p>第五章「イタイ」演出デモ（約1分半）<br>音が出ます。ヘッドホン推奨。<br>部屋を暗くして、どうぞ。</p><div class="tap">画面をタップして再生</div></div></div>
+</div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const textEl=$('text');
+const SPEED=+(new URLSearchParams(location.search).get('speed')||1);
+const wait=ms=>new Promise(r=>setTimeout(r,ms/SPEED));
+
+/* 文字の色：r=赤（妹） b=青（姉） m=一文字ずつ赤と青 w=白 n=色なし */
+function colored(str,mode){
+  const out=[]; let i=0;
+  for(const ch of str){
+    let c=mode;
+    if(mode==='m') c=(i++%2)?'b':'r';
+    if(mode==='mr') c=Math.random()<.5?'r':'b';
+    out.push(`<span class="${c}">${ch.replace(/</g,'&lt;')}</span>`);
+  }
+  return out.join('');
+}
+function line(html,cls=''){ const d=document.createElement('span'); d.className='l '+cls; d.innerHTML=html; textEl.appendChild(d); return d; }
+function clear(){ textEl.innerHTML=''; }
+async function type(str,mode,{speed=70,cls=''}={}){
+  const d=line('',cls); let i=0;
+  for(const ch of str){ d.insertAdjacentHTML('beforeend',colored(ch,mode==='m'?(i%2?'b':'r'):mode)); i++; await wait(speed); }
+  return d;
+}
+
+/* 子守唄：速さと音程を落としていく */
+const song=new Audio('../audio/dirt_and_smoke_unplugged.mp3'); song.preload='auto';
+try{ song.preservesPitch=false; song.mozPreservesPitch=false; song.webkitPreservesPitch=false; }catch(e){}
+let ctx=null, gain=null;
+function initAudio(){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); const s=ctx.createMediaElementSource(song); gain=ctx.createGain(); gain.gain.value=0; s.connect(gain).connect(ctx.destination); }catch(e){ ctx=null; } }
+function vol(v,sec){ if(gain){ const g=gain.gain; g.cancelScheduledValues(ctx.currentTime); g.setValueAtTime(g.value,ctx.currentTime); g.linearRampToValueAtTime(v,ctx.currentTime+sec); } else song.volume=v; }
+function rate(r){ song.playbackRate=r; }
+function breath(){ if(!ctx) return; const b=ctx.createBuffer(1,ctx.sampleRate*.5,ctx.sampleRate), d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/d.length);
+  const s=ctx.createBufferSource(); s.buffer=b; const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200; f.Q.value=.8; const g=ctx.createGain(); g.gain.value=.18; s.connect(f).connect(g).connect(ctx.destination); s.start(); }
+
+async function play(){
+  $('bg').classList.add('on');
+  song.currentTime=0; song.play().catch(()=>{}); vol(.75,3); rate(1);
+  await wait(2500);
+  await type('溶けて曖昧になる意識の中で','n',{speed:90}); await wait(2600); clear(); await wait(1400);
+
+  // ① 気づかい
+  await type('お姉ちゃんも…痛いよね？','r',{speed:95}); await wait(900);
+  line(colored('ね？','r')); await wait(2000); clear(); await wait(500);
+
+  // ② 反復：勝手に進み、色が混ざり、速くなる
+  rate(.92);
+  for(const [s,m,t] of [['痛いよね？','r',700],['痛いよね？','b',620],['痛いよね？','r',520]]){ line(colored(s,m),'fast'); breath(); await wait(t); }
+  clear(); rate(.85);
+  for(const [s,m,t] of [['痛いよね？','b',420],['痛い？','r',380],['ね？','m',700]]){ line(colored(s,m),'fast'); breath(); await wait(t); }
+  clear();
+  const it=line('','fast'); 
+  for(let i=0;i<7;i++){ it.insertAdjacentHTML('beforeend',colored('イタイ','mr')); breath(); await wait(260-i*22); }
+  await wait(900); clear(); rate(.78); vol(.45,2);
+  await wait(1600);
+
+  // ③ ひらがな
+  await type('いたい？','n',{speed:140}); await wait(1500);
+  await type('いたい？','n',{speed:140}); await wait(1300);
+  line(colored('ね？','w')); await wait(2400); clear();
+
+  // ④ 笑い：無音の中で画面を埋め尽くし、突然止まる
+  vol(0,.05); $('bg').classList.add('gone');
+  await wait(900);
+  const fl=document.createElement('div'); fl.className='flood'; document.getElementById('app').appendChild(fl);
+  let n=0; const total=760;
+  while(n<total){ const k=Math.min(6,total-n); fl.insertAdjacentHTML('beforeend',colored('あ'+'は'.repeat(k-1),'mr')); n+=k; if(n%36===0) breath(); await wait(Math.max(8,60-n/8)); }
+  await wait(300); fl.remove();
+  await wait(2200);
+  await type('ねえ？','r',{speed:160}); await wait(1800);
+  const fl2=document.createElement('div'); fl2.className='flood'; fl2.style.top='40%'; fl2.style.textAlign='center'; document.getElementById('app').appendChild(fl2);
+  for(let i=0;i<6;i++){ fl2.insertAdjacentHTML('beforeend',colored(i?'は':'あ','mr')); await wait(110); }
+  await wait(120); fl2.remove(); clear();
+  await wait(3000);
+
+  // ⑤ 居たい：姉の願いが、妹の色で
+  rate(.7); song.currentTime=Math.max(0,song.currentTime-4); vol(.35,3);
+  await type('居たい？','b',{speed:150}); await wait(900);
+  await type('未だ居たい？','r',{speed:150}); await wait(1200);
+  line(colored('ね？','m')); await wait(1800); clear();
+  // 漢字が一瞬だけ化ける
+  const tags=['イタイ？','イタイ？','イタイ？']; const ghost=[null,'遺体？','異体？'];
+  for(let i=0;i<3;i++){ const d=line(colored(tags[i],'mr'),'fast'); breath(); await wait(520);
+    if(ghost[i]){ d.innerHTML=colored(ghost[i],'w'); await wait(70); d.innerHTML=colored(tags[i],'mr'); } await wait(500); }
+  await wait(600); clear();
+  await type('痛い？','r',{speed:120}); await wait(700);
+  await type('居たい？','b',{speed:120}); await wait(1800); clear();
+  vol(0,1.5); await wait(1700); song.pause();
+  await wait(2500);
+
+  // ⑥ 凪
+  await type('ずーと…一緒…','w',{speed:210}); await wait(3200); clear(); await wait(2000);
+  const d=line('','');
+  d.innerHTML='<span class="w">汚れた</span><ruby class="w">私<rt>ワタシタチ</rt></ruby><span class="w">が</span>';
+  await wait(2600);
+  line('<span class="n small">（ワタシタチ…）</span>'); await wait(2600); clear();
+  await wait(4200);
+  await type('本当の私','w',{speed:260}); await wait(4200); clear();
+  await wait(3500);
+  $('bg').src=''; await type('おやすみ。','n',{speed:200});
+  await wait(2500); $('again').classList.add('on'); document.title='END';
+  $('app').addEventListener('pointerdown',()=>location.reload(),{once:true});
+}
+$('boot').addEventListener('pointerdown',ev=>{ ev.stopPropagation(); initAudio(); if(ctx&&ctx.state==='suspended') ctx.resume(); song.play().then(()=>song.pause()).catch(()=>{});
+  $('boot').classList.add('hidden'); setTimeout(()=>$('boot').remove(),1600); setTimeout(play,1200); },{once:true});
+if(new URLSearchParams(location.search).has('auto')) setTimeout(()=>$('boot').dispatchEvent(new Event('pointerdown')),100);
+})();
+</script>
+</body>
+</html>
