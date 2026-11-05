@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>DIRT AND SMOKE — PV</title>
+<style>
+@font-face{font-family:"DSSerif";src:url(font/NotoSerifJP-400.woff2) format("woff2");font-display:block}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;overflow:hidden}
+body{font-family:"DSSerif",serif;color:#d8d1c5;-webkit-user-select:none;user-select:none}
+#c{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,177.78vh);height:min(56.25vw,100vh);background:#000}
+#boot{position:fixed;inset:0;z-index:5;background:#000;display:flex;align-items:center;justify-content:center;text-align:center;transition:opacity 1.5s}
+#boot h1{font-weight:400;font-size:20px;letter-spacing:.3em;color:#cfc8bc;margin-bottom:24px}
+#boot p{font-size:13px;color:#8b858e;line-height:2.4;letter-spacing:.12em}
+#boot .tap{margin-top:30px;font-size:12px;color:#5c5761;animation:bl 2s infinite}
+@keyframes bl{50%{opacity:.25}}
+.hidden{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="boot"><div><h1>DIRT AND SMOKE</h1><p>約3分の映像です。音が出ます。<br>スマホは横向き、ヘッドホン推奨。<br>部屋を暗くして、どうぞ。</p><div class="tap" id="tapmsg">読み込み中…</div></div></div>
+<script src="timeline.js"></script>
+<script>
+(()=>{
+'use strict';
+const W=1920,H=1080, cv=document.getElementById('c'), g=cv.getContext('2d');
+const TL=window.TL;
+const COL={r:'#ad5558',b:'#7899b8',w:'#d8d1c5',n:'#a39d94',p:'#a987b5',dim:'#8e887f'};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const hash=(a,b)=>{ let h=(a*374761393+b*668265263)|0; h=(h^(h>>>13))*1274126177|0; return ((h^(h>>>16))>>>0)/4294967296; };
+
+/* ---------- 素材 ---------- */
+const IMG={};
+const names=new Set([...TL.BG.map(b=>b.img),...TL.CUT.map(c=>c.img)].filter(n=>n!=='none'));
+function loadAll(){
+  const ps=[...names].map(n=>new Promise(res=>{ const im=new Image(); im.onload=()=>{IMG[n]=im;res();}; im.onerror=()=>res(); im.src='../game/img/'+n+'.jpg'; }));
+  ps.push(document.fonts.load('48px DSSerif','灰と煙の中で私'));
+  return Promise.all(ps).then(()=>document.fonts.ready);
+}
+
+/* ---------- 背景 ---------- */
+const FILT={'':'none',cold:'saturate(.22) brightness(.82) contrast(1.06)',dark:'brightness(.38) saturate(.6)',night:'brightness(.55) saturate(.7)'};
+function drawImg(name,filt,scale,alpha){
+  if(alpha<=0||name==='none') return; const im=IMG[name]; if(!im) return;
+  const r=Math.max(W/im.width,H/im.height)*scale, w=im.width*r, h=im.height*r;
+  g.save(); g.globalAlpha=alpha; g.filter=FILT[filt]||'none'; g.drawImage(im,(W-w)/2,(H-h)/2,w,h); g.restore();
+}
+function bgAt(t){
+  let i=-1; for(let k=0;k<TL.BG.length;k++){ if(TL.BG[k].t<=t) i=k; else break; }
+  if(i<0) return;
+  const cur=TL.BG[i], prev=TL.BG[i-1];
+  const dt=t-cur.t, fade=cur.snap?.35:cur.fade, a=clamp(dt/fade);
+  const kb=e=>e.kb?1+0.08*clamp((t-e.t)/14):1;
+  if(prev&&a<1) drawImg(prev.img,prev.filt,kb(prev),1);
+  if(prev&&a<1&&cur.img==='none'){ g.fillStyle='rgba(0,0,0,'+a+')'; g.fillRect(0,0,W,H); return; }
+  drawImg(cur.img,cur.filt,kb(cur),cur.img==='none'?0:a);
+}
+function vignette(){
+  const v=g.createRadialGradient(W/2,H/2,H*.35,W/2,H/2,H*.95); v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(0,0,0,.72)');
+  g.fillStyle=v; g.fillRect(0,0,W,H);
+  const lb=g.createLinearGradient(0,H*.55,0,H); lb.addColorStop(0,'rgba(0,0,0,0)'); lb.addColorStop(1,'rgba(0,0,0,.78)');   // 下の文字を読みやすく
+  g.fillStyle=lb; g.fillRect(0,H*.55,W,H*.45);
+}
+
+/* ---------- 灰 ---------- */
+const FL=[...Array(110)].map((_,i)=>({x:hash(i,1),y:hash(i,2),r:1.2+hash(i,3)*3.2,v:.012+hash(i,4)*.03,a:.12+hash(i,5)*.34,ph:hash(i,6)*6.28}));
+function ash(t){
+  let on=0; for(const [a,b] of TL.ASH){ on=Math.max(on,clamp((t-a)/2)*clamp((b-t)/1.5)); }
+  if(on<=0) return;
+  g.fillStyle='#b9b3ab';
+  for(const f of FL){ const y=((f.y+f.v*t)%1)*H*1.04-H*.02, x=(f.x+Math.sin(f.ph+t*.4)*.006)*W;
+    g.globalAlpha=f.a*on; g.beginPath(); g.arc(x,y,f.r,0,6.283); g.fill(); }
+  g.globalAlpha=1;
+}
+
+/* ---------- 文字 ---------- */
+// 文字列を「1文字ずつ・色つき」に分ける。私《青》で色、《r:親:ルビ》でルビ
+function toks(s,mode,seed){
+  const out=[]; let i=0, n=0; const re=/私《(青|赤|白|紫)》|《r:(.+?):(.+?)》/g; let m;
+  const colorOf=k=>{ if(mode==='m') return k%2?'b':'r'; if(mode==='mr') return hash(seed,k)<.5?'r':'b'; return mode; };
+  while((m=re.exec(s))){
+    for(const ch of s.slice(i,m.index)) out.push({ch,c:colorOf(n++)});
+    if(m[1]) out.push({ch:'私',c:{青:'b',赤:'r',白:'w',紫:'p'}[m[1]],big:m[1]==='紫'}); else out.push({ch:m[2],c:colorOf(n++),ruby:m[3]});
+    n++; i=re.lastIndex;
+  }
+  for(const ch of s.slice(i)) out.push({ch,c:colorOf(n++)});
+  return out;
+}
+function drawText(t){
+  for(const ev of TL.TXT){
+    if(t<ev.t0||t>ev.t1) continue;
+    const grpA=ev.out>0?clamp((ev.t1-t)/ev.out):1;
+    const base=(ev.pos==='credit'?40:46)*ev.size, lh=base*2.05;
+    const lines=ev.lines.filter(l=>t>=ev.t0+l.at);
+    const total=ev.lines.length*lh;
+    let y0= ev.pos==='low'? H*.80-(total-lh)/2 : ev.pos==='credit'? H*.70-(total-lh)/2 : H/2-(total-lh)/2;
+    { // 文字の後ろだけ、ぼんやり暗く
+      const cy=y0+(total-lh)/2, rg=g.createRadialGradient(W/2,cy,10,W/2,cy,W*.32);
+      rg.addColorStop(0,`rgba(0,0,0,${.5*grpA})`); rg.addColorStop(1,'rgba(0,0,0,0)');
+      g.save(); g.translate(0,cy); g.scale(1,.35); g.translate(0,-cy); g.fillStyle=rg; g.fillRect(0,cy-W*.32,W,W*.64); g.restore(); }
+    ev.lines.forEach((l,li)=>{
+      const ls=ev.t0+l.at; if(t<ls) return;
+      let src=l.s, mode=l.mode;
+      if(l.ghost) for(const gh of l.ghost) if(t>=gh.t&&t<gh.t1){ src=gh.s; mode=gh.mode; }
+      const size=base*(l.small?.62:1);
+      const tk=toks(src,mode,l.seed);
+      g.font=`${size}px DSSerif`;
+      const sp=size*.06, widths=tk.map(k=>(k.big?g.measureText(k.ch).width*1.3:g.measureText(k.ch).width)+sp);
+      const tw=widths.reduce((a,b)=>a+b,0); let x=(W-tw)/2; const y=y0+li*lh;
+      tk.forEach((k,ci)=>{
+        let ca;
+        if(l.reveal){ const grp=Math.floor(ci/3); ca=t>=ls+(l.reveal[grp]??1e9)?1:0; }
+        else if(l.fast) ca=clamp((t-ls)/.05);
+        else { const cs=ls+ci*l.sp; ca=clamp((t-cs)/.3); }
+        if(ca>0){
+          g.globalAlpha=ca*grpA; g.fillStyle=COL[k.c]||COL.n;
+          g.font=`${k.big?size*1.3:size}px DSSerif`; g.textBaseline='middle';
+          g.fillText(k.ch,x,y);
+          if(k.ruby){ g.font=`${size*.5}px DSSerif`; g.fillStyle=COL.dim; const rw=g.measureText(k.ruby).width; g.fillText(k.ruby,x+widths[ci]/2-sp/2-rw/2,y-size*.92); }
+        }
+        x+=widths[ci];
+      });
+      g.globalAlpha=1;
+    });
+  }
+}
+/* 笑いが画面を埋める */
+function drawFlood(t){
+  for(const f of TL.FLOOD){
+    if(t<f.t0||t>f.t1) continue;
+    const p=clamp((t-f.t0)/(f.t1-f.t0)), cnt=Math.floor(f.n*Math.pow(p,1.5))+1;
+    const size=f.center?60:54; g.font=`${size}px DSSerif`; g.textBaseline='top';
+    const cell=size*1.02, cols=f.center?f.n:Math.floor((W-120)/cell);
+    const x0=f.center?(W-f.n*cell)/2:60, y0=f.center?H/2-size/2:40;
+    for(let i=0;i<Math.min(cnt,f.n);i++){
+      const ch=(i%6===0)?'あ':'は'; g.fillStyle=hash(91,i)<.5?COL.r:COL.b; g.globalAlpha=.92;
+      g.fillText(ch,x0+(i%cols)*cell,y0+Math.floor(i/cols)*size*1.3);
+    }
+    g.globalAlpha=1;
+  }
+}
+function drawCut(t){ for(const c of TL.CUT) if(t>=c.t&&t<c.t+c.d){ drawImg(c.img,'',1.04,1); } }
+
+function draw(t){
+  g.fillStyle='#000'; g.fillRect(0,0,W,H);
+  bgAt(t); drawCut(t); vignette(); ash(t); drawText(t); drawFlood(t);
+}
+window.__draw=draw;
+
+/* ---------- 再生 ---------- */
+const Q=new URLSearchParams(location.search);
+const ready=loadAll();
+window.__ready=ready;
+if(Q.has('render')){ document.getElementById('boot').remove(); return; }   // 書き出し用：外から __draw(t) を呼ぶ
+const audio=new Audio('mix.m4a'); audio.preload='auto';
+ready.then(()=>{ document.getElementById('tapmsg').textContent='画面をタップして再生'; draw(0); });
+let started=false, ended=false;
+function loop(){ const t=audio.currentTime; draw(t); if(audio.ended||t>=TL.END){ ended=true; return; } requestAnimationFrame(loop); }
+document.addEventListener('pointerdown',async()=>{
+  if(ended){ location.reload(); return; }
+  if(started) return; await ready; started=true;
+  const b=document.getElementById('boot'); b.classList.add('hidden'); setTimeout(()=>b.remove(),1600);
+  try{ await document.documentElement.requestFullscreen?.(); screen.orientation?.lock?.('landscape').catch(()=>{}); }catch(e){}
+  setTimeout(()=>{ audio.play().catch(()=>{}); loop(); },900);
+});
+})();
+</script>
+</body>
+</html>
