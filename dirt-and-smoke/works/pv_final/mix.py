@@ -6,7 +6,7 @@
 import subprocess, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-AUD = os.path.join(HERE, '..', 'audio')
+AUD = os.path.join(HERE, '..', '..', 'assets', 'audio')
 LULLABY = os.path.join(AUD, 'dirt_and_smoke_unplugged.mp3')
 THEME = os.path.join(AUD, 'dirt_and_smoke_guitar_ballad.mp3')
 OUT = os.path.join(HERE, 'mix.m4a')

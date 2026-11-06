@@ -37,7 +37,7 @@ ruby rt{font-size:.45em;letter-spacing:.25em;color:#8e887f}
 </head>
 <body>
 <div id="app">
-  <img id="bg" src="../game/img/gloves.jpg" alt="">
+  <img id="bg" src="../../assets/img/gloves.jpg" alt="">
   <div id="vig"></div>
   <div id="text"></div>
   <div id="again">タップでもう一度</div>
@@ -71,7 +71,7 @@ async function type(str,mode,{speed=70,cls=''}={}){
 }
 
 /* 子守唄：速さと音程を落としていく */
-const song=new Audio('../audio/dirt_and_smoke_unplugged.mp3'); song.preload='auto';
+const song=new Audio('../../assets/audio/dirt_and_smoke_unplugged.mp3'); song.preload='auto';
 try{ song.preservesPitch=false; song.mozPreservesPitch=false; song.webkitPreservesPitch=false; }catch(e){}
 let ctx=null, gain=null;
 function initAudio(){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); const s=ctx.createMediaElementSource(song); gain=ctx.createGain(); gain.gain.value=0; s.connect(gain).connect(ctx.destination); }catch(e){ ctx=null; } }

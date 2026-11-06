@@ -94,7 +94,7 @@ body{font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;color:
   <div id="lyric"></div>
   <div id="credits"></div>
   <div id="flash"></div>
-  <div id="titleCard"><img src="img/hall.jpg" alt=""><div>
+  <div id="titleCard"><img src="../../../assets/img/hall.jpg" alt=""><div>
     <h1>DIRT AND SMOKE</h1><h2>フランケン少女計画</h2><div class="tap">タップして はじめる</div></div></div>
   <div id="boot"><div>
     <p>音が出ます。<br>ヘッドホンを推奨します。<br>部屋を暗くして、どうぞ。</p>
@@ -175,7 +175,7 @@ function setImg(name,filt){
   const back=front===imA?imB:imA;
   const fast=MIRROR.test(name)&&MIRROR.test(curImg);
   back.style.transition=fast?'opacity .35s, filter .35s':''; front.style.transition=fast?'opacity .35s, filter .35s':'';
-  back.src='img/'+name+'.jpg'; back.className='on '+cls; front.classList.remove('on');
+  back.src='../../../assets/img/'+name+'.jpg'; back.className='on '+cls; front.classList.remove('on');
   front=back; curImg=name;
 }
 function flash(color){ const f=$('flash'); f.style.background=color==='red'?'#7d1820':'#e8e2d8'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
@@ -196,12 +196,12 @@ function setAsh(on){ ashOn=on; ash.style.opacity=on?1:0; }
 
 /* ---------- 音 ---------- */
 let ctx=null, noiseBuf=null; const tracks={}; let curBgm=null;
-const TRACK={lullaby:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.8,loopEnd:58},
-             liar:{src:'../audio/liar_remastered.mp3',vol:.55,loop:true},
-             obscure:{src:'../audio/obscure.mp3',vol:.8,loop:true},
-             obscure_far:{src:'../audio/obscure.mp3',vol:.22,loop:true,far:true},
-             title:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.55,loopEnd:40},
-             theme:{src:'../audio/dirt_and_smoke_guitar_ballad.mp3',vol:.9}};
+const TRACK={lullaby:{src:'../../../assets/audio/dirt_and_smoke_unplugged.mp3',vol:.8,loopEnd:58},
+             liar:{src:'../../../assets/audio/liar_remastered.mp3',vol:.55,loop:true},
+             obscure:{src:'../../../assets/audio/obscure.mp3',vol:.8,loop:true},
+             obscure_far:{src:'../../../assets/audio/obscure.mp3',vol:.22,loop:true,far:true},
+             title:{src:'../../../assets/audio/dirt_and_smoke_unplugged.mp3',vol:.55,loopEnd:40},
+             theme:{src:'../../../assets/audio/dirt_and_smoke_guitar_ballad.mp3',vol:.9}};
 function initAudio(){
   if(ctx) return; try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ctx=null; return; }
   noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;

@@ -36,7 +36,7 @@ const hash=(a,b)=>{ let h=(a*374761393+b*668265263)|0; h=(h^(h>>>13))*1274126177
 const IMG={};
 const names=new Set([...TL.BG.map(b=>b.img),...TL.CUT.map(c=>c.img)].filter(n=>n!=='none'));
 function loadAll(){
-  const ps=[...names].map(n=>new Promise(res=>{ const im=new Image(); im.onload=()=>{IMG[n]=im;res();}; im.onerror=()=>res(); im.src='../game/img/'+n+'.jpg'; }));
+  const ps=[...names].map(n=>new Promise(res=>{ const im=new Image(); im.onload=()=>{IMG[n]=im;res();}; im.onerror=()=>res(); im.src='../../assets/img/'+n+'.jpg'; }));
   ps.push(document.fonts.load('48px DSSerif','灰と煙の中で私'));
   return Promise.all(ps).then(()=>document.fonts.ready);
 }

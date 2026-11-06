@@ -171,7 +171,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms/SPEED));
 /* ---------- 絵 ---------- */
 const imA=$('imA'), imB=$('imB'); let front=imA, cur='none';
 const vidEl=$('vid');
-function vid(n){ vidEl.src='../game/img/'+n+'.mp4'; vidEl.currentTime=0; vidEl.classList.add('on'); vidEl.play().catch(()=>{}); }
+function vid(n){ vidEl.src='../../../assets/img/'+n+'.mp4'; vidEl.currentTime=0; vidEl.classList.add('on'); vidEl.play().catch(()=>{}); }
 function setImg(spec){
   if(vidEl.classList.contains('on')){ vidEl.classList.remove('on'); setTimeout(()=>vidEl.pause(),900); }
   const [name,f]=spec.split(' ');
@@ -179,14 +179,14 @@ function setImg(spec){
   if(name==='none'){ imA.classList.remove('on'); imB.classList.remove('on'); cur='none'; return; }
   const snap=/^mirror/.test(name)&&/^mirror/.test(cur);
   const back=front===imA?imB:imA;
-  back.src='../game/img/'+name+'.jpg'; back.className=(snap?'snap ':'')+'on'+(f&&f!=='red'?' f-'+f:'');
+  back.src='../../../assets/img/'+name+'.jpg'; back.className=(snap?'snap ':'')+'on'+(f&&f!=='red'?' f-'+f:'');
   front.classList.remove('on'); if(snap) front.classList.add('snap');
   front=back; cur=name;
 }
 const cutEl=$('cut');
 function cut(n){ if(n==='off'){ cutEl.classList.remove('show'); return; }
   if(n==='black'){ cutEl.src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E"; cutEl.classList.add('show'); return; }
-  cutEl.src='../game/img/'+n+'.jpg'; cutEl.classList.add('show'); }
+  cutEl.src='../../../assets/img/'+n+'.jpg'; cutEl.classList.add('show'); }
 function flash(c){ const f=$('flash'); f.style.background=c==='red'?'#7d1820':'#e8e2d8'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
 async function bulge(){ $('band').classList.add('bulge'); await wait(450); $('band').classList.remove('bulge'); }
 
@@ -202,12 +202,12 @@ addEventListener('resize',sizeAsh); sizeAsh();
 
 /* ---------- 音 ---------- */
 let ctx=null, noiseBuf=null; const tracks={}; let curBgm=null;
-const TRACK={lullaby:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.8,loopEnd:58},
-             liar:{src:'../audio/liar_remastered.mp3',vol:.55,loop:true},
-             obscure:{src:'../audio/obscure.mp3',vol:.8,loop:true},
-             obscure_far:{src:'../audio/obscure.mp3',vol:.22,loop:true,far:true},
-             title:{src:'../audio/dirt_and_smoke_unplugged.mp3',vol:.55,loopEnd:40},
-             theme:{src:'../audio/dirt_and_smoke_guitar_ballad.mp3',vol:.95}};
+const TRACK={lullaby:{src:'../../../assets/audio/dirt_and_smoke_unplugged.mp3',vol:.8,loopEnd:58},
+             liar:{src:'../../../assets/audio/liar_remastered.mp3',vol:.55,loop:true},
+             obscure:{src:'../../../assets/audio/obscure.mp3',vol:.8,loop:true},
+             obscure_far:{src:'../../../assets/audio/obscure.mp3',vol:.22,loop:true,far:true},
+             title:{src:'../../../assets/audio/dirt_and_smoke_unplugged.mp3',vol:.55,loopEnd:40},
+             theme:{src:'../../../assets/audio/dirt_and_smoke_guitar_ballad.mp3',vol:.95}};
 function initAudio(){
   if(ctx) return; try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ctx=null; return; }
   noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
@@ -321,7 +321,7 @@ $('boot').addEventListener('pointerdown',ev=>{
   const b=$('boot'); b.classList.add('hidden'); setTimeout(()=>b.remove(),1700);
   // 一瞬だけ出す絵が間に合うよう、使う絵を先に全部読み込んでおく
   const names=new Set(CUES.filter(c=>c[1]==='img'||c[1]==='cut').map(c=>c[2].split(' ')[0]).filter(n=>n!=='none'&&n!=='off'&&n!=='black'));
-  window.__pre=[...names].map(n=>{ const i=new Image(); i.src='../game/img/'+n+'.jpg'; return i; });
+  window.__pre=[...names].map(n=>{ const i=new Image(); i.src='../../../assets/img/'+n+'.jpg'; return i; });
   setTimeout(()=>{ t0=performance.now(); loop(); },1200);
 },{once:true});
 $('app').addEventListener('pointerdown',()=>{ if(ended) location.reload(); });
