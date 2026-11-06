@@ -7,6 +7,7 @@
 | 焼肉ロス管理アプリ | `index.html` |
 | ハムスターゲーム | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
+| DIRT AND SMOKE（PV・ビジュアルノベル制作中） | `dirt-and-smoke/`（入口は `dirt-and-smoke/README.md`） |
 
 ## 配信方法
 
