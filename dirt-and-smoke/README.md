@@ -1,6 +1,6 @@
 # DIRT AND SMOKE — 現在地
 
-> このフォルダの入口。迷ったらまずここ。（最終更新：2026-11-06）
+> このフォルダの入口。迷ったらまずここ。（最終更新：2026-11-07）
 > 総監督・音楽：shouyama ／ ビジュアル：ChatGPT ／ シナリオ：Claude
 
 ## ひとことで
@@ -12,13 +12,13 @@
 |---|---|
 | **PV（姉妹版・約3分）** | ✅ **完成**　`works/pv_final/DIRT_AND_SMOKE_PV.mp4` |
 | イタイ演出デモ | ✅ 完成（60分版・第五章の原型）　`works/demo_itai/` |
-| **60分版ビジュアルノベル** | ⏸ 章別プロット v0.1。**総監督の判断待ち（7項目）** → `docs/04_未決事項.md` |
+| **60分版ビジュアルノベル** | ✍ 制作中。未決7項目は推奨どおり確定（11/07）。**第一章の脚本とエンジンができた** → `vn60/` |
 | 博士版（最初のVN試作・6分半PV） | 📦 保管　`archive/博士版/` |
 
 ## 次にやること
-1. 総監督：`docs/04_未決事項.md` の A1〜A7 に答える（「推奨でOK」でも可）
-2. Claude：60分版の脚本を第一章から書く。並行して横画面のエンジンを用意
-3. ChatGPT：`docs/05_ChatGPT共有用_現状まとめ.md` を共有。絵の発注はプロット確定後
+1. 総監督：第一章を遊んで感想を（`vn60/index.html`）
+2. Claude：第二章「優しい記憶」の脚本
+3. ChatGPT：`docs/05_ChatGPT共有用_現状まとめ.md` を共有。第一章で足りない絵（ヴェールの女など）をリストにして発注
 
 ## フォルダの中身
 ```
@@ -34,12 +34,14 @@ dirt-and-smoke/
 │   └─ 60分版/
 │       ├─ 章別プロット_v0.1.md
 │       └─ 第五章_イタイ_演出案.md
+├─ vn60/                    ← 60分版ビジュアルノベル（制作中。README.md に書き方）
 ├─ works/                   ← 出来たもの
 │   ├─ pv_final/               完成PV（MP4・Web版・作り直し用の部品）
 │   └─ demo_itai/              イタイ演出デモ（Web）
 ├─ assets/                  ← 素材（README.md に一覧）
 │   ├─ img/                    絵（ChatGPT制作）
-│   └─ audio/                  音楽（総監督制作）4曲
+│   ├─ audio/                  音楽（総監督制作）4曲
+│   └─ font/                   明朝体（Noto Serif JP）
 └─ archive/博士版/          ← 保管（消していない）
     ├─ docs/                   構成案・脚本・依頼文など 01〜10
     ├─ game_v1/                最初のビジュアルノベル試作（スマホ縦）
@@ -50,6 +52,7 @@ dirt-and-smoke/
 ## 見る・遊ぶ
 ブラウザで開けるもの（GitHub のブランチから直接配信）。ブランチ名を差し替えれば、ほかのブランチからも開ける。
 - 完成PV（Web版）：`https://raw.githack.com/yama5150/shouhei/claude/dirt-smoke-visual-novel-x984pk/dirt-and-smoke/works/pv_final/index.html`
+- 60分版：`https://raw.githack.com/yama5150/shouhei/claude/dirt-smoke-visual-novel-x984pk/dirt-and-smoke/vn60/index.html`
 - イタイデモ：`https://raw.githack.com/yama5150/shouhei/claude/dirt-smoke-visual-novel-x984pk/dirt-and-smoke/works/demo_itai/index.html`
 - 完成PV（MP4をダウンロード）：`https://github.com/yama5150/shouhei/raw/claude/dirt-smoke-visual-novel-x984pk/dirt-and-smoke/works/pv_final/DIRT_AND_SMOKE_PV.mp4`
 
