@@ -98,6 +98,7 @@ y='(in_h-out_h)*0.08',scale=1080:1920,scale=200:-1" -frames:v 1 試し.jpg
 | `audio_tail` | 3.5 | 音のフェードアウトの長さ |
 | `audio_curve` | `tri` | 短い動画は直線、30秒級は `qsin` |
 | `basename` | `name` | 出力ファイル名の頭 |
+| `hdr` | `auto` | iPhone の HDR 動画（HLG）を SDR に直す。`"off"` で直さない。理由は gotchas.md |
 
 ## サムネ（cover）
 

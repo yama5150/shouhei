@@ -51,6 +51,8 @@ DEFAULTS = {
     "caption_shadow": [0, 3],
     "caption_shadow_color": "black@0.5",
     "font": None,                  # "maru" / "gothic" / フォントのパス
+    # iPhone の HDR 動画（HLG）を SDR に直す。"off" で直さない
+    "hdr": "auto",
     "ink": "white",
     "accent": "0xF0C071",
     # 前後
@@ -125,6 +127,26 @@ class Reel:
         if not p.exists():
             die(f"素材が見つかりません: {p}")
         return p
+
+    # HLG / PQ → BT.709。基準白は BT.2408 の 203nit
+    TONEMAP = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,"
+               "tonemap=tonemap=hable:desat=0,"
+               "zscale=t=bt709:m=bt709:r=tv,format=yuv420p,")
+
+    def tonemap(self, path):
+        """iPhone の HDR 動画なら SDR に直すフィルタを返す。
+
+        HLG のまま 8bit に落とすと白っぽく眠くなり、サーモンが黄色く、
+        マグロが薄桃色に出る。料理の色が変わるので必ず直す
+        （references/gotchas.md）。
+        """
+        if self.c["hdr"] == "off":
+            return ""
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=color_transfer", "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True)
+        return self.TONEMAP if r.stdout.strip() in ("arib-std-b67", "smpte2084") else ""
 
     def grade(self, lift=1.0):
         """色調整。lift は暗いカットを持ち上げるガンマ。
@@ -246,7 +268,11 @@ class Reel:
                 inputs += ["-loop", "1", "-framerate", str(self.fps),
                            "-t", f"{dur}", "-i", str(path)]
                 if seg.get("fit") == "blur":
-                    shaper = self.blur_fit(f"p{i}")
+                    # 静止画の overlay は末尾が 1 フレーム欠ける。重なると
+                    # 映像だけ短くなるので、最後の絵で埋めてから尺で切る
+                    shaper = (self.blur_fit(f"p{i}") +
+                              f",tpad=stop_mode=clone:stop_duration=0.2,"
+                              f"trim=duration={dur},setpts=PTS-STARTPTS")
                 else:
                     shaper = self.kenburns(seg.get("zoom", [1.0, 1.08]), dur, focus)
                 chains.append(
@@ -268,7 +294,7 @@ class Reel:
                         f"{self.grade(lift)},setsar=1,format=yuv420p")
                     cap = self.captions(seg, i)
                 chains.append(
-                    f"[{i}:v]fps={self.fps},{look},"
+                    f"[{i}:v]{self.tonemap(path)}fps={self.fps},{look},"
                     f"trim=duration={dur},setpts=PTS-STARTPTS{cap}[v{i}]")
             labels.append(f"[v{i}]")
 
@@ -292,12 +318,23 @@ class Reel:
 
     # ---------------------------------------------------------- 音声
 
-    def has_audio(self, path):
+    def audio_index(self, path):
+        """デコードできる最初の音声ストリームの番号。無ければ None。
+
+        iPhone の空間オーディオ付き動画は、先頭の音声が ffmpeg 6.x では
+        読めないコーデック（apac）のことがある。a:0 決め打ちだと落ちる。
+        """
         r = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "a:0",
-             "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(path)],
+            ["ffprobe", "-v", "error", "-select_streams", "a",
+             "-show_entries", "stream=codec_name", "-of", "csv=p=0", str(path)],
             capture_output=True, text=True)
-        return "audio" in r.stdout
+        for n, codec in enumerate(r.stdout.split()):
+            if codec not in ("unknown", "apac", "none"):
+                return n
+        return None
+
+    def has_audio(self, path):
+        return self.audio_index(path) is not None
 
     def measure(self, inputs, chains, label, what):
         """グラフ途中のラベルの統合ラウドネスを測るだけ。
@@ -335,7 +372,8 @@ class Reel:
                     and path is not None and self.has_audio(path)):
                 inputs += ["-ss", f"{seg.get('start', 0)}", "-t", f"{dur}", "-i", str(path)]
                 chains.append(
-                    f"[{i}:a:0]aformat=sample_fmts=fltp:sample_rates=48000:"
+                    f"[{i}:a:{self.audio_index(path)}]"
+                    f"aformat=sample_fmts=fltp:sample_rates=48000:"
                     f"channel_layouts=stereo,atrim=duration={dur},asetpts=PTS-STARTPTS,"
                     f"afade=t=in:st=0:d=0.08,"
                     f"afade=t=out:st={dur - 0.08:.3f}:d=0.08[a{i}]")

@@ -3,6 +3,7 @@
   "basename": "halloween_reel_fast",
   "src": "/root/.claude/uploads/ebdc904f-5340-54cd-b0d4-2ab1002efa6a",
   "out": "../out",
+  "hdr": "off",
   "sources": {
     "jump": "85b27fc0-_users_50725571-75b6-4773-9a3d-c3ac9768d6f1_generated_c594a094-b375-47f9-86fe-16d5215b0a7e_generated_video.mp4",
     "bibim": "71769e20-IMG_1922.mov",

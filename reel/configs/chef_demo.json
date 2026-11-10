@@ -1,0 +1,25 @@
+{
+  "name": "chef_demo",
+  "basename": "chef_demo",
+  "src": "/tmp/claude-0/-home-user-shouhei/ebdc904f-5340-54cd-b0d4-2ab1002efa6a/scratchpad/nenmatsu_src",
+  "out": "../out",
+  "audio_tail": 3.0,
+  "sources": {
+    "p1":   "popc_yamaguchi.png",
+    "p2":   "popc_kagami.png",
+    "p3":   "popc_maeda.png",
+    "card": "still_serve.png",
+    "logo": "logo_sting.mp4"
+  },
+  "music": { "file": "bgm2.mp3", "start": 100, "use_clip_audio": false },
+  "segments": [
+    { "src": "p1", "kind": "photo", "dur": 2.30, "fit": "blur" },
+    { "src": "p2", "kind": "photo", "dur": 2.30, "fit": "blur" },
+    { "src": "p3", "kind": "photo", "dur": 2.30, "fit": "blur" },
+    { "src": "card", "kind": "card", "dur": 2.60, "lift": 1.20,
+      "lines": [["料理人の名前で出す、一皿。", 48, "ink"],
+                ["シェフズシグネチャー", 78, "accent"]] },
+    { "src": "logo", "kind": "video", "start": 0, "dur": 2.00, "plain": true },
+    { "kind": "black", "dur": 0.50 }
+  ]
+}

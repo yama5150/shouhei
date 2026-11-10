@@ -155,3 +155,49 @@ drawtext=fontfile=/usr/share/fonts/truetype/fonts-japanese-gothic.ttf:\
 text='%{pts\:hms}':fontsize=22:fontcolor=yellow:box=1:boxcolor=black:x=3:y=3,\
 tile=5x4:padding=3:color=white" -frames:v 1 grid.jpg
 ```
+
+## iPhone の HDR 動画は、そのまま使うと料理の色が抜ける
+
+**症状**: 撮ったままの `.mov` を入れると、白っぽく眠い絵になる。サーモンが
+黄色く、マグロが薄桃色に出る。
+
+**原因**: iPhone の動画は HLG（`color_transfer=arib-std-b67`、10bit、BT.2020）。
+これを何もせず 8bit の BT.709 として書き出すと、明るさも色域も解釈がずれる。
+実測で彩度の平均が 20 → 29 と、3 割ほど落ちていた。
+
+**対処**: ビルダーが自動で直す（`hdr: "auto"` が既定）。中身はこれ。
+
+```
+zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,
+tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p
+```
+
+`npl=203` は HLG の基準白（BT.2408）。100 にすると明るく派手に転び、あとの
+色調整（彩度 1.16）と重なって木目がオレンジに寄りすぎた。
+
+見分け方:
+
+```bash
+ffprobe -v error -select_streams v:0 -show_entries stream=color_transfer -of csv=p=0 素材.mov
+```
+
+`arib-std-b67` か `smpte2084` なら HDR。アプリで書き出した動画（h264・`bt709`）は
+SDR なので何も起きない。
+
+ハロウィンと焼肉の回はこれを知らずに作ったので、当時のままの絵を残すために
+`halloween.json` / `halloween_fast.json` には `"hdr": "off"` を入れてある。
+
+## iPhone の動画は、先頭の音声が読めないことがある
+
+空間オーディオ付きで撮った `.mov` は音声が 2 本入っていて、片方は ffmpeg 6.x
+では読めないコーデック（apac、`codec_name=unknown`）。**どちらが先頭に来るかは
+ファイルによって違う**（IMG_2121 は aac が先、IMG_2122 は読めないほうが先）。
+`a:0` 決め打ちだと落ちるので、ビルダーは読める最初の音声を探して使う。
+
+## 静止画の `fit: "blur"` は 1 フレーム欠ける
+
+静止画を overlay で重ねると、カットの末尾が 1 フレーム短くなる。1 枚なら
+誤差だが、3 枚続けたら映像だけ 0.1 秒短くなった（映像 11.9 秒・音声 12.0 秒）。
+ビルダー側で最後の絵を足してから尺で切るようにしてある。**映像と音声の
+長さが合わないときは loudnorm だけでなく、ここも疑う。**
+
