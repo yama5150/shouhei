@@ -28,6 +28,14 @@ https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html
 | **Netlifyへの移行** | `netlify.toml` 設置済み・未接続。githackが重くなったら移る(第26節) |
 | **音源の録り直し** | 保留。`bara` と `gag` の2曲だけで改善分の100%(第21節) |
 
+### ⚠️ githack は「One more step」の告知ページを挟む(2026-11-18 確認)
+
+ブラウザで配信URLを開くと、**ゲームの前に githack の英語の告知ページ**
+(「One more step / Open the page」)が出る。押せばゲームが起動し、
+同じブラウザで2回目以降は出ない。curl では告知を通らず本体が直接返るので、
+**curl で200が返っても「人が開ける」確認にはならない。** ブラウザで開いて確かめる。
+初見の人に渡すと「怪しいページ」に見えるので、**X に出すなら Netlify への移行(第26節)を先にやる理由になる。**
+
 ### ⚠️ 作業を始める前に
 
 1. **`.claude/skills/crc-build/` を読む**(手順と、踏んだ罠16件)

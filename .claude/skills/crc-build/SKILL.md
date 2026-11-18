@@ -114,6 +114,11 @@ git rev-parse origin/<branch>:crc/index.html
 https://rawcdn.githack.com/yama5150/shouhei/<40桁のSHA>/crc/index.html
 ```
 
+**渡す前に、そのURLを実際にブラウザで開いて確かめる。** 作業環境の許可リストに
+`rawcdn.githack.com` を入れてある(2026-11-18)。Playwright に `proxy={"server":$HTTPS_PROXY}` を渡して開き、
+githack の告知ページ(「Open the page」)を押して、`meta[name=build]` が今回の版か・JSエラーが無いかを見る。
+curl は告知を通らないので、curl の200だけで「開ける」と言わない。確かめていないURLは渡さない。
+
 この作品は「更新したのに古い版が出る」を**2回**別の原因で踏んでいる
 (1回目はファイル名ベースのURL、2回目はCDNキャッシュ)。だから
 「ファイルは正しい」で終わらせず、必ず実データで確認する。
