@@ -16,7 +16,7 @@
 https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html
 ```
 
-`main` が公開版。**v79** が乗っている(v80 = 新ビジュアル2枚、v81 = 幕開けの題の修正、v82 = 第一話サルベージの絵の差し替えは作業ブランチで確認待ち)。全16話の自動通過テスト(`tools/qa.py`)を
+`main` が公開版。**v79** が乗っている(v80 = 新ビジュアル2枚、v81 = 幕開けの題の修正、v82〜v83 = 第一話の絵2枚の差し替えは作業ブランチで確認待ち)。全16話の自動通過テスト(`tools/qa.py`)を
 毎ビルド通している。友人のテストプレイ1回ぶんの指摘は反映済み(第25節)。
 
 ### いま動いている話
@@ -381,7 +381,7 @@ ASSETS からも外した。**使わない素材は入れっぱなしにしな�
 ### 縦型(9:16にそのまま使える)
 `imgCity` `imgKobo` `imgAsa` `imgDaiseido` `imgMatsuri` `imgYoin` `imgKishin` `imgAoi` `imgUshio` `imgAzure` `imgMic` `imgFull` `imgEdBg`
 立ち絵:`sprSomei` `sprEleven` `sprSakuya` `sprYukata` `sprN` `sprHmph` `sprGlitch` `sprSmile`
-背景(v80〜):`imgSalvage`(1100x1100、正方形、v82)`imgPod`(529x941、原画1672x941 からエルザ中心に切り出し)
+背景(v80〜):`imgSeal`(1024x1536、v83)`imgSalvage`(1100x1100、正方形、v82)`imgPod`(529x941、原画1672x941 からエルザ中心に切り出し)
 
 ### 透過の全身立ち絵(v80〜)
 `sprStand`(640x960 WebP・アルファ付き)。spr キーは `stand`。
@@ -633,6 +633,7 @@ python3 tools/qa.py --mem      # 1話ごとに renderer の実メモリも出す
 | v80 | **フェーズ2.5:新ビジュアル2枚**。①`imgPod`(bg `elzaPod`)── 硝子の揺り籠で眠るエルザ。第十話・核界最深部「円形のステージ」の直後に挟んだ ②`sprStand`(spr `stand`)── **初の透過・全身立ち絵**(衣装は資料03の正装)。最終話の締め「一輪の薔薇。」の直前に、背景 `asa` を暗くしてから挟んだ(`asa` 自体に大きなエルザがいて二重になるため)。台詞の追加・削除なし |
 | v81 | **話の幕開けの題がスマホ幅で左に寄り、変な所で折り返していたのを修正**(最終話「Cyber Rose Crimson」で発生、v80以前から)。`#curtainText` を中央揃え・左右余白付きにし、話数と題を2行に分けた。16話すべて390px幅で2行に収まることを確認 |
 | v82 | **第一話のサルベージ(棺の中の少女)を新しい絵 `imgSalvage`(bg `elzaSalvage`)に差し替え**。硝子の棺・拘束帯・紅い月。旧 `imgElza` は MUSIC ROOM の `bara` のジャケットでも使っているので残した。スマホでは左端のモニタ(EDEN PROJECT / SUBJECT: CRC-ELZA)は画面外に切れ、PCの横長画面でだけ見える |
+| v83 | **第一話の封印解除(`{label:"salvage"}` 直後)の背景を新しい絵 `imgSeal`(bg `elzaSeal`)に**。それまでは `sea` を暗くしたもの。鎖と薔薇に巻かれた棺。**棺に桜の紋**が入っている(ソメイ=染井吉野と重ねて読める。伏線にするなら第7節へ) |
 
 ## 17. PWA構成(v60〜)
 
