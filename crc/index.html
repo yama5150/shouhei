@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v80">
+<meta name="build" content="v81">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -518,7 +518,11 @@ body.ready #titleLoading{display:none;}
   transition:opacity 1.2s;z-index:15;}
 #curtain.on{opacity:1;pointer-events:auto;}
 #curtainText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:20px;letter-spacing:.4em;color:var(--rose);opacity:0;transition:opacity 1.5s;}
+  font-size:20px;letter-spacing:.4em;color:var(--rose);opacity:0;transition:opacity 1.5s;
+  /* v81: 長い題がスマホ幅で左に寄って折り返していた。中央揃え+左右の余白+改行を活かす。
+     letter-spacing は行末にも付くので、左に同じだけ足して中心を合わせる */
+  text-align:center;white-space:pre-line;line-height:2;padding:0 20px 0 calc(20px + .4em);
+  box-sizing:border-box;word-break:keep-all;overflow-wrap:anywhere;}
 #curtain.on #curtainText{opacity:1;}
 
 #ed{position:absolute;inset:0;z-index:28;display:none;background:#060310;overflow:hidden;}
@@ -4072,7 +4076,7 @@ function startGame(ep, fromSave, fresh){
   startAmbient();
   if(state.i===0){
     const et=EP_TITLES[state.ep]||["",""];
-    $("curtainText").textContent=et[0]+"　"+et[1];
+    $("curtainText").textContent=et[0]+"\n"+et[1];
     $("curtain").classList.add("on");
     fxAfter(2300, ()=>{ $("curtain").classList.remove("on"); run(); });
   }else{
