@@ -16,7 +16,7 @@
 https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html
 ```
 
-`main` が公開版。**v79** が乗っている。全16話の自動通過テスト(`tools/qa.py`)を
+`main` が公開版。**v79** が乗っている(v80 = 新ビジュアル2枚は作業ブランチで確認待ち)。全16話の自動通過テスト(`tools/qa.py`)を
 毎ビルド通している。友人のテストプレイ1回ぶんの指摘は反映済み(第25節)。
 
 ### いま動いている話
@@ -381,6 +381,13 @@ ASSETS からも外した。**使わない素材は入れっぱなしにしな�
 ### 縦型(9:16にそのまま使える)
 `imgCity` `imgKobo` `imgAsa` `imgDaiseido` `imgMatsuri` `imgYoin` `imgKishin` `imgAoi` `imgUshio` `imgAzure` `imgMic` `imgFull` `imgEdBg`
 立ち絵:`sprSomei` `sprEleven` `sprSakuya` `sprYukata` `sprN` `sprHmph` `sprGlitch` `sprSmile`
+背景(v80〜):`imgPod`(529x941、原画1672x941 からエルザ中心に切り出し)
+
+### 透過の全身立ち絵(v80〜)
+`sprStand`(640x960 WebP・アルファ付き)。spr キーは `stand`。
+`#sprite.cut` で表示する ── 枠もマスクの矩形も出さず、`contain` で裾まで入れる。
+原画は**透過の市松模様が画像に焼き込まれていた**ので、縁から繋がる無彩色の明部を背景として抜き、
+境界だけ明度から半透明を推定して色を戻した。同じ形式の絵が来たら同じ手順で抜ける
 
 ### 正方形
 `imgElza` `imgSoshisha` `imgYuHand` `imgClose` `imgCalm` / 顔差分 `sprFace0-2` / SD `sdTsun` `sdIkari` `sdTere` `sdAmai` `sdDere`
@@ -623,6 +630,7 @@ python3 tools/qa.py --mem      # 1話ごとに renderer の実メモリも出す
 | v77 | **友人のテストプレイを受けて3点**。①扉絵に「読み始める」ボタン ②ライナーノーツを独立画面に ③`chGrid` のid重複を直し、MUSIC ROOMボタンの幅バグを解消 |
 | v78 | **公開(X)前の備え**。①読み込み中にボタンを出さない(見えるのに押せない66秒を潰した) ②SNSカード用のタグと画像 `crc/ogp.jpg` ③軽い共有ページ `crc/share.html` |
 | v79 | **外部レビュー(GPT)の指摘6件を検証し、再現した4件を修正**。幕タイマーによる位置破壊 / BGMデコード失敗後の再試行不能 / 巻き戻し時のゲージ不一致 / 復帰時に音が戻らない。2件は不成立 |
+| v80 | **フェーズ2.5:新ビジュアル2枚**。①`imgPod`(bg `elzaPod`)── 硝子の揺り籠で眠るエルザ。第十話・核界最深部「円形のステージ」の直後に挟んだ ②`sprStand`(spr `stand`)── **初の透過・全身立ち絵**(衣装は資料03の正装)。最終話の締め「一輪の薔薇。」の直前に、背景 `asa` を暗くしてから挟んだ(`asa` 自体に大きなエルザがいて二重になるため)。台詞の追加・削除なし |
 
 ## 17. PWA構成(v60〜)
 
@@ -1075,7 +1083,7 @@ bara は11.9kHzで止まっている。元が既に劣化していた可能性�
 
 | | 今あるもの | 資料との差 |
 |---|---|---|
-| エルザ(全身) | `sprN` `sprHmph` `sprGlitch` `sprSmile` (418x843) | 4種 |
+| エルザ(全身) | `sprN` `sprHmph` `sprGlitch` `sprSmile` (418x843) + `sprStand`(透過・全身・微笑, v80) | 5種 |
 | エルザ(顔) | `sprFace0` `sprFace1` `sprFace2` (509〜620px) | 3種 |
 | ユウジ(顔アイコン) | `yuN` `yuBik` `yuKan` `yuEn` `yuAse` `yuTehe` (140x186) | **落ち込み・眠気が無い** |
 
