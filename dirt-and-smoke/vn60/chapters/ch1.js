@@ -57,20 +57,20 @@
 ほかの鏡は、みんな黒い布をかぶっている。
 一枚だけ、布がない。
 
-@img mirror1b
+@img mirrorX_base
 覗き込む。
 
 少女がいる。
 灰色の目。白い頬。首の縫い目。
 これが、この顔。
 
-@img mirror1a
+@img mirrorX_smile
 @wait 900
 鏡の中の少女が、微笑んだ。
 
 この口は、まだ笑っていない。
 
-@img mirror1b
+@img mirrorX_base
 瞬きをする。
 鏡の中の少女も、瞬きをする。
 同じ顔。同じ縫い目。

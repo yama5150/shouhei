@@ -25,6 +25,7 @@
 | mirror_moon | 鏡の中に後ろ姿と赤い月 | 博 |
 | girl_mirror | 鏡に手を伸ばす少女 | 博 |
 | empty_mirror | **誰も映っていない鏡**（見ている人の姿もない） | PV・博 |
+| mirrorX_base / smile / reach / breath / veil / candle / empty / closer | **鏡の一枚の差分セット**（11/21・1280×720）。鏡の外は1画素も変わらないので瞬時に切り替えられる。base＝無表情／smile＝わずかに微笑む／reach＝内側から鏡に触れる指／breath＝目を閉じ鏡が息で曇る／veil＝背後にヴェールの女（ごく薄い）／candle＝鏡の中の蝋燭だけ消える（ごく小さい）／empty＝誰もいない／closer＝鏡面ぎりぎりまで近づく。stitch（縫い目が一本多い）は差分が出ていなかったため未収録 | 60分版 第一章（base・smile） |
 | corridor_reflect | 布を外した鏡の廊下。どの鏡にも少女 | 博 |
 
 ### 少女
