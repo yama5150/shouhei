@@ -150,15 +150,21 @@ async function rewrite(newText){
 }
 
 /* ---------- 絵 ---------- */
-const imA=$('imA'), imB=$('imB'), ph=$('ph'); let front=imA, cur={name:'none',filt:''};
+const imA=$('imA'), imB=$('imB'), ph=$('ph'); let front=imA, cur={name:'none',filt:''}, imgGen=0;
 function setImg(name,filt){
   cur={name,filt:filt||''};
-  if(name==='none'){ imA.classList.remove('on'); imB.classList.remove('on'); ph.classList.remove('on'); return; }
+  if(name==='none'){ imgGen++; imA.classList.remove('on'); imB.classList.remove('on'); ph.classList.remove('on'); return; }
   const cls=filt?' f-'+filt:'';
   const back=front===imA?imB:imA;
   const snap=/^mirror/.test(name)&&/^mirror/.test(front.dataset.n||'');
   back.style.transition=snap?'opacity .35s, filter .35s':''; front.style.transition=snap?'opacity .35s, filter .35s':'';
-  back.onerror=()=>{ back.classList.remove('on'); ph.textContent=DEBUG?('［絵：'+name+'］'):''; ph.className='ph on'+cls; };
+  const prev=front;
+  // 絵がまだ届いていないとき：直前の絵を出したままにする（?debug のときだけ、仮の背景に名前を出す）
+  const gen=++imgGen;
+  back.onerror=()=>{ if(gen!==imgGen) return;          // もう次の絵に替わっていたら何もしない
+    back.classList.remove('on');
+    if(DEBUG||!prev.dataset.n){ ph.textContent=DEBUG?('［絵：'+name+'］'):''; ph.className='ph on'+cls; }
+    else { prev.classList.add('on'); front=prev; } };
   back.onload=()=>{ ph.classList.remove('on'); };
   back.dataset.n=name; back.src=IMG+name+'.jpg'; back.className='on'+cls; front.classList.remove('on'); front=back;
 }
