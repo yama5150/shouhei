@@ -1,0 +1,159 @@
+<title>CRC 画像の指示書</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 1カラムの縦スクロール。注文1件=1枚のカード。上から作る順 */
+:root{
+  --abyss:#140f15; --night:#1f1520; --plum:#34192f; --wine:#611f3b;
+  --rose:#b25977; --blush:#e0b2b8; --ink:#efe4ea; --mute:#a68f9c; --gold:#c9a25c;
+  --display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  color-scheme:dark;
+}
+body{background:var(--abyss);color:var(--ink);font-family:var(--body);line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header h1{font-family:var(--display);font-weight:800;font-size:1.9rem;letter-spacing:.06em;margin:0;color:var(--blush);text-wrap:balance}
+header p{margin:.4em 0 0;color:var(--mute);font-size:.92rem}
+.prog{margin-top:14px;display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:6px;background:var(--plum);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--rose);transition:width .3s}
+.rules{background:var(--night);border:1px solid var(--plum);border-radius:10px;padding:16px 18px}
+.rules h2,section>h2{font-family:var(--display);font-size:1.15rem;margin:0 0 8px;color:var(--blush);letter-spacing:.05em}
+.rules ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:.93rem}
+.rules b{color:var(--blush)}
+section{display:flex;flex-direction:column;gap:12px}
+section>h2 small{font-family:var(--body);font-size:.78rem;color:var(--mute);margin-left:.6em;letter-spacing:0;font-weight:400}
+.card{background:var(--night);border:1px solid var(--plum);border-left:3px solid var(--wine);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card.done{opacity:.5;border-left-color:var(--mute)}
+.top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.no{font-family:var(--display);font-weight:800;color:var(--rose);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.name{font-weight:700;font-size:1.02rem}
+.where{font-size:.8rem;color:var(--mute)}
+.att{font-size:.82rem;color:var(--gold)}
+.att::before{content:"添付:";color:var(--mute)}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--body);font-size:.86rem;background:var(--abyss);border:1px solid var(--plum);border-radius:6px;padding:10px 12px;color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button,label.chk{font:inherit;font-size:.85rem;border-radius:999px;padding:7px 16px;cursor:pointer;border:1px solid var(--rose);background:transparent;color:var(--blush);display:inline-flex;align-items:center;gap:6px}
+button.copy{background:var(--wine);border-color:var(--wine);color:var(--ink)}
+button:focus-visible,label.chk:focus-within{outline:2px solid var(--blush);outline-offset:2px}
+label.chk input{accent-color:var(--rose);margin:0}
+footer{font-size:.85rem;color:var(--mute);border-top:1px solid var(--plum);padding-top:16px}
+footer b{color:var(--blush)}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Cyber Rose Crimson<br>画像の指示書</h1>
+  <p>上から順に作れば効きが大きい。「コピー」で GPT にそのまま貼れる。共通ルールは全部の文に入っている。</p>
+  <div class="prog"><div class="bar"><i id="bar"></i></div><span id="cnt">0 / 0</span></div>
+</header>
+
+<div class="rules">
+  <h2>共通ルール</h2>
+  <ol>
+    <li><b>縦長 1024×1536</b>(SDとアイコンは正方形)。横長は使わない</li>
+    <li><b>顔は画面の上の方、左右の真ん中。</b>スマホでは下3割が文字の枠で隠れ、左右の端が切れる</li>
+    <li><b>画像に文字を入れない。</b>看板やモニタの文字も。本文の表記とずれる</li>
+    <li>エルザが出る絵には、<b>前に送った「横顔・通常」の立ち絵を添付</b>。顔と髪飾りが揃う</li>
+    <li>できたら番号を添えてチャットに貼る(例:「No.4」)。置き場所・切り出しはこっちでやる</li>
+  </ol>
+</div>
+
+<div id="list"></div>
+
+<footer>完了の印はこの端末だけに残る。<b>迷ったら、番号だけ書いて貼ってくれればいい。</b></footer>
+</div>
+
+<script>
+const COMMON="アニメ調、ゴシック×サイバーパンク、深紅と紫の配色、夜の暗めの光。画像の中に文字・ロゴを入れない。";
+const ELZA="添付のエルザと同一人物・同一衣装(長い黒髪に紅いメッシュ、紅い瞳、赤い薔薇と金の歯車の髪飾り、赤い房飾り、黒と深紅の着物風の羽織に金の刺繍)。";
+const V="縦長1024x1536。", SQ="正方形1024x1024。";
+const DATA=[
+ {sec:"人物の立ち絵",note:"エルザだけ新しくなって、3人が浮いている",items:[
+  {name:"ソメイ",where:"立ち絵・11回",att:"設定資料集(02 Characters)",
+   p:V+"ソメイ。情報屋の女性、見た目は23歳くらい、実は313年生きている長女。短めの黒髪、細めた目で余裕の笑み。黒のスーツに深紅の差し色、桜の刺繍。閉じた黒い扇を手に持つ。胸から上、やや斜め。背景は夜の街の暗いぼかし。"+COMMON},
+  {name:"イレヴン(白仮面)",where:"立ち絵・9回",att:"設定資料集(02 Characters)",
+   p:V+"イレヴン。白仮面の筆頭の少女。顔の上半分を覆う白い仮面をつけたまま。髪型と髪色は添付の設定資料集に合わせる。白と銀の装束に細い鎖。感情を見せない冷たい佇まい。胸から上、正面。背景は紅い月の夜の暗いぼかし。"+COMMON},
+  {name:"咲耶",where:"立ち絵・7回",att:"設定資料集(02 Characters)+ エルザの立ち絵",
+   p:V+"咲耶。エルザの妹。ピンクのリボン、紅い瞳、髪型は添付の設定資料集に合わせる。感情を消した平坦な目、無表情。薔薇の意匠の細身の剣を腰に下げる。黒と桃色のゴシックの装い。胸から上、やや斜め。背景は暗いぼかし。"+COMMON}
+ ]},
+ {sec:"背景",note:"人物なし。立ち絵を上に重ねるため",items:[
+  {name:"朝の工房",where:"最終話・隠し章の締め・5回",att:"新しい工房の絵",
+   p:V+"添付の工房と同じ部屋の、朝。窓から柔らかな朝の光。淹れたての紅茶から湯気。作業机に描きかけの下手な似顔絵、小さな水槽に金魚。窓の外の空に白い月が薄く残る。人物なし。"+COMMON},
+  {name:"縁日",where:"第三話・7回",att:"なし",
+   p:V+"夜の縁日。屋台の列、提灯、射的と金魚すくいの屋台、遠景に人混みのシルエット。空に紅い月。手前に人物を立たせない。"+COMMON},
+  {name:"核界",where:"第八話・第十話・4回",att:"なし",
+   p:V+"地下深くに眠る、312年前の未来都市。誰もいないのに灯りだけが満ちている。動き続ける機械。中央に、薔薇の紋が刻まれた円形のステージ。人物なし。"+COMMON},
+  {name:"電脳の海の底",where:"第一話の冒頭・隠し章・2回",att:"なし",
+   p:V+"電脳の海の底、深度470。崩れたデータの瓦礫が谷になり、壊れたデータが雨のように静かに降り注ぐ。暗い深海の奥に、紅い光がひとつ。人物なし。"+COMMON},
+  {name:"宴の後の大聖堂",where:"最終話・1回",att:"新しい大聖堂の絵",
+   p:V+"添付の大聖堂(アンプの壁のライブ会場)と同じ場所。ライブが終わった後。客席は無人、床にケーブルが散らばり、真空管が橙色の残り火のように光る。静けさ。人物なし。"+COMMON}
+ ]},
+ {sec:"見せ場の一枚絵",note:"今は250〜400pxしかなく、ぼやけている",items:[
+  {name:"起動台で眠るエルザ",where:"第十話",att:"エルザの立ち絵",
+   p:V+ELZA+"円形の起動台の上で眠るエルザの顔のアップ。目を閉じ、睫毛に光。長い髪が台の上に広がる。上から見下ろす構図。"+COMMON},
+  {name:"「聴きなさい、トランジスタ」",where:"最終話のクライマックス",att:"エルザの立ち絵 + 薔薇剣の絵",
+   p:V+ELZA+"ギターの爆音の中、薔薇剣を掲げ、叫ぶように笑うエルザ。紅い光が花びらのように爆ぜる。下から見上げる構図。"+COMMON},
+  {name:"コアを抱いて祈る",where:"第七話",att:"エルザの立ち絵",
+   p:V+ELZA+"両手で、淡く光る小さなコア(心臓のような結晶)を胸に抱き、目を閉じて祈るエルザ。暗い大聖堂、真空管の灯り。"+COMMON},
+  {name:"棺の中の目覚め",where:"隠し章",att:"エルザの立ち絵 + 封印の棺の絵",
+   p:V+ELZA+"透き通った棺の中から、こちらを見上げるエルザの顔のアップ。周りは暗く、紅い瞳だけが光る。気だるく、値踏みするような目。"+COMMON},
+  {name:"専属契約",where:"隠し章",att:"エルザの立ち絵 + 新しい工房の絵",
+   p:V+ELZA+"散らかった工房で、腕組みをしてこちらを見下ろすエルザの全身。尊大な笑み。下から見上げる構図。"+COMMON},
+  {name:"金魚を手のひらに",where:"第三話",att:"浴衣の立ち絵",
+   p:V+"添付の浴衣のエルザ。金魚すくいの金魚を、手のひらの水にすくって見つめる。寂しげな横顔。背景に花火。"+COMMON},
+  {name:"ココアで蕩ける",where:"後日談・2回",att:"ココアのSDの絵",
+   p:V+ELZA+"SDではなく通常の頭身。猫耳。マグカップを両手で抱え、頬が真っ赤、目がとろんと蕩けている。夜の工房。"+COMMON},
+  {name:"背中に薔薇が咲く",where:"第四話・第十話",att:"エルザの立ち絵",
+   p:V+ELZA+"後ろ姿。肩甲骨のあたりから、紅い薔薇の光が翼のように咲き開く。少し振り返りかける。"+COMMON},
+  {name:"創設者の映像",where:"第十話・最終話",att:"なし",
+   p:V+"空中に投影された古いホログラム映像。黒衣の女性(玲の創設者)。走査線とノイズが混じり、顔は少し見えにくい。暗い地下。"+COMMON}
+ ]},
+ {sec:"あれば嬉しい",note:"チャプター一覧のサムネと、ユウジ",items:[
+  {name:"2人SD:作業机",where:"チャプター一覧・第二話",att:"SDの12表情シート",
+   p:SQ+"添付のSDと同じ絵柄。ユウジ(小柄な少年、黒髪、眼鏡)が作業机で修理をしていて、隣でエルザが紅茶を飲みながら見ている。工房の夜。"+COMMON},
+  {name:"2人SD:厨房",where:"チャプター一覧・幕間",att:"SDの12表情シート + 台所の絵",
+   p:SQ+"添付のSDと同じ絵柄。エプロン姿のエルザが鍋から黒い煙を出していて、ユウジが青ざめている。台所の夜。"+COMMON},
+  {name:"2人SD:寝顔",where:"チャプター一覧・第六話",att:"SDの12表情シート",
+   p:SQ+"添付のSDと同じ絵柄。看病で付き添ううちに、ベッドの横で並んで眠ってしまったユウジとエルザ。柔らかい夜の灯り。"+COMMON},
+  {name:"ユウジの顔アイコン(8表情シート)",where:"本文の話者アイコン",att:"設定資料集(02 Characters)",
+   p:"横長1536x1024に、ユウジの顔アイコンを4x2で並べたシート。ユウジ:18歳、小柄、黒髪、眼鏡、リペアマン。各マスは胸から上、背景は暗い単色。表情:通常 / びっくり / 考え込む / 焦り / てへ / 照れ / 落ち込み / 眠気。アニメ調、文字なし。"}
+ ]}
+];
+const KEY="crc-shiji-done";
+let done={}; try{done=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+const list=document.getElementById("list"); let n=0;
+DATA.forEach(g=>{
+  const s=document.createElement("section");
+  s.innerHTML=`<h2>${g.sec}<small>${g.note}</small></h2>`;
+  g.items.forEach(it=>{
+    n++; const id="no"+n;
+    const c=document.createElement("div"); c.className="card"+(done[id]?" done":"");
+    c.innerHTML=`<div class="top"><span class="no">No.${n}</span><span class="name"></span><span class="where"></span></div>
+      <div class="att"></div><pre></pre>
+      <div class="row"><button class="copy" type="button">コピー</button>
+      <label class="chk"><input type="checkbox" id="${id}">できた</label></div>`;
+    c.querySelector(".name").textContent=it.name;
+    c.querySelector(".where").textContent=it.where;
+    c.querySelector(".att").textContent=it.att;
+    const pre=c.querySelector("pre"); pre.textContent=it.p;
+    const btn=c.querySelector(".copy");
+    btn.addEventListener("click",()=>{
+      const ok=()=>{btn.textContent="コピーした";setTimeout(()=>btn.textContent="コピー",1500)};
+      const sel=()=>{const r=document.createRange();r.selectNodeContents(pre);const w=getSelection();w.removeAllRanges();w.addRange(r);btn.textContent="選択した。長押しでコピー"};
+      try{navigator.clipboard.writeText(it.p).then(ok,sel)}catch(e){sel()}
+    });
+    const cb=c.querySelector("input"); cb.checked=!!done[id];
+    cb.addEventListener("change",()=>{done[id]=cb.checked;c.classList.toggle("done",cb.checked);
+      try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){} prog();});
+    s.appendChild(c);
+  });
+  list.appendChild(s);
+});
+function prog(){const k=Object.values(done).filter(Boolean).length;
+  document.getElementById("cnt").textContent=k+" / "+n;
+  document.getElementById("bar").style.width=(k/n*100)+"%";}
+prog();
+</script>
