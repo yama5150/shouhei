@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v93">
+<meta name="build" content="v94">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -2830,6 +2830,17 @@ const EN2 = [
  {spr:"somei"},
  {n:SOM,t:"「ロザリウムの試験稼働だね。……ねえ、ユウジくん。彼ら、決戦の前に品定めするつもりだよ」"},
  {n:SOM,t:"「──デカいのが、動いた」"},
+ {curtain:"──その夜"},
+ {bg:"kobo", dim:true},
+ {spr:"n"},
+ {n:N,t:"工房の灯りを落としかけた時、細い声が聞こえた。"},
+ {n:N,t:"エルザが作業台の端に腰かけて、何かを口ずさんでいた。"},
+ {n:N,t:"言葉のない、短い旋律。上がって、下がって──ふっと、途切れる。"},
+ {n:YU,t:"「……それ、なんて歌?」"},
+ {n:EL,t:"「知らないわ。……どこで覚えたのかしら」"},
+ {n:N,t:"ギターを取って、耳で拾った音をなぞってみる。四小節目で、旋律が消えた。"},
+ {n:EL,t:"「そこから先が、思い出せないの」"},
+ {n:EL,t:"「……変ね。続きがあることだけは、わかるのに」"},
  {curtain:""},
  {bg:"kobo", dim:true},
  {spr:"n"},
@@ -2864,22 +2875,41 @@ const EN2 = [
  {glitch:true},
  {n:EL,t:"「ッ……共鳴系が、乱される……!!」",gt:true},
  {n:N,t:"俺は弾いた。ありったけの音で。──掻き消される。向こうは数千ワットの砲塔群だ。"},
+ {bg:"gardenerWhip"},
+ {n:N,t:"機神の腕から、鎖が解けた。しなる。唸る。──鞭だ。"},
+ {gauge:{reso:52}},
+ {spr:"n"},
+ {n:N,t:"薔薇の棘を編み込んだ鎖が、エルザの剣を三度弾いた。三度とも、寸分違わぬ角度で。"},
+ {n:EL,t:"「……この、振り方」"},
+ {n:EL,t:"「知ってる。私、この鞭を──知ってる」"},
+ {bg:"kishin"},
  {n:N,t:"だが──その砲声の、奥。"},
  {n:N,t:"ほんの微かに。ノイズの底に。──何かが、聴こえた。"},
  {n:N,t:"……歌?"},
+ {n:N,t:"上がって、下がって、ふっと途切れる──あの旋律。"},
+ {n:N,t:"昨夜、エルザが口ずさんでいた歌だった。"},
  {spr:"n"},
  {n:EL,t:"「──────」"},
  {n:N,t:"エルザが、凍りついた。"},
  {n:EL,t:"「蔵馬(くらま)……? あなた、中に、いるの……?」"},
+ {bgm:"kodou"},
  {n:N,t:"機神の動力源──胸部に組み込まれた、小さなコア。"},
  {n:N,t:"回収された妹、序列9・蔵馬。その心臓を、奴らはエンジンにしていた。"},
  {gauge:{reso:45}},
  {n:EL,t:"「妹の鼓動で……兵器を、動かして──!!」"},
+ {n:N,t:"エルザが跳んだ。剣先が、機神の胸に届く──寸前で、止まった。"},
+ {n:EL,t:"「……斬れない」"},
+ {n:EL,t:"「ここを斬れば、あの子の心臓ごと……!」"},
+ {n:N,t:"止まった剣を、鎖の鞭が薙いだ。エルザの身体が、石畳を転がる。"},
+ {gauge:{reso:38}},
+ {glitch:true},
  {n:N,t:"怒りで共鳴が乱れる。まずい。──落ち着け。観察しろ。俺はリペアマンだ。"},
  {n:YU,yu:"kan",t:"「(……音圧の周期が、完璧に同じだ。振動波も。寸分違わず、同じ波形の繰り返し──)」"},
  {n:N,t:"録音された波形の、再生。あの砲撃は全部、過去の音だ。"},
  {n:YU,t:"「(録音は過去だ。過去は──今に、応えられない。でも──)」"},
  {n:YU,t:"「(中にいる『心』は──応えて、しまうんじゃないか?)」"},
+ {n:YU,t:"「エルザ!! 斬らなくていい!!」"},
+ {n:YU,t:"「開けるんだ。──お前がずっと、内側からそうしてきたみたいに!!」"},
  {choice:[
    {label:"正面から、音圧で押し返す", jump:"en2_onaji", flag:"onaji"},
    {label:"祖父ちゃんの曲を、届ける", jump:"en2_sokkyo", flag:"sokkyo"}
@@ -2908,6 +2938,10 @@ const EN2 = [
  {glitch:true},
  {n:N,t:"機神の内側で、何かが──応えた。",gt:true},
  {n:N,t:"砲声の奥の微かな歌が、俺の音に、寄り添うように揺れた。"},
+ {n:N,t:"四小節目。昨夜、旋律が途切れた場所。"},
+ {n:N,t:"そこを越えて──歌が、続いた。"},
+ {n:N,t:"俺の知らない五小節目。エルザが思い出せなかった、続き。"},
+ {n:EL,t:"「……これ。これが、続き──」"},
  {n:N,t:"録音は、応えられない。"},
  {n:N,t:"でも──心は、応えてしまう。"},
  {gauge:{armor:60, reso:62}},
@@ -2917,6 +2951,7 @@ const EN2 = [
  {n:EL,t:"「──見えたわ」"},
  {n:EL,t:"「妹が……蔵馬が、内側から道を開けてくれてる!!」"},
  {gauge:{armor:25}},
+ {bg:"gardenerCut"},
  {n:N,t:"紅い軌跡が、月下を三度、閃く。鎖が千切れ、砲塔が沈黙していく。"},
  {n:EL,t:"「狙いは破壊じゃない──胸部装甲、切開!!」"},
  {glitch:true},
@@ -2938,6 +2973,11 @@ const EN2 = [
  {n:N,t:"青い月。青い薔薇。機械の腕を翼のように広げて、歌っていた頃の──彼女。"},
  {spr:"none"},
  {n:EL,t:"「……蔵馬。薔薇の鞭みたいに強くて、誰より歌が好きだった子」"},
+ {n:KUR,t:"「……ねえさん」"},
+ {n:KUR,t:"「うた、つづき……きこえた?」"},
+ {n:EL,t:"「……ええ。ちゃんと、最後まで」"},
+ {n:KUR,t:"「よかった。……ねえさん、いつも、とちゅうで、ねちゃうから」"},
+ {n:N,t:"投影が、ほどけるように消えた。"},
  {bg:"elzaPray"},
  {n:EL,t:"「あなたの鼓動、ちゃんと取り戻したわよ。……眠ってて。今度こそ、ちゃんとした場所で」"},
  {n:N,t:"コアはソメイに託され、アンプの大聖堂へ運ばれることになった。"},
@@ -2951,6 +2991,11 @@ const EN2 = [
  {n:N,t:"拍手が、ひとつ。"},
  {n:HAI,t:"「では当日、全員でお迎えに上がります」"},
  {n:N,t:"男が消えた後、エルザは、コアの眠る方角を、長いこと見ていた。"},
+ {n:N,t:"帰り道。人気のない高架の下で、エルザが、小さく歌い出した。"},
+ {n:N,t:"上がって、下がって──四小節目を越えて、五小節目へ。最後まで。"},
+ {n:N,t:"歌い終わって、エルザは、初めて声を上げて泣いた。"},
+ {n:N,t:"俺は何も言わずに、隣で、同じ旋律をギターでなぞった。"},
+ {n:N,t:"一度も、途切れなかった。"},
  {spr:"n"},
  {n:EL,t:"「ユウジ」"},
  {n:EL,t:"「次は──全員、連れて帰るわよ」"},
@@ -3367,7 +3412,7 @@ function playBgv(key){
 function stopBgv(){
   const v=$("bgv"); v.pause(); v.classList.remove("show");
 }
-const BGMAP={elza:ASSETS.imgElza, city:ASSETS.imgCity, sea:ASSETS.imgSea, kobo:ASSETS.imgKobo2, kitchen:ASSETS.imgKitchen, battle:ASSETS.imgRosy, core:ASSETS.imgCore, asa:ASSETS.imgAsa, daiseido:ASSETS.imgDaiseido, kakukai:ASSETS.imgKakukai, kako:ASSETS.imgKako, soshisha:ASSETS.imgSoshisha, matsuri:ASSETS.imgMatsuri, yoin:ASSETS.imgYoin, funyu:ASSETS.imgFunyu, kishin:ASSETS.imgKishin, aoi:ASSETS.imgAoi, ushio:ASSETS.imgUshio, azure:ASSETS.imgAzure, mic:ASSETS.imgMic, elzaFull:ASSETS.imgFull, elzaClose:ASSETS.imgClose, elzaCalm:ASSETS.imgCalm, elzaLaugh2:ASSETS.imgLaugh2, elzaPray:ASSETS.imgPray, elzaLean:ASSETS.imgLean, elzaPod:ASSETS.imgPod, elzaSalvage:ASSETS.imgSalvage, elzaSeal:ASSETS.imgSeal, kasa:ASSETS.imgMatsuri, water:ASSETS.imgHanabi, hanabi:ASSETS.imgHanabi, yuhand:ASSETS.imgYuHand};
+const BGMAP={elza:ASSETS.imgElza, city:ASSETS.imgCity, sea:ASSETS.imgSea, kobo:ASSETS.imgKobo2, kitchen:ASSETS.imgKitchen, battle:ASSETS.imgRosy, core:ASSETS.imgCore, asa:ASSETS.imgAsa, daiseido:ASSETS.imgDaiseido, kakukai:ASSETS.imgKakukai, kako:ASSETS.imgKako, soshisha:ASSETS.imgSoshisha, matsuri:ASSETS.imgMatsuri, yoin:ASSETS.imgYoin, funyu:ASSETS.imgFunyu, kishin:ASSETS.imgKishin, aoi:ASSETS.imgAoi, ushio:ASSETS.imgUshio, azure:ASSETS.imgAzure, mic:ASSETS.imgMic, elzaFull:ASSETS.imgFull, elzaClose:ASSETS.imgClose, elzaCalm:ASSETS.imgCalm, elzaLaugh2:ASSETS.imgLaugh2, elzaPray:ASSETS.imgPray, elzaLean:ASSETS.imgLean, elzaPod:ASSETS.imgPod, gardenerWhip:ASSETS.imgKishin, gardenerCut:ASSETS.imgKishin, elzaSalvage:ASSETS.imgSalvage, elzaSeal:ASSETS.imgSeal, kasa:ASSETS.imgMatsuri, water:ASSETS.imgHanabi, hanabi:ASSETS.imgHanabi, yuhand:ASSETS.imgYuHand};
 function setBg(key, dim){
   const back = (bgFront===bgA)?bgB:bgA;
   if(key==="none"){
@@ -3974,7 +4019,7 @@ function startEdRoll(){
     ed.style.background="transparent";
   }else{
     $("edBg").style.backgroundImage = ASSETS.imgEdBg.startsWith("__")?"none":`url(${ASSETS.imgEdBg})`;
-    const EDMAP={"4":"doukoku","5":"doukoku","6":"doukoku","7":"genkei"};
+    const EDMAP={"en2":"doukoku","4":"doukoku","5":"doukoku","6":"doukoku","7":"genkei"};
     playBgm(EDMAP[state.ep]||"bara", false);
   }
   ed.classList.add("show");
