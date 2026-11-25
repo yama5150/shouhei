@@ -7,6 +7,7 @@
 | 焼肉ロス管理アプリ | `index.html` |
 | ハムスターゲーム | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
+| CRC 紹介LP(拡散用) | `crc/lp/index.html` |
 
 ## 配信方法
 

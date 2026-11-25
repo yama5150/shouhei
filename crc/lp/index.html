@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cyber Rose Crimson — 紅い月のサルベージ</title>
+<meta name="description" content="「薔薇は、愛か、呪いか。」電脳の海の底から引き揚げた、一輪の薔薇。全16話・オリジナル楽曲12曲。曲を物語の中で鳴らす、再生する物語アルバム。iPhoneひとつで、遊べる。">
+<meta name="theme-color" content="#080310">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cyber Rose Crimson">
+<meta property="og:title" content="Cyber Rose Crimson — 紅い月のサルベージ">
+<meta property="og:description" content="「薔薇は、愛か、呪いか。」全16話のノベル × 12曲のアルバム。iPhoneひとつで、遊べる。">
+<meta property="og:image" content="https://rawcdn.githack.com/yama5150/shouhei/main/crc/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="628">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cyber Rose Crimson — 紅い月のサルベージ">
+<meta name="twitter:description" content="「薔薇は、愛か、呪いか。」全16話のノベル × 12曲のアルバム。iPhoneひとつで、遊べる。">
+<meta name="twitter:image" content="https://rawcdn.githack.com/yama5150/shouhei/main/crc/ogp.jpg">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Shippori+Mincho+B1:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080310; --bg2:#12081c; --ink:#ece4f4; --sub:#b9a6d6; --dim:#7d6a96;
+  --rose:#e8375f; --rose2:#ff8fb0; --blue:#5b7bff; --line:rgba(232,55,95,.35);
+  --serif:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --latin:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:2;
+  letter-spacing:.06em;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+.wrap{width:100%;max-width:1040px;margin:0 auto;padding:0 20px}
+section{position:relative;padding:96px 0;overflow:hidden}
+.eyebrow{font-family:var(--latin);font-size:12px;letter-spacing:.42em;color:var(--rose2);
+  text-transform:uppercase}
+h2{font-size:clamp(24px,6vw,38px);font-weight:600;letter-spacing:.16em;line-height:1.5;margin:10px 0 28px}
+h2 small{display:block;font-family:var(--latin);font-size:12px;letter-spacing:.4em;color:var(--dim);font-weight:400;margin-top:6px}
+p.lead{color:var(--sub);font-size:15px;max-width:34em}
+.rule{width:56px;height:1px;background:var(--rose);margin:0 0 24px;box-shadow:0 0 12px var(--rose)}
+
+/* ---------- reveal ---------- */
+.rv{opacity:0;transform:translateY(24px);transition:opacity 1.1s ease,transform 1.1s ease}
+.rv.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;
+  padding:0 30px;border-radius:999px;font-family:var(--serif);font-size:15px;letter-spacing:.18em;
+  text-decoration:none;cursor:pointer;border:1px solid var(--rose);transition:.3s}
+.btn-main{background:linear-gradient(135deg,#b0153d,#e8375f 60%,#ff6a8e);color:#fff;
+  box-shadow:0 0 0 1px rgba(255,143,176,.25),0 10px 40px rgba(232,55,95,.45)}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(255,143,176,.5),0 14px 50px rgba(232,55,95,.6)}
+.btn-ghost{background:rgba(8,3,16,.45);color:#ffd9e4;border-color:rgba(232,55,95,.6);backdrop-filter:blur(6px)}
+.btn-ghost:hover{background:rgba(232,55,95,.15)}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+
+/* ---------- hero ---------- */
+.hero{min-height:100svh;padding:0;display:flex;align-items:flex-end;overflow:hidden}
+.hero-media{position:absolute;inset:0}
+.hero-media video,.hero-media img{width:100%;height:100%;object-fit:cover}
+.hero-media::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(8,3,16,.35) 0%,rgba(8,3,16,0) 30%,rgba(8,3,16,.55) 62%,var(--bg) 100%)}
+.hero .wrap{position:relative;z-index:2;padding-bottom:max(56px,env(safe-area-inset-bottom))}
+.hero .tag{font-family:var(--latin);font-size:11px;letter-spacing:.5em;color:var(--sub)}
+.hero h1{font-family:var(--latin);font-weight:600;font-size:clamp(34px,10vw,84px);line-height:1.05;
+  letter-spacing:.08em;margin:14px 0 6px;text-shadow:0 0 30px rgba(232,55,95,.55)}
+.hero h1 span{color:var(--rose2)}
+.hero .sub{font-size:14px;letter-spacing:.4em;color:var(--sub)}
+.hero .catch{font-size:clamp(20px,5.4vw,30px);font-weight:600;letter-spacing:.2em;margin:26px 0 28px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.chips li{list-style:none;font-size:12px;letter-spacing:.12em;padding:4px 12px;border:1px solid rgba(185,166,214,.35);
+  border-radius:999px;color:var(--sub);background:rgba(8,3,16,.4)}
+.scroll-hint{position:absolute;right:20px;bottom:24px;z-index:2;font-family:var(--latin);font-size:10px;
+  letter-spacing:.4em;color:var(--dim);writing-mode:vertical-rl}
+.scroll-hint::after{content:"";display:inline-block;width:1px;height:40px;background:var(--dim);margin-top:10px;
+  animation:drip 2.4s ease-in-out infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}
+  51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- moon motif ---------- */
+.moon{position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 40% 38%,#ff8fa8,#c3173f 45%,#5a0619 75%,transparent 76%);
+  filter:blur(1px);opacity:.18}
+
+/* ---------- story ---------- */
+.story{background:var(--bg)}
+.story-grid{display:grid;gap:40px;align-items:center}
+.story-text p{margin-bottom:1.4em;font-size:16px}
+.story-text em{font-style:normal;color:var(--rose2)}
+.story-fig{position:relative;max-width:440px}
+.story-fig img{border-radius:4px;box-shadow:0 30px 80px rgba(232,55,95,.25)}
+.story-fig figcaption{font-size:11px;color:var(--dim);letter-spacing:.2em;margin-top:10px}
+@media(min-width:820px){.story-grid{grid-template-columns:1.1fr .9fr}}
+
+/* ---------- concept ---------- */
+.concept{background:linear-gradient(180deg,var(--bg),var(--bg2) 40%,var(--bg))}
+.pillars{display:grid;gap:16px;margin-top:40px}
+@media(min-width:760px){.pillars{grid-template-columns:repeat(3,1fr)}}
+.pillar{border:1px solid rgba(185,166,214,.18);background:rgba(255,255,255,.02);padding:28px 24px;border-radius:6px}
+.pillar .no{font-family:var(--latin);color:var(--rose);font-size:13px;letter-spacing:.3em}
+.pillar h3{font-size:20px;letter-spacing:.2em;margin:6px 0 10px;font-weight:600}
+.pillar p{font-size:14px;color:var(--sub);line-height:1.9}
+.pillar b{color:var(--ink);font-weight:600}
+.quote{margin-top:56px;font-size:clamp(17px,4.6vw,22px);letter-spacing:.18em;line-height:2.1;
+  border-left:1px solid var(--rose);padding-left:20px}
+.quote small{display:block;font-size:12px;color:var(--dim);letter-spacing:.2em}
+
+/* ---------- characters ---------- */
+.chars{display:grid;gap:18px;grid-template-columns:1fr 1fr}
+@media(min-width:820px){.chars{grid-template-columns:repeat(3,1fr)}}
+.char{position:relative;overflow:hidden;border-radius:6px;aspect-ratio:3/4;background:#140a20}
+.char img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
+.char:hover img{transform:scale(1.04)}
+.char .cap{position:absolute;inset:auto 0 0 0;padding:60px 14px 14px;
+  background:linear-gradient(180deg,transparent,rgba(8,3,16,.92) 55%)}
+.char .nm{font-size:18px;font-weight:600;letter-spacing:.2em;line-height:1.4}
+.char .rb{font-family:var(--latin);font-size:10px;letter-spacing:.3em;color:var(--rose2)}
+.char .ds{font-size:12px;color:var(--sub);line-height:1.7;margin-top:6px}
+.char.lead{grid-column:1/-1;aspect-ratio:auto}
+.char.lead .inner{display:grid}
+@media(min-width:820px){.char.lead{grid-column:span 3}.char.lead .inner{grid-template-columns:1fr 1fr}}
+.char.lead img{aspect-ratio:1/1}
+.char.lead .cap{position:static;background:none;padding:22px 18px}
+.char.lead .nm{font-size:22px}
+.char.lead .ds{font-size:14px}
+.char.lead .line{margin-top:14px;font-size:15px;color:var(--rose2);letter-spacing:.14em}
+
+/* ---------- music ---------- */
+.music{background:var(--bg2)}
+.album{display:grid;gap:36px}
+@media(min-width:860px){.album{grid-template-columns:340px 1fr}}
+.jacket{position:relative;max-width:340px}
+.jacket img{border-radius:4px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.jacket .disc{font-family:var(--latin);font-size:11px;letter-spacing:.3em;color:var(--dim);margin-top:12px}
+.tracks{list-style:none;border-top:1px solid rgba(185,166,214,.15)}
+.tr{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 2px;
+  border-bottom:1px solid rgba(185,166,214,.12)}
+.tr .play{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;
+  color:var(--rose2);cursor:pointer;display:grid;place-items:center;transition:.25s}
+.tr .play:hover{background:rgba(232,55,95,.15)}
+.tr .play svg{width:14px;height:14px;fill:currentColor}
+.tr.on .play{background:var(--rose);color:#fff;border-color:var(--rose)}
+.tr .t{min-width:0}
+.tr .num{font-family:var(--latin);font-size:11px;color:var(--dim);letter-spacing:.2em}
+.tr .name{font-size:15px;line-height:1.5;letter-spacing:.06em}
+.tr .desc{font-size:12px;color:var(--sub);line-height:1.7;display:none;margin-top:4px}
+.tr.on .desc{display:block}
+.tr .bar{height:2px;background:rgba(185,166,214,.15);margin-top:8px;display:none}
+.tr.on .bar{display:block}
+.tr .bar i{display:block;height:100%;width:0;background:var(--rose);box-shadow:0 0 8px var(--rose)}
+.tr .suno{font-size:11px;letter-spacing:.12em;color:var(--sub);text-decoration:none;border:1px solid rgba(185,166,214,.25);
+  padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tr .suno:hover{color:#fff;border-color:var(--rose2)}
+.note{font-size:12px;color:var(--dim);margin-top:14px;line-height:1.8}
+
+/* ---------- gallery ---------- */
+.gallery{padding-bottom:40px}
+.strip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 20px 24px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--rose) transparent}
+.strip figure{flex:0 0 auto;scroll-snap-align:center;height:min(62vh,520px)}
+.strip img{height:100%;width:auto;border-radius:4px}
+.strip-hint{font-size:11px;color:var(--dim);letter-spacing:.3em;text-align:right;padding-right:20px}
+
+/* ---------- how ---------- */
+.how ol{list-style:none;display:grid;gap:14px;counter-reset:s;margin-top:10px}
+@media(min-width:760px){.how ol{grid-template-columns:repeat(3,1fr)}}
+.how li{counter-increment:s;padding:22px 20px;border:1px solid rgba(185,166,214,.16);border-radius:6px;font-size:14px;color:var(--sub);line-height:1.9}
+.how li::before{content:"0" counter(s);display:block;font-family:var(--latin);color:var(--rose);font-size:13px;letter-spacing:.3em;margin-bottom:4px}
+.how li b{display:block;color:var(--ink);font-size:16px;letter-spacing:.14em;margin-bottom:4px}
+
+/* ---------- final ---------- */
+.final{min-height:90svh;display:flex;align-items:center;text-align:center;overflow:hidden}
+.final .bgimg{position:absolute;inset:0}
+.final .bgimg img{width:100%;height:100%;object-fit:cover;opacity:.55}
+.final .bgimg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(8,3,16,.35),var(--bg) 78%)}
+.final .wrap{position:relative;z-index:2}
+.final .lyric{font-size:clamp(15px,4.2vw,19px);letter-spacing:.3em;color:var(--sub);line-height:2.4}
+.final h2{font-family:var(--latin);font-size:clamp(28px,8vw,56px);letter-spacing:.1em;margin:28px 0 8px;text-shadow:0 0 30px rgba(232,55,95,.6)}
+.final .catch{font-size:18px;letter-spacing:.24em;margin-bottom:34px}
+.final .btns{justify-content:center}
+.tip{font-size:12px;color:var(--dim);margin-top:22px;line-height:1.9}
+
+footer{padding:48px 0 calc(48px + env(safe-area-inset-bottom));border-top:1px solid rgba(185,166,214,.12);
+  font-size:12px;color:var(--dim);text-align:center;line-height:2.1;letter-spacing:.12em}
+footer b{color:var(--sub);font-weight:400}
+footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:var(--rose2);margin-bottom:10px}
+
+/* sticky play bar (mobile) */
+.dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:50;
+  display:flex;transform:translateY(140%);transition:transform .5s ease}
+.dock.show{transform:none}
+.dock .btn{flex:1;min-height:50px}
+@media(min-width:820px){.dock{display:none}}
+
+/* petals */
+.petal{position:fixed;top:-20px;width:10px;height:12px;border-radius:70% 0 70% 0;pointer-events:none;z-index:1;
+  background:linear-gradient(135deg,#ff6a8e,#8e0f30);opacity:.55;animation:fall linear infinite}
+@keyframes fall{to{transform:translate3d(var(--dx),110vh,0) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.petal{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <div class="hero-media">
+    <video id="heroVid" autoplay muted loop playsinline preload="auto" poster="img/hero-poster.jpg">
+      <source src="hero.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="wrap">
+    <div class="tag rv">A NOVEL × ALBUM</div>
+    <h1 class="rv">CYBER ROSE<br><span>CRIMSON</span></h1>
+    <div class="sub rv">紅い月のサルベージ</div>
+    <p class="catch rv">「薔薇は、愛か、呪いか。」</p>
+    <ul class="chips rv">
+      <li>全16話</li><li>オリジナル楽曲 12曲</li><li>無料・登録不要</li><li>iPhoneひとつで</li>
+    </ul>
+    <div class="btns rv">
+      <a class="btn btn-main" href="../index.html">▶ 物語をはじめる</a>
+      <a class="btn btn-ghost" href="#music">♪ 曲を聴く</a>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</header>
+
+<!-- ============ STORY ============ -->
+<section class="story" id="story">
+  <div class="moon" style="width:420px;height:420px;right:-160px;top:40px"></div>
+  <div class="wrap story-grid">
+    <div class="story-text">
+      <div class="eyebrow rv">Story</div>
+      <h2 class="rv">深度470から、<br>一輪の薔薇を引き揚げた。</h2>
+      <div class="rule rv"></div>
+      <p class="rv">紅い月が昇る夜。電脳の海——セカンド・レイヤーでは、崩れ落ちる破損データの音を、脳が「雨」と翻訳する。</p>
+      <p class="rv">月島電脳修理店のリペアマン、<em>結城ユウジ</em>。「壊れかけたものを、直して、守る」が信条の18歳。<br>祖父の形見のギターと真空管アンプを継いだ彼は、ある夜、海の底で眠る棺を見つける。</p>
+      <p class="rv">目を覚ましたのは、312年前に造られた少女——<em>エルザ</em>。<br>尊大で、口が悪くて、甘いものにだけ弱い。<br>けれど彼女があの海に沈められたのは、これが初めてではなかった。</p>
+      <p class="rv">二度と同じにならない真空管の揺らぎと、完全な制御を誇るトランジスタ。<br>これは、<em>揺らぎ</em>を「心」と呼んだ者たちの物語。</p>
+    </div>
+    <figure class="story-fig rv">
+      <img src="img/salvage.webp" alt="棺の中で眠るエルザ" width="800" height="800" loading="lazy">
+      <figcaption>— 第一話「紅い月のサルベージ」</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ CONCEPT ============ -->
+<section class="concept" id="concept">
+  <div class="wrap">
+    <div class="eyebrow rv">Concept</div>
+    <h2 class="rv">次世代の、CDアルバム。<small>A STORY THAT PLAYS</small></h2>
+    <p class="lead rv">ゲームである前に、<b style="color:var(--ink)">再生する物語アルバム</b>。<br>曲は BGM ではなく、物語の中で鳴るために作られた。<br>あの曲がなぜあの場面で流れるのか——読み終えたとき、アルバムの聴こえ方が変わる。</p>
+    <div class="pillars">
+      <div class="pillar rv"><div class="no">01 — READ</div><h3>読む</h3>
+        <p><b>全16話・約35,000字。</b>出会い編、ロザリウム編、空白期編、そして後日談と隠し章。読んだ話には印がつき、どこからでも読み返せる。</p></div>
+      <div class="pillar rv"><div class="no">02 — LISTEN</div><h3>聴く</h3>
+        <p><b>オリジナル楽曲 12曲。</b>作者自身が作曲。場面ごとに鳴る曲が決まっていて、MUSIC ROOM ではジャケットとライナーノーツ付きでいつでも聴ける。</p></div>
+      <div class="pillar rv"><div class="no">03 — CARRY</div><h3>持ち歩く</h3>
+        <p><b>ブラウザで開くだけ。</b>インストールも登録もいらない。iPhone なら「ホーム画面に追加」で、アプリのように起動できる。</p></div>
+    </div>
+    <p class="quote rv">「楽器ってのはな、<br>弾かれた記憶を木が覚えてるんだ」<small>— 月島源三</small></p>
+  </div>
+</section>
+
+<!-- ============ CHARACTERS ============ -->
+<section id="chars">
+  <div class="wrap">
+    <div class="eyebrow rv">Characters</div>
+    <h2 class="rv">登場人物</h2>
+    <div class="chars">
+      <article class="char lead rv">
+        <div class="inner">
+          <img src="img/elza.webp" alt="エルザ" loading="lazy" width="800" height="800">
+          <div class="cap">
+            <div class="rb">ERUZA — CYBER ROSE PROTOTYPE 00</div>
+            <div class="nm">エルザ</div>
+            <p class="ds">海の底から引き揚げられた少女。長い黒髪に紅い瞳、身長178cm。味覚センサー1024段階、触覚は人間の8倍解像度。態度は尊大、口が悪く、意地っ張り。料理は壊滅的、絵は呪物級。温かい甘味で感情演算がオーバーフローする。</p>
+            <p class="line">「私の修理、あなたがやるのよ。──専属契約。拒否権はないわ」</p>
+          </div>
+        </div>
+      </article>
+      <article class="char lead rv">
+        <div class="inner">
+          <img src="img/yuji.webp" alt="結城ユウジ" loading="lazy" width="800" height="800">
+          <div class="cap">
+            <div class="rb">YUJI YUKI — REPAIRMAN</div>
+            <div class="nm">結城ユウジ</div>
+            <p class="ds">18歳。月島電脳修理店のリペアマン。眼鏡。祖父・月島源三の形見のギターと真空管アンプを継ぐ。「壊れかけたものを、直して、守る」。街では「月島の孫」で通っている。</p>
+          </div>
+        </div>
+      </article>
+      <article class="char rv"><img src="img/somei.webp" alt="ソメイ" loading="lazy">
+        <div class="cap"><div class="rb">SOMEI</div><div class="nm">ソメイ</div><p class="ds">情報屋。自称23歳。年中コーヒー臭く、早口で守銭奴。扇で舞う。</p></div></article>
+      <article class="char rv"><img src="img/sakuya.webp" alt="咲耶" loading="lazy">
+        <div class="cap"><div class="rb">SAKUYA</div><div class="nm">咲耶</div><p class="ds">エルザの妹。ピンクのリボンに薔薇の剣。平坦な喋り方。</p></div></article>
+      <article class="char rv"><img src="img/eleven.webp" alt="白仮面" loading="lazy">
+        <div class="cap"><div class="rb">ELEVEN</div><div class="nm">白仮面</div><p class="ds">ロザリウムの筆頭。序列11。仮面の下の顔を、誰も知らない。</p></div></article>
+      <article class="char rv"><img src="img/ushio.webp" alt="潮" loading="lazy">
+        <div class="cap"><div class="rb">USHIO — AZURE ROSE</div><div class="nm">潮</div><p class="ds">「音は、すべてを支配する。感情は誤差。揺らぎは欠陥」</p></div></article>
+      <article class="char rv"><img src="img/kishin.webp" alt="薔薇機神" loading="lazy">
+        <div class="cap"><div class="rb">GARDENER</div><div class="nm">薔薇機神</div><p class="ds">機械の駆動音の奥に、盗まれた鼓動が脈打っている。</p></div></article>
+      <article class="char rv"><img src="img/mic.webp" alt="歌うエルザ" loading="lazy">
+        <div class="cap"><div class="rb">？？？</div><div class="nm">紅い月の歌</div><p class="ds">解禁は物語上、ただ二度だけ。</p></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MUSIC ============ -->
+<section class="music" id="music">
+  <div class="moon" style="width:300px;height:300px;left:-120px;bottom:60px;opacity:.12"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">Music</div>
+    <h2 class="rv">収録曲<small>12 ORIGINAL TRACKS</small></h2>
+    <div class="album">
+      <div class="jacket rv">
+        <img src="img/rosy.webp" alt="Cyber Rose Crimson ジャケット" loading="lazy" width="800" height="1200">
+        <div class="disc">CYBER ROSE CRIMSON — ORIGINAL SOUNDTRACK<br>MUSIC BY shou.5150</div>
+      </div>
+      <div>
+        <ol class="tracks" id="tracks"></ol>
+        <p class="note">試聴はゲーム内と同じ軽量音源から30秒。フル音質は Suno で聴けます → <a href="https://suno.com/@shouyama" target="_blank" rel="noopener" style="color:var(--rose2)">suno.com/@shouyama</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALLERY ============ -->
+<section class="gallery" id="gallery">
+  <div class="wrap">
+    <div class="eyebrow rv">Gallery</div>
+    <h2 class="rv">紅い月の街</h2>
+  </div>
+  <div class="strip rv">
+    <figure><img src="img/city.webp" alt="紅い月の街" loading="lazy"></figure>
+    <figure><img src="img/kobo.webp" alt="月島電脳修理店" loading="lazy"></figure>
+    <figure><img src="img/matsuri.webp" alt="縁日" loading="lazy"></figure>
+    <figure><img src="img/sea.webp" alt="電脳の海" loading="lazy"></figure>
+    <figure><img src="img/yoin.webp" alt="余韻" loading="lazy"></figure>
+    <figure><img src="img/sdsleep.webp" alt="二人の朝" loading="lazy"></figure>
+    <figure><img src="img/battle.webp" alt="薔薇剣" loading="lazy"></figure>
+    <figure><img src="img/edbg.webp" alt="エルザ" loading="lazy"></figure>
+  </div>
+  <div class="strip-hint">SWIPE →</div>
+</section>
+
+<!-- ============ HOW TO ============ -->
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="eyebrow rv">How to play</div>
+    <h2 class="rv">遊びかた</h2>
+    <ol>
+      <li class="rv"><b>リンクを開く</b>ボタンを押すだけ。アプリのインストールも、アカウント登録もいりません。</li>
+      <li class="rv"><b>少しだけ待つ</b>絵と音を全部内蔵しているので、初回の読み込みに少し時間がかかります。Wi-Fi がおすすめ。</li>
+      <li class="rv"><b>音を出して読む</b>曲と物語は一緒に鳴るように作ってあります。イヤホン推奨。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="play">
+  <div class="bgimg"><img src="img/rosy.webp" alt="" loading="lazy"></div>
+  <div class="wrap">
+    <p class="lyric rv">ノイズ混じりの星々が　運命を繰り返す<br>刻の裂け目で　君を探す</p>
+    <h2 class="rv">CYBER ROSE CRIMSON</h2>
+    <p class="catch rv">薔薇は、愛か、呪いか。</p>
+    <div class="btns rv">
+      <a class="btn btn-main" href="../index.html">▶ 物語をはじめる</a>
+      <button class="btn btn-ghost" id="shareBtn" type="button">シェアする</button>
+    </div>
+    <p class="tip rv">英語の確認ページ（One more step）が出たら「Open the page」を押してください。<br>配信サービスの仕様で、初回だけ表示されます。</p>
+  </div>
+</section>
+
+<footer>
+  <div class="logo">CYBER ROSE CRIMSON</div>
+  原作・企画・音楽・ビジュアル <b>shou.5150</b><br>
+  シナリオ <b>shou.5150 × Claude</b><br>
+  エンジン <b>月島電脳修理店 製</b><br>
+  <a href="https://suno.com/@shouyama" target="_blank" rel="noopener">♪ suno.com/@shouyama</a>
+</footer>
+
+<div class="dock" id="dock"><a class="btn btn-main" href="../index.html">▶ 物語をはじめる</a></div>
+
+<script>
+(()=>{
+const BASE="https://rawcdn.githack.com/yama5150/shouhei/main/crc/";
+const TRACKS=[
+ ["obscure","obscure","常に鳴っている、世界の呼吸。気づかれないことが仕事の曲。……その正体は、Track 11で。","5344ec1e-7fa7-48b5-baca-a43548e40473"],
+ ["gag","carrot-hoofbeats","SDの相棒。プリンが盗まれる時、必ず鳴る。","ad7eb6ad-aa90-46d5-8ca5-313bcfa19f25"],
+ ["bara","薔薇の涙","泣かせ担当。BPM152——涙は、意外と速い。","7e15f374-b2bc-4e67-9df6-dee22ead9cdd"],
+ ["doukoku","慟哭グラデーション","悲劇の章のためのEDテーマ。","98ccb235-92fc-421f-b339-3857d5dd0d8d"],
+ ["genkei","涙の赤、忘却の青、混ぜれば紫、電脳の熱","第一世代。源三の十八番。すべての封印を開ける鍵。","15b1778c-2e1f-434e-b093-0d8f9739903b"],
+ ["crimson","Eruza: Cyber Rose Crimson","第二世代。解禁は物語上、ただ二度だけ。","5d8d0013-a8e7-4ff1-9bcc-51b2cd335205"],
+ ["ephemeral","Eruza: Ephemeral Cyber Rose","第三世代。すべてが終わった後の、白い月の曲。","f5b573ec-7619-4e99-a3e8-8b112f7baa63"],
+ ["itami","涙の赤、忘却の青、混ぜれば紫、電脳の痛 (Remastered)","第一世代の戦闘形態。熱は癒し、痛は討つ。","e0614b57-22b3-4af2-931f-055fe474ebc6"],
+ ["kodou","鼓動","対機神戦。機械の駆動音の奥に、盗まれた鼓動が脈打っている。","4160cfb0-3798-4dcb-a1df-90ccc4a4d4d6"],
+ ["gyakuten","逆転","対バン。支配は、セッションに入れない。BPM144——終端に向かって上がり続ける曲。","96f903da-1462-4ad3-8184-7316e5d434cc"],
+ ["requiem","秒 慟哭 紅い月","物語には登場しない。312年の全ての魂のための鎮魂歌。",""],
+ ["seijaku","朝の静寂","二人の日常。ギャグでも涙でもない、何も起きない朝の音。","3973efbb-4ece-482a-8ae4-07dbb4d31a3e"]
+];
+const PLAY='<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>';
+const PAUSE='<svg viewBox="0 0 16 16"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>';
+const ol=document.getElementById("tracks");
+ol.innerHTML=TRACKS.map((t,i)=>`
+  <li class="tr" data-k="${t[0]}">
+    <button class="play" type="button" aria-label="${t[1]} を試聴">${PLAY}</button>
+    <div class="t"><div class="num">TRACK ${String(i+1).padStart(2,"0")}</div>
+      <div class="name">${t[1]}</div><div class="desc">${t[2]}</div><div class="bar"><i></i></div></div>
+    <a class="suno" href="${t[3]?"https://suno.com/song/"+t[3]:"https://suno.com/@shouyama"}" target="_blank" rel="noopener">Suno</a>
+  </li>`).join("");
+
+const audio=new Audio(); audio.preload="none";
+let cur=null;
+function setRow(li,on){li.classList.toggle("on",on);li.querySelector(".play").innerHTML=on?PAUSE:PLAY;}
+ol.addEventListener("click",e=>{
+  const b=e.target.closest(".play"); if(!b) return;
+  const li=b.closest(".tr");
+  if(cur===li && !audio.paused){audio.pause();setRow(li,false);return;}
+  if(cur!==li){ if(cur) setRow(cur,false); cur=li; audio.src="audio/"+li.dataset.k+".mp3"; }
+  setRow(li,true); audio.play().catch(()=>setRow(li,false));
+});
+audio.addEventListener("timeupdate",()=>{ if(cur&&audio.duration) cur.querySelector(".bar i").style.width=(audio.currentTime/audio.duration*100)+"%"; });
+audio.addEventListener("ended",()=>{
+  if(!cur) return; setRow(cur,false); cur.querySelector(".bar i").style.width="0";
+  const nx=cur.nextElementSibling; if(nx) nx.querySelector(".play").click();
+});
+
+/* reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+
+/* mobile dock: hero のボタンが見えなくなったら出す / 最後のCTAが見えたら引っ込める */
+const dock=document.getElementById("dock");
+let heroVis=true,finVis=false;
+const upd=()=>dock.classList.toggle("show",!heroVis&&!finVis);
+new IntersectionObserver(([e])=>{heroVis=e.isIntersecting;upd();}).observe(document.querySelector(".hero .btns"));
+new IntersectionObserver(([e])=>{finVis=e.isIntersecting;upd();}).observe(document.querySelector("#play .btns"));
+
+/* share */
+document.getElementById("shareBtn").addEventListener("click",async()=>{
+  const text="「薔薇は、愛か、呪いか。」\n全16話のノベル × 12曲のアルバム『Cyber Rose Crimson』\n#CyberRoseCrimson";
+  const url=BASE+"lp/index.html";
+  if(navigator.share){ try{ await navigator.share({title:"Cyber Rose Crimson",text,url}); return; }catch(e){ if(e.name==="AbortError") return; } }
+  open("https://x.com/intent/post?text="+encodeURIComponent(text)+"&url="+encodeURIComponent(url),"_blank","noopener");
+});
+
+/* petals */
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches){
+  for(let i=0;i<10;i++){
+    const p=document.createElement("i"); p.className="petal";
+    p.style.left=(Math.random()*100)+"vw";
+    p.style.setProperty("--dx",(Math.random()*160-80)+"px");
+    p.style.animationDuration=(12+Math.random()*14)+"s";
+    p.style.animationDelay=(-Math.random()*26)+"s";
+    p.style.transform="scale("+(.6+Math.random()*.8)+")";
+    document.body.appendChild(p);
+  }
+}
+})();
+</script>
+</body>
+</html>
