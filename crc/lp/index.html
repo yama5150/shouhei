@@ -191,17 +191,26 @@ p.lead{color:var(--sub);font-size:15px;max-width:34em}
 /* ---------- next works ---------- */
 .works{display:grid;gap:16px;margin-top:8px}
 @media(min-width:760px){.works{grid-template-columns:1fr 1fr}}
-.work{position:relative;overflow:hidden;border-radius:8px;min-height:220px;padding:28px 24px;display:flex;flex-direction:column;justify-content:flex-end;
-  border:1px solid rgba(185,166,214,.18);background:#0f0818}
-.work::before{content:"";position:absolute;inset:-40%;filter:blur(40px);opacity:.55;animation:drift 14s ease-in-out infinite alternate}
-.work.smoke::before{background:radial-gradient(circle at 30% 40%,#6b6f86,transparent 45%),radial-gradient(circle at 70% 70%,#3a2f4a,transparent 50%)}
-.work.island::before{background:radial-gradient(circle at 35% 45%,#2fb3a8,transparent 42%),radial-gradient(circle at 70% 30%,#ffd36b,transparent 40%),radial-gradient(circle at 60% 80%,#ff8fb0,transparent 45%)}
+.work{position:relative;overflow:hidden;border-radius:8px;border:1px solid rgba(185,166,214,.18);background:#0f0818;display:flex;flex-direction:column}
+.work .media{position:relative;aspect-ratio:16/9;background:#000}
+.work .media img,.work .media video{width:100%;height:100%;object-fit:cover}
+.work .body{position:relative;padding:20px 22px 24px}
+.work .body p{font-size:13px;color:var(--sub);line-height:1.8;margin-top:6px}
+.work.island .media{background:#aee6ff}
+.work.island .media img{object-fit:contain}
+.pv-play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25);border:0;cursor:pointer;color:#fff;
+  font-family:var(--serif);font-size:13px;letter-spacing:.2em}
+.pv-play span{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
+.pv-play svg{width:14px;height:14px;fill:currentColor}
+.work .body::before{content:"";position:absolute;inset:-60% -20% 0;filter:blur(40px);opacity:.35;z-index:-1}
+.work.smoke .body::before{background:radial-gradient(circle at 30% 40%,#6b6f86,transparent 45%),radial-gradient(circle at 70% 70%,#3a2f4a,transparent 50%)}
+.work.island .body::before{background:radial-gradient(circle at 35% 45%,#2fb3a8,transparent 42%),radial-gradient(circle at 70% 30%,#ffd36b,transparent 40%),radial-gradient(circle at 60% 80%,#ff8fb0,transparent 45%)}
 @keyframes drift{to{transform:translate(6%,-4%) rotate(8deg)}}
-@media (prefers-reduced-motion:reduce){.work::before{animation:none}}
-.work>*{position:relative}
+.work .body{z-index:0;overflow:hidden}
 .work .soon{font-family:var(--latin);font-size:11px;letter-spacing:.45em;color:var(--rose2)}
 .work h3{font-size:clamp(22px,6vw,28px);font-weight:600;letter-spacing:.12em;line-height:1.5;margin-top:6px}
 .work.smoke h3{font-family:var(--latin);letter-spacing:.14em}
+.work.island h3{color:#ffe08a}
 .sns{display:flex;justify-content:center;gap:12px;margin:14px 0 6px}
 .sns a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(185,166,214,.3);
   text-decoration:none;color:var(--sub);font-size:12px;letter-spacing:.12em}
@@ -407,8 +416,17 @@ footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:v
     <div class="eyebrow rv">Next works</div>
     <h2 class="rv">次の作品<small>COMING SOON</small></h2>
     <div class="works">
-      <article class="work smoke rv"><div class="soon">COMING SOON</div><h3>Dart and Smoke</h3></article>
-      <article class="work island rv"><div class="soon">COMING SOON</div><h3>リゼ丸の<br>プチプチ冒険島</h3></article>
+      <article class="work smoke rv">
+        <div class="media">
+          <video id="pv" src="dirt-pv.mp4" poster="img/dirt.webp" playsinline preload="none"></video>
+          <button class="pv-play" id="pvPlay" type="button"><span><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>Official PV を見る</span></button>
+        </div>
+        <div class="body"><div class="soon">COMING SOON</div><h3>Dirt and Smoke</h3></div>
+      </article>
+      <article class="work island rv">
+        <div class="media"><img src="img/rizemaru.webp" alt="リゼ丸" loading="lazy" width="960" height="540"></div>
+        <div class="body"><div class="soon">COMING SOON</div><h3>ほおばりハムスター<br>リゼ丸のプチプチ冒険島</h3><p>てきを すいこんで ほおばろう！ 全9ステージ</p></div>
+      </article>
     </div>
   </div>
 </section>
@@ -468,6 +486,12 @@ audio.addEventListener("ended",()=>{
   if(!cur) return; setRow(cur,false); cur.querySelector(".bar i").style.width="0";
   const nx=cur.nextElementSibling; if(nx) nx.querySelector(".play").click();
 });
+
+/* Dirt and Smoke PV */
+const pv=document.getElementById("pv"), pvBtn=document.getElementById("pvPlay");
+pvBtn.addEventListener("click",()=>{ pvBtn.remove(); pv.controls=true; pv.play().catch(()=>{}); });
+pv.addEventListener("play",()=>{ if(cur&&!audio.paused){ audio.pause(); setRow(cur,false); } });
+audio.addEventListener("play",()=>{ if(!pv.paused) pv.pause(); });
 
 /* reveal */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target);}}),{threshold:.12});
