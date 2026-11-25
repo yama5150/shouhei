@@ -37,6 +37,8 @@ https://yama5150.github.io/shouhei/crc/
 
 ### Vercel(推奨・push で自動反映)
 
+**接続済み: https://shouhei.vercel.app** (`main` に入れると自動で反映)。公開・更新の手順は `.claude/skills/shouhei-release/SKILL.md`、AI 向けの入口は `AGENTS.md`。
+
 `vercel.json` 設置済み。リポジトリを一度つなげば、以降は **push するだけで反映**される。
 
 - `main` に push → 本番URLが自動で更新される

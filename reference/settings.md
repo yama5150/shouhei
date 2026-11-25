@@ -29,7 +29,7 @@ https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html
 | **ビジュアル面** | **別のチャットで開発中。** 表情差分などはそちらで進めている。**`crc/index.html` を両方から触ると食い違う**ので、組み込む前に `main` の最新を取ってから作業すること |
 | **表情差分の生成** | **翔平が作業中。** ユウジの「落ち込み」「眠気」から。第22節に仕様 |
 | **劇中BGMの追加** | **4曲中1曲入った**(v80「朝の静寂」)。残り3曲の候補は第28節 |
-| **Vercelへの移行** | `vercel.json` 設置済み・**未接続**。翔平が vercel.com でリポジトリを Import すれば、以後 push で自動反映。手順は README。紹介LPは `crc/lp/` |
+| **Vercel で公開中** | **https://shouhei.vercel.app**(2026-11-25 接続)。`main` に入れると1〜2分で本番に出る。本編は `/play`、紹介LPは `/`(`crc/lp/`)。手順と罠は `.claude/skills/shouhei-release/`。**本番の本編はまだ v88**(v94 は `claude/elegant-dijkstra-w9yj7t`) |
 | **Netlifyへの移行** | `netlify.toml` 設置済み・未接続。githackが重くなったら移る(第26節) |
 | **音源の録り直し** | 保留。`bara` と `gag` の2曲だけで改善分の100%(第21節) |
 
