@@ -133,6 +133,12 @@ python3 -m venv /tmp/qv && /tmp/qv/bin/pip -q install "qrcode[pil]" opencv-pytho
    繋がらない。`shouhei.vercel.app` と `vercel.com` は許可済み。プレビューURL(`*-git-*.vercel.app`)は
    見られないので、本番で確かめるか翔平に見てもらう
 
+9. **GitHub がマージで 500/502 を返すと、マージは通っているのに Vercel が動かないことがある。**
+   CRC v88.1(PR #25)で起きた。`main` は新しいのに、10分たっても本番は前の版のまま、PR に vercel[bot] のコメントも無い。
+   → `git fetch` で `main` に入ったかを先に確かめる(エラーでも通っていることがある)。本番が変わらなければ、
+   Vercel の Deployments から `main` をデプロイし直してもらうか、次のマージで一緒に出す
+10. **CRC のマージは時間がかかる。** 41MB のファイルの差分なので、GitHub の API が詰まりやすい
+
 ## 他の作業との関係
 
 - CRC 本編:`crc-build` スキルに従う。ビジュアルの作業は別チャット(ブランチ `claude/elegant-dijkstra-w9yj7t`)。
