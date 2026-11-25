@@ -128,6 +128,17 @@ p.lead{color:var(--sub);font-size:15px;max-width:34em}
 .char.lead .inner{display:grid}
 @media(min-width:820px){.char.lead{grid-column:span 3}.char.lead .inner{grid-template-columns:1fr 1fr}}
 .char.lead img{aspect-ratio:1/1}
+/* エルザだけ、初期プロトと新デザインを切り替えて見比べられる */
+.elza-art{position:relative;aspect-ratio:3/4;overflow:hidden;cursor:pointer;background:#140a20}
+.elza-art img{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;
+  opacity:0;transition:opacity .7s ease}
+.elza-art img.on{opacity:1}
+.elza-art img[data-v="new"]{object-position:center 20%}
+.ver-tabs{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:6px;justify-content:center}
+.ver-tabs button{flex:1;max-width:160px;min-height:38px;padding:0 10px;border-radius:999px;cursor:pointer;
+  font-family:var(--latin);font-size:10px;letter-spacing:.22em;color:var(--sub);
+  background:rgba(8,3,16,.6);border:1px solid rgba(185,166,214,.35);backdrop-filter:blur(6px)}
+.ver-tabs button.on{color:#fff;background:rgba(232,55,95,.75);border-color:var(--rose2)}
 .char.lead .cap{position:static;background:none;padding:22px 18px}
 .char.lead .nm{font-size:22px}
 .char.lead .ds{font-size:14px}
@@ -308,7 +319,14 @@ footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:v
     <div class="chars">
       <article class="char lead rv">
         <div class="inner">
-          <img src="img/elza.webp" alt="エルザ" loading="lazy" width="800" height="800">
+          <div class="elza-art" id="elzaArt" role="group" aria-label="エルザのデザイン">
+            <img class="on" data-v="new" src="img/elza-new.webp" alt="エルザ(新デザイン)" loading="lazy" width="800" height="1067">
+            <img data-v="proto" src="img/elza.webp" alt="エルザ(初期プロトタイプ)" loading="lazy" width="800" height="800">
+            <div class="ver-tabs">
+              <button type="button" class="on" data-v="new">NEW DESIGN</button>
+              <button type="button" data-v="proto">PROTOTYPE</button>
+            </div>
+          </div>
           <div class="cap">
             <div class="rb">ERUZA — CYBER ROSE PROTOTYPE 00</div>
             <div class="nm">エルザ</div>
@@ -486,6 +504,15 @@ audio.addEventListener("timeupdate",()=>{ if(cur&&audio.duration) cur.querySelec
 audio.addEventListener("ended",()=>{
   if(!cur) return; setRow(cur,false); cur.querySelector(".bar i").style.width="0";
   const nx=cur.nextElementSibling; if(nx) nx.querySelector(".play").click();
+});
+
+/* エルザ: NEW DESIGN / PROTOTYPE。ボタンでも、絵をタップしても切り替わる */
+const ea=document.getElementById("elzaArt");
+const setV=v=>{ ea.querySelectorAll("[data-v]").forEach(el=>el.classList.toggle("on",el.dataset.v===v)); };
+ea.addEventListener("click",e=>{
+  const b=e.target.closest("button[data-v]");
+  if(b){ setV(b.dataset.v); return; }
+  setV(ea.querySelector("img.on").dataset.v==="new"?"proto":"new");
 });
 
 /* Dirt and Smoke PV */
