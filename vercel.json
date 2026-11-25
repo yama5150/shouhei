@@ -1,0 +1,40 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "echo 'ビルドしない。リポジトリの中身をそのまま配る'",
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/crc/lp/",
+      "permanent": false
+    },
+    {
+      "source": "/play",
+      "destination": "/crc/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/crimson",
+      "destination": "/crc/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/crc/lp",
+      "destination": "/crc/lp/",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
