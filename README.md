@@ -5,7 +5,7 @@
 | | パス |
 |---|---|
 | 焼肉ロス管理アプリ | `index.html` |
-| ハムスターゲーム | `hamster.html` |
+| リゼ丸のプチプチ冒険🟢島(ハムスターゲーム) | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
 | CRC 紹介LP(拡散用) | `crc/lp/index.html` |
 

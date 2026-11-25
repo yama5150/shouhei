@@ -2,14 +2,14 @@
 <html lang="ja">  
 <head>  
 <meta charset="UTF-8">  
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-<title>ほおばりハムスター モグモグ大冒険</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">  
+<title>リゼ丸のプチプチ冒険🟢島</title>
 <!-- PWA / ホーム画面アプリ設定 -->
 <meta name="theme-color" content="#2a1e3f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="ほおばりハムスター">
+<meta name="apple-mobile-web-app-title" content="リゼ丸のプチプチ冒険🟢島">
 <link rel="apple-touch-icon" href="https://raw.githack.com/yama5150/shouhei/main/icon-180.png">
 <link rel="icon" type="image/png" href="https://raw.githack.com/yama5150/shouhei/main/icon-192.png">
 <link rel="manifest" href="https://raw.githack.com/yama5150/shouhei/main/manifest.webmanifest">
@@ -18,79 +18,110 @@
   html,body { width:100%; height:100%; overflow:hidden; background:#2a1e3f; font-family:'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif; }  
   #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }  
   canvas { background:#aee7ff; touch-action:none; max-width:100%; max-height:100%; image-rendering:pixelated; border-radius:8px; }  
-  /* タッチUI */  
-  .btn {  
-    position:fixed; border-radius:50%; display:flex; align-items:center; justify-content:center;  
-    font-weight:bold; color:#fff; touch-action:none; z-index:10;  
-    border:3px solid rgba(255,255,255,.55); background:rgba(60,40,90,.45);  
-    backdrop-filter:blur(2px); font-size:15px; text-shadow:0 1px 2px rgba(0,0,0,.5);  
-  }  
-  .btn:active, .btn.on { background:rgba(255,170,60,.65); }  
-  #btnL { left:14px;  bottom:24px; width:64px; height:64px; font-size:26px; }  
-  #btnR { left:92px;  bottom:24px; width:64px; height:64px; font-size:26px; }  
-  #btnJ { right:14px; bottom:96px; width:70px; height:70px; }  
-  #btnS { right:96px; bottom:24px; width:70px; height:70px; }  
-  #btnG { right:14px; bottom:24px; width:60px; height:60px; font-size:12px; }  
-  #ui { display:none; }  
-  body.playing #ui { display:block; }  
-</style>  
-</head>  
-<body>  
-<div id="wrap"><canvas id="cv" width="960" height="540"></canvas></div>  
-<div id="ui">  
-  <div class="btn" id="btnL">◀</div>  
-  <div class="btn" id="btnR">▶</div>  
-  <div class="btn" id="btnJ">ジャンプ</div>  
-  <div class="btn" id="btnS">すいこむ</div>  
-  <div class="btn" id="btnG">のみこむ</div>  
-</div>  
+  /* タッチUI */
+  .btn, .pad {
+    position:fixed; display:flex; align-items:center; justify-content:center; flex-direction:column;
+    font-weight:bold; color:#fff; touch-action:none; z-index:10; line-height:1.15;
+    border:3px solid rgba(255,255,255,.6); background:rgba(60,40,90,.42);
+    backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+    text-shadow:0 1px 2px rgba(0,0,0,.6); box-shadow:0 4px 0 rgba(0,0,0,.25);
+  }
+  .btn { border-radius:50%; font-size:15px; }
+  .btn small { font-size:10px; font-weight:normal; opacity:.85; }
+  .btn.on, .pad.on { background:rgba(255,170,60,.72); transform:translateY(2px) scale(.95); box-shadow:0 1px 0 rgba(0,0,0,.25); }
+  /* ◀▶ は1枚のパッド。指をすべらせるだけで向きを変えられる */
+  #pad { position:fixed; z-index:10; touch-action:none; display:flex;
+    left:calc(14px + env(safe-area-inset-left)); bottom:calc(18px + env(safe-area-inset-bottom));
+    width:176px; height:88px; }
+  #pad .pad { position:static; flex:1; font-size:30px; }
+  #padL { border-radius:44px 0 0 44px; border-right-width:1.5px !important; }
+  #padR { border-radius:0 44px 44px 0; border-left-width:1.5px !important; }
+  #btnJ { right:calc(16px + env(safe-area-inset-right));  bottom:calc(18px + env(safe-area-inset-bottom));  width:90px; height:90px; font-size:17px; }
+  #btnS { right:calc(118px + env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom));  width:76px; height:76px; }
+  #btnG { right:calc(42px + env(safe-area-inset-right));  bottom:calc(120px + env(safe-area-inset-bottom)); width:62px; height:62px; font-size:12px; }
+  #ui { display:none; }
+  body.playing #ui { display:block; }
+  /* たて向きのスマホ */
+  #rotate { display:none; position:fixed; inset:0; z-index:50; background:#2a1e3f; color:#ffd54f;
+    flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    font-weight:bold; font-size:20px; text-align:center; }
+  #rotate .ico { font-size:56px; animation:turn 2s ease-in-out infinite; }
+  @keyframes turn { 0%,30% { transform:rotate(0) } 60%,100% { transform:rotate(-90deg) } }
+  @media (orientation:portrait) and (pointer:coarse) { #rotate { display:flex; } }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv" width="960" height="540"></canvas></div>
+<div id="ui">
+  <div id="pad"><div class="pad" id="padL">◀</div><div class="pad" id="padR">▶</div></div>
+  <div class="btn" id="btnJ">ジャンプ</div>
+  <div class="btn" id="btnS">すいこむ<small>はきだす</small></div>
+  <div class="btn" id="btnG">のみこむ</div>
+</div>
+<div id="rotate"><div class="ico">📱</div><p>スマホを よこむきに してね</p></div>
 <script>  
 "use strict";  
 const cv = document.getElementById('cv');  
 const ctx = cv.getContext('2d');  
 const W = cv.width, H = cv.height;  
   
-// ---------- 入力 ----------  
-const input = { left:false, right:false, jump:false, suck:false, swallow:false,  
-                jumpPressed:false, swallowPressed:false, suckPressed:false };  
-const keymap = { ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right',  
-                 Space:'jump', KeyZ:'jump', ArrowUp:'jump', KeyW:'jump',  
-                 KeyX:'suck', ShiftLeft:'suck', ArrowDown:'swallow', KeyS:'swallow', KeyC:'swallow' };  
-addEventListener('keydown', e=>{  
-  const k = keymap[e.code]; if(!k) return; e.preventDefault();  
-  if(k==='jump' && !input.jump) input.jumpPressed = true;  
-  if(k==='swallow' && !input.swallow) input.swallowPressed = true;  
-  if(k==='suck' && !input.suck) input.suckPressed = true;  
-  input[k] = true;  
-});  
-addEventListener('keyup', e=>{ const k = keymap[e.code]; if(k){ input[k]=false; } });  
-  
-function bindBtn(id, name){  
-  const el = document.getElementById(id);  
-  const on = e=>{ e.preventDefault();  
-    if(name==='jump' && !input.jump) input.jumpPressed = true;  
-    if(name==='swallow' && !input.swallow) input.swallowPressed = true;  
-    if(name==='suck' && !input.suck) input.suckPressed = true;  
-    input[name]=true; el.classList.add('on'); };  
-  const off = e=>{ e.preventDefault(); input[name]=false; el.classList.remove('on'); };  
-  el.addEventListener('touchstart', on, {passive:false});  
-  el.addEventListener('touchend', off, {passive:false});  
-  el.addEventListener('touchcancel', off, {passive:false});  
-  el.addEventListener('mousedown', on);  
-  el.addEventListener('mouseup', off);  
-  el.addEventListener('mouseleave', off);  
-}  
-bindBtn('btnL','left'); bindBtn('btnR','right');  
-bindBtn('btnJ','jump'); bindBtn('btnS','suck'); bindBtn('btnG','swallow');  
-  
-cv.addEventListener('touchstart', e=>{ e.preventDefault(); if(game.state!=='play') startOrRetry(); }, {passive:false});  
-cv.addEventListener('mousedown', e=>{ if(game.state!=='play') startOrRetry(); });  
-addEventListener('keydown', e=>{ if(game.state!=='play' && (e.code==='Space'||e.code==='Enter')) startOrRetry(); });  
-  
+// ---------- 入力 ----------
+const FONT = "'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif";
+const input = { left:false, right:false, jump:false, suck:false, swallow:false,
+                jumpPressed:false, swallowPressed:false, suckPressed:false };
+const keymap = { ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right',
+                 Space:'jump', KeyZ:'jump', ArrowUp:'jump', KeyW:'jump',
+                 KeyX:'suck', ShiftLeft:'suck', ArrowDown:'swallow', KeyS:'swallow', KeyC:'swallow' };
+function press(name){
+  if(name==='jump' && !input.jump) input.jumpPressed = true;
+  if(name==='swallow' && !input.swallow) input.swallowPressed = true;
+  if(name==='suck' && !input.suck) input.suckPressed = true;
+  input[name] = true;
+}
+addEventListener('keydown', e=>{
+  const k = keymap[e.code]; if(!k) return; e.preventDefault();
+  press(k);
+});
+addEventListener('keyup', e=>{ const k = keymap[e.code]; if(k){ input[k]=false; } });
+
+function bindBtn(id, name){
+  const el = document.getElementById(id);
+  const on = e=>{ e.preventDefault(); press(name); el.classList.add('on'); };
+  const off = e=>{ e.preventDefault(); input[name]=false; el.classList.remove('on'); };
+  el.addEventListener('touchstart', on, {passive:false});
+  el.addEventListener('touchend', off, {passive:false});
+  el.addEventListener('touchcancel', off, {passive:false});
+  el.addEventListener('mousedown', on);
+  el.addEventListener('mouseup', off);
+  el.addEventListener('mouseleave', off);
+}
+bindBtn('btnJ','jump'); bindBtn('btnS','suck'); bindBtn('btnG','swallow');
+
+// ◀▶ パッド: 押している指の位置で左右を決める(すべらせて切りかえOK)
+const pad = document.getElementById('pad');
+const padL = document.getElementById('padL'), padR = document.getElementById('padR');
+function setPad(l, r){
+  input.left = l; input.right = r;
+  padL.classList.toggle('on', l); padR.classList.toggle('on', r);
+}
+function padFromX(xs){
+  const rc = pad.getBoundingClientRect(), mid = rc.left + rc.width/2;
+  let l = false, r = false;
+  for(const x of xs){ if(x < mid) l = true; else r = true; }
+  setPad(l, r);
+}
+const padTouch = e=>{ e.preventDefault(); padFromX([...e.targetTouches].map(t=>t.clientX)); };
+['touchstart','touchmove','touchend','touchcancel'].forEach(t=>pad.addEventListener(t, padTouch, {passive:false}));
+let padMouse = false;
+pad.addEventListener('mousedown', e=>{ padMouse = true; padFromX([e.clientX]); });
+addEventListener('mousemove', e=>{ if(padMouse) padFromX([e.clientX]); });
+addEventListener('mouseup', ()=>{ if(padMouse){ padMouse = false; setPad(false, false); } });
+
 // ---------- サウンド(チップチューン) ----------  
 let AC = null;  
 function audio(){ try{ if(!AC){ AC = new (window.AudioContext||window.webkitAudioContext)(); } }catch(e){} return AC; }  
-function beep(freq, dur=0.08, type='square', vol=0.12, slide=0){  
+function beep(freq, dur=0.08, type='square', vol=0.12, slide=0){
+  if(!save.se) return;  
   try{  
     const ac = audio(); if(!ac) return;  
     const o = ac.createOscillator(); const g = ac.createGain();  
@@ -137,26 +168,204 @@ function decodeBGM(cb){
     }, ()=>{ bgmDecoding = false; });  
   }catch(e){ bgmDecoding = false; }  
 }  
-function playBGM(){  
-  try{  
-    const ac = audio(); if(!ac) return;  
-    if(ac.state === 'suspended') ac.resume();  
-    const start = ()=>{  
-      try{  
-        stopBGM();  
-        bgmSource = ac.createBufferSource();  
-        bgmSource.buffer = bgmBuffer;  
-        bgmSource.loop = true;  
-        bgmGain = ac.createGain();  
-        bgmGain.gain.value = 0.45;  
-        bgmSource.connect(bgmGain); bgmGain.connect(ac.destination);  
-        bgmSource.start(0);  
-      }catch(e){}  
-    };  
-    if(bgmBuffer) start(); else decodeBGM(start);  
-  }catch(e){}  
-}  
-function stopBGM(){ try{ if(bgmSource){ bgmSource.stop(); bgmSource.disconnect(); bgmSource = null; } }catch(e){} }  
+// もとの曲(carrot-hoofbeats)を鳴らす
+function playHoof(){
+  try{
+    const ac = audio(); if(!ac) return;
+    if(ac.state === 'suspended') ac.resume();
+    const start = ()=>{
+      if(music.id !== 'hoof') return; // デコード中に曲が変わった
+      try{
+        stopHoof();
+        bgmSource = ac.createBufferSource();
+        bgmSource.buffer = bgmBuffer;
+        bgmSource.loop = true;
+        bgmGain = ac.createGain();
+        bgmGain.gain.value = 0.45;
+        bgmSource.connect(bgmGain); bgmGain.connect(ac.destination);
+        bgmSource.start(0);
+      }catch(e){}
+    };
+    if(bgmBuffer) start(); else decodeBGM(start);
+  }catch(e){}
+}
+function stopHoof(){ try{ if(bgmSource){ bgmSource.stop(); bgmSource.disconnect(); bgmSource = null; } }catch(e){} }
+
+// ---------- チップチューンの曲 ----------
+// lead: 8分音符ごとに 1つ。「.」= 休み、「-」= 前の音をのばす
+// chords: 1小節ごとのコード。ベース・アルペジオは コードから自動で作る
+const SONGS = {
+  forest: { title:'きのこの森', bpm:112, wave:'square', bass:'octave', drums:'pop', arp:true,
+    chords:['F','C','Dm','Bb','F','C','Bb','C'],
+    lead:`A4 . C5 . F5 - E5 C5   D5 . C5 . G4 - . .   F4 . A4 . D5 - C5 A4   Bb4 - A4 - G4 - . .
+          A4 . C5 . F5 - G5 A5   G5 . E5 . C5 - D5 E5   F5 . D5 . Bb4 . D5 .   C5 - - - . . . .` },
+  ice: { title:'こおりの谷', bpm:96, wave:'triangle', leadVol:0.13, bass:'half', drums:'soft', arp:true, echo:true,
+    chords:['Am','F','C','G','Am','F','E','E'],
+    lead:`E5 - . A4 C5 - B4 .   A4 - - - . . . .   G4 - . C5 E5 - D5 .   B4 - - - . . . .
+          E5 - . A5 G5 - E5 .   F5 - E5 - C5 - A4 .   G#4 - B4 - E5 - D5 .   B4 - - - G#4 - - .` },
+  desert: { title:'さばくのオアシス', bpm:120, wave:'sawtooth', leadVol:0.045, bass:'octave', drums:'tom',
+    chords:['D','Eb','D','Eb','D','Cm','Eb','D'],
+    lead:`D5 Eb5 F#5 . G5 F#5 Eb5 D5   Eb5 - - . . . . .   A5 G5 F#5 G5 A5 - Bb5 A5   G5 - F#5 - Eb5 - . .
+          D5 Eb5 F#5 . A5 . F#5 .   G5 - Eb5 - C5 - . .   Bb4 C5 Eb5 . D5 C5 Bb4 .   A4 - - - D5 - . .` },
+  volcano: { title:'ゆうやけ火山', bpm:140, wave:'square', bass:'root8', drums:'rock',
+    chords:['Em','C','D','B','Em','C','Am','B'],
+    lead:`E5 . E5 G5 . E5 B4 .   C5 - . E5 - G5 . .   F#5 . F#5 A5 . F#5 D5 .   D#5 - - - F#5 - - .
+          G5 . G5 F#5 . E5 B4 .   C5 . E5 G5 . C6 - .   B5 . A5 G5 . E5 C5 .   B4 - - - D#5 - F#5 .` },
+  cave: { title:'うみべのどうくつ', bpm:84, wave:'triangle', leadVol:0.14, bass:'half', drums:'none', arp:true, echo:true,
+    chords:['Dm','Em','Dm','Em','F','G','Am','Am'],
+    lead:`A4 - - . D5 - - .   B4 - - . E5 - D5 .   C5 - A4 - F4 - - .   G4 - - - - - . .
+          A4 - C5 - F5 - E5 .   D5 - - . B4 - G4 .   C5 - B4 - A4 - E4 .   A4 - - - - - . .` },
+  sea: { title:'さんごの海', bpm:92, wave:'triangle', leadVol:0.13, bass:'walk', drums:'soft', arp:true, echo:true,
+    chords:['Bb','Gm','Eb','F','Bb','Gm','Cm','F'],
+    lead:`D5 - F5 - Bb5 - A5 .   G5 - - - D5 - . .   Eb5 - G5 - Bb5 - G5 .   F5 - - - C5 - . .
+          D5 - F5 - Bb5 - C6 .   D6 - Bb5 - G5 - Bb5 .   C6 - Bb5 - G5 - Eb5 .   F5 - - - A4 - C5 .` },
+  sky: { title:'くもの上', bpm:128, wave:'square', bass:'walk', drums:'pop', arp:true,
+    chords:['G','D','Em','C','G','D','C','D'],
+    lead:`D5 . G5 . B5 . A5 G5   F#5 - D5 - A4 - . .   G5 . E5 . B4 . E5 G5   E5 - - - D5 - C5 .
+          B4 . D5 . G5 . B5 .   A5 - F#5 - D5 - E5 F#5   G5 . E5 . C5 . E5 .   D5 - - - A5 - - .` },
+  castle: { title:'ほしぞら城', bpm:104, wave:'square', bass:'walk', drums:'march', arp:true,
+    chords:['Cm','Ab','Bb','G','Cm','Ab','Fm','G'],
+    lead:`C5 - Eb5 - G5 - Eb5 .   Ab5 - - - G5 - Eb5 .   F5 - D5 - Bb4 - D5 .   B4 - - - D5 - - .
+          G5 - G5 Ab5 G5 - Eb5 .   C6 - - - Ab5 - Eb5 .   F5 - Ab5 - C6 - Bb5 Ab5   G5 - - - B4 - D5 .` },
+  boss: { title:'ボスせん', bpm:160, wave:'sawtooth', leadVol:0.05, bass:'root8', drums:'rock',
+    chords:['Cm','Cm','Ab','Bb','Cm','Cm','Db','G'],
+    lead:`C5 C5 Eb5 C5 G5 C5 F#5 G5   Eb5 . D5 . C5 . G4 .   Ab4 C5 Eb5 Ab5 G5 Eb5 C5 Eb5   D5 - F5 - Bb5 - Ab5 G5
+          C6 . G5 . Eb5 . G5 .   C6 B5 Bb5 A5 Ab5 G5 F#5 G5   Ab5 - F5 - Db5 - F5 .   G5 - B4 - D5 - F5 .` },
+};
+// ステージごとの曲(hoof = もとの曲)
+const STAGE_BGM = { 'そよかぜ草原':'hoof', 'きのこの森':'forest', 'こおりの谷':'ice', 'さばくのオアシス':'desert',
+  'ゆうやけ火山':'volcano', 'うみべのどうくつ':'cave', 'さんごの海':'sea', 'くもの上':'sky', 'ほしぞら城':'castle' };
+
+const PITCH = { C:0, 'C#':1, Db:1, D:2, 'D#':3, Eb:3, E:4, F:5, 'F#':6, Gb:6, G:7, 'G#':8, Ab:8, A:9, 'A#':10, Bb:10, B:11 };
+const midiOf = n=>{ const m = n.match(/^([A-G][#b]?)(\d)$/); return 12*(+m[2] + 1) + PITCH[m[1]]; };
+const hz = m=> 440 * Math.pow(2, (m - 69)/12);
+const DRUM_PAT = { // 1小節(8分音符 8つ)ぶん。k=キック s=スネア h=ハイハット t=タム
+  pop:   ['kh','h','sh','h','kh','kh','sh','h'],
+  rock:  ['kh','h','sh','kh','kh','kh','sh','h'],
+  soft:  ['k','h','','h','k','h','','h'],
+  march: ['k','','s','','k','','s','s'],
+  tom:   ['k','','t','k','','t','t','h'],
+  none:  ['','','','','','','',''],
+};
+
+function compileSong(sg){
+  const steps = sg.chords.length * 8;
+  const at = Array.from({length:steps}, ()=>[]);
+  let last = null;
+  sg.lead.trim().split(/\s+/).forEach((tk, i)=>{
+    if(i >= steps) return;
+    if(tk==='-'){ if(last) last.d++; }
+    else if(tk==='.') last = null;
+    else { last = { v:'lead', m:midiOf(tk), d:1 }; at[i].push(last); }
+  });
+  sg.chords.forEach((c, b)=>{
+    const m = c.match(/^([A-G][#b]?)(m?)$/);
+    const r = PITCH[m[1]], third = m[2] ? 3 : 4;
+    let root = 36 + r; if(root > 43) root -= 12;
+    const tones = [0, third, 7];
+    for(let k=0;k<8;k++){
+      const t = b*8 + k;
+      if(sg.bass==='root8') at[t].push({ v:'bass', m:root, d:1 });
+      else if(sg.bass==='octave') at[t].push({ v:'bass', m:root + (k%2 ? 12 : 0), d:1 });
+      else if(sg.bass==='walk' && k%2===0) at[t].push({ v:'bass', m:root + [0, third, 7, third][k/2], d:2 });
+      else if(sg.bass==='half' && k%4===0) at[t].push({ v:'bass', m:root + (k ? 7 : 0), d:4 });
+      if(sg.arp){
+        let base = 60 + r; if(base > 66) base -= 12;
+        at[t].push({ v:'arp', m:base + [tones[0], tones[1], tones[2], 12][k%4], d:1 });
+      }
+    }
+  });
+  return at;
+}
+
+const music = { id:null, playing:false, song:null, at:null, step:0, next:0, timer:null, out:null };
+let noiseBuf = null;
+function seqNote(e, t, sd){
+  const ac = AC, sg = music.song;
+  const V = e.v==='lead' ? { type:sg.wave, vol:sg.leadVol || 0.07 }
+          : e.v==='bass' ? { type:'triangle', vol:0.17 }
+          : { type:'square', vol:0.022 };
+  const len = e.d * sd;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = V.type; o.frequency.setValueAtTime(hz(e.m), t);
+  if(e.v==='lead' && e.d >= 3){ // 長い音に ビブラート
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    lfo.frequency.value = 5.5; lg.gain.value = hz(e.m) * 0.012;
+    lfo.connect(lg); lg.connect(o.frequency); lfo.start(t + 0.12); lfo.stop(t + len);
+  }
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(V.vol, t + 0.012);
+  g.gain.setValueAtTime(V.vol, t + len*0.65);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len*0.97);
+  o.connect(g); g.connect(music.out); o.start(t); o.stop(t + len);
+}
+function seqDrum(kind, t){
+  const ac = AC;
+  if(kind==='k' || kind==='t'){
+    const o = ac.createOscillator(), g = ac.createGain();
+    const f0 = kind==='k' ? 150 : 230, f1 = kind==='k' ? 42 : 110;
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + 0.12);
+    g.gain.setValueAtTime(kind==='k' ? 0.5 : 0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    o.connect(g); g.connect(music.out); o.start(t); o.stop(t + 0.17);
+    return;
+  }
+  if(!noiseBuf){
+    noiseBuf = ac.createBuffer(1, ac.sampleRate*0.2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = Math.random()*2 - 1;
+  }
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = noiseBuf;
+  const snare = kind==='s';
+  f.type = snare ? 'bandpass' : 'highpass'; f.frequency.value = snare ? 1800 : 7000;
+  const dur = snare ? 0.12 : 0.035;
+  g.gain.setValueAtTime(snare ? 0.2 : 0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); g.connect(music.out); src.start(t); src.stop(t + dur + 0.01);
+}
+function seqTick(){
+  const ac = AC, sg = music.song; if(!ac || !sg) return;
+  const sd = 60 / sg.bpm / 2, n = music.at.length;
+  if(music.next < ac.currentTime - 0.2) music.next = ac.currentTime + 0.05; // おくれたら 追いつく
+  while(music.next < ac.currentTime + 0.15){
+    const st = music.step % n;
+    for(const e of music.at[st]) seqNote(e, music.next, sd);
+    for(const k of DRUM_PAT[sg.drums || 'none'][st % 8]) seqDrum(k, music.next);
+    music.next += sd; music.step++;
+  }
+}
+function startSeq(sg){
+  const ac = audio(); if(!ac) return;
+  if(ac.state === 'suspended') ac.resume();
+  if(!sg.at) sg.at = compileSong(sg);
+  music.song = sg; music.at = sg.at; music.step = 0; music.next = ac.currentTime + 0.08;
+  music.out = ac.createGain(); music.out.gain.value = 0.7; music.out.connect(ac.destination);
+  if(sg.echo){ // どうくつ・氷の やまびこ
+    const dl = ac.createDelay(), fb = ac.createGain(), wet = ac.createGain();
+    dl.delayTime.value = 60 / sg.bpm * 0.75; fb.gain.value = 0.3; wet.gain.value = 0.35;
+    music.out.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(ac.destination);
+  }
+  music.timer = setInterval(seqTick, 25); seqTick();
+}
+function stopSeq(){
+  if(music.timer){ clearInterval(music.timer); music.timer = null; }
+  if(music.out){ try{ music.out.disconnect(); }catch(e){} music.out = null; }
+  music.song = null;
+}
+
+// いまの場面に合った曲を流す(同じ曲なら そのまま)
+function currentTrack(){
+  if(game.state==='title' || game.state==='select' || game.state==='settings') return 'hoof';
+  if(boss && boss.alive && boss.engaged) return 'boss';
+  return STAGE_BGM[STAGES[Math.min(game.stage, STAGES.length-1)].name] || 'hoof';
+}
+function playBGM(){
+  if(!save.bgm) return;
+  const id = currentTrack();
+  if(music.playing && music.id === id) return;
+  stopBGM();
+  music.id = id; music.playing = true;
+  if(id==='hoof') playHoof(); else startSeq(SONGS[id]);
+}
+function stopBGM(){ stopHoof(); stopSeq(); music.playing = false; music.id = null; }
 // ページ読み込み時に先にデコード開始(再生はユーザー操作後)  
 setTimeout(()=>decodeBGM(), 300);  
   
@@ -170,7 +379,10 @@ const ENEMY_TYPES = {
   walker: { w:34, h:30, hp:1, speed:1.0, ability:null,    color:'#8bc34a', name:'てくてく豆' },  
   chili:  { w:34, h:34, hp:1, speed:1.2, ability:'fire',  color:'#e53935', name:'とうがらしヘビ' },  
   bee:    { w:34, h:30, hp:1, speed:1.6, ability:'spark', color:'#fdd835', name:'ビリビリ蜂', fly:true },  
-  slime:  { w:38, h:30, hp:1, speed:0.7, ability:'ice',   color:'#4fc3f7', name:'こおりスライム' },  
+  slime:  { w:38, h:30, hp:1, speed:0.7, ability:'ice',   color:'#4fc3f7', name:'こおりスライム' },
+  fish:   { w:34, h:24, hp:1, speed:1.4, ability:null,    color:'#ff8a65', name:'ぷかぷかフィッシュ', fly:true },
+  jelly:  { w:30, h:34, hp:1, speed:0.4, ability:'spark', color:'#f48fb1', name:'ビリビリクラゲ', fly:true, amp:60 },
+  hopper: { w:32, h:32, hp:1, speed:0.9, ability:null,    color:'#e53935', name:'きのこピョン', hopper:true },  
 };  
 const ABILITIES = {  
   fire:  { name:'ファイア',  color:'#ff5722', desc:'炎をはく!' },  
@@ -219,6 +431,40 @@ const STAGES = [
       {t:'walker', x:3500}, {t:'slime', x:3650},  
       {t:'chili',  x:3800}, {t:'bee', x:3900, y:300},
     ] },
+  { name:'きのこの森',
+    sky:['#1b5e20','#66bb6a','#dcedc8'], hill:'#2e7d32',
+    dirt:'#4e342e', grass:'#558b2f', grass2:'#7cb342',
+    levelW:4600, goalX:4450,
+    platforms:[
+      {x:0, y:GROUND_Y, w:1300, h:80},
+      {x:1450, y:GROUND_Y, w:650, h:80},
+      {x:2250, y:GROUND_Y, w:800, h:80},
+      {x:3200, y:GROUND_Y, w:1400, h:80},
+      {x:500, y:370, w:140, h:24},
+      {x:760, y:300, w:140, h:24},
+      {x:1060, y:360, w:120, h:24},
+      {x:1330, y:400, w:110, h:24},
+      {x:1600, y:330, w:140, h:24},
+      {x:1900, y:270, w:140, h:24},
+      {x:2150, y:390, w:90, h:24},
+      {x:2450, y:320, w:140, h:24},
+      {x:2750, y:260, w:140, h:24},
+      {x:3060, y:390, w:120, h:24},
+      {x:3350, y:340, w:140, h:24},
+      {x:3700, y:290, w:140, h:24},
+      {x:4050, y:350, w:140, h:24},
+    ],
+    spawns:[
+      {t:'hopper', x:600}, {t:'walker', x:800},
+      {t:'chili', x:1000}, {t:'hopper', x:1200},
+      {t:'bee', x:1350, y:300}, {t:'hopper', x:1600},
+      {t:'slime', x:1800}, {t:'walker', x:2000},
+      {t:'hopper', x:2350}, {t:'chili', x:2550},
+      {t:'bee', x:2700, y:240}, {t:'hopper', x:2900},
+      {t:'walker', x:3300}, {t:'hopper', x:3500},
+      {t:'slime', x:3700}, {t:'chili', x:3900},
+      {t:'hopper', x:4100}, {t:'bee', x:4250, y:300},
+    ] },
   { name:'こおりの谷',
     sky:['#5c6bc0','#90caf9','#e1f5fe'], hill:'#b0bec5',  
     dirt:'#78909c', grass:'#eceff1', grass2:'#b3e5fc',  
@@ -251,6 +497,43 @@ const STAGES = [
       {t:'bee', x:3500, y:300}, {t:'chili', x:3700},  
       {t:'slime', x:3900}, {t:'bee', x:4100, y:280},  
       {t:'walker', x:4250},
+    ] },
+  { name:'さばくのオアシス',
+    sky:['#f57c00','#ffcc80','#fff8e1'], hill:'#e8b15f',
+    dirt:'#c68a3e', grass:'#f0c27a', grass2:'#f7d79b',
+    levelW:5000, goalX:4850,
+    platforms:[
+      {x:0, y:GROUND_Y, w:1000, h:80},
+      {x:1150, y:GROUND_Y, w:500, h:80},
+      {x:1800, y:GROUND_Y, w:700, h:80},
+      {x:2700, y:GROUND_Y, w:450, h:80},
+      {x:3350, y:GROUND_Y, w:1650, h:80},
+      {x:450, y:360, w:140, h:24},
+      {x:800, y:290, w:130, h:24},
+      {x:1020, y:400, w:110, h:24},
+      {x:1350, y:330, w:130, h:24},
+      {x:1650, y:390, w:120, h:24},
+      {x:2000, y:320, w:140, h:24},
+      {x:2300, y:260, w:140, h:24},
+      {x:2550, y:390, w:120, h:24},
+      {x:2900, y:330, w:130, h:24},
+      {x:3180, y:390, w:120, h:24},
+      {x:3500, y:310, w:140, h:24},
+      {x:3850, y:260, w:140, h:24},
+      {x:4250, y:340, w:140, h:24},
+    ],
+    spawns:[
+      {t:'walker', x:500}, {t:'chili', x:700},
+      {t:'chili', x:900}, {t:'bee', x:1100, y:300},
+      {t:'walker', x:1250}, {t:'chili', x:1500},
+      {t:'bee', x:1700, y:260}, {t:'chili', x:1900},
+      {t:'walker', x:2100}, {t:'slime', x:2300},
+      {t:'chili', x:2450}, {t:'bee', x:2650, y:280},
+      {t:'chili', x:2800}, {t:'walker', x:3000},
+      {t:'bee', x:3250, y:300}, {t:'chili', x:3450},
+      {t:'walker', x:3650}, {t:'chili', x:3850},
+      {t:'bee', x:4050, y:260}, {t:'chili', x:4300},
+      {t:'slime', x:4500},
     ] },
   { name:'ゆうやけ火山',
     sky:['#4a148c','#e65100','#ffcc80'], hill:'#6d4c41',  
@@ -286,6 +569,108 @@ const STAGES = [
       {t:'chili', x:3850}, {t:'slime', x:4050},  
       {t:'bee', x:4250, y:300}, {t:'chili', x:4450},  
       {t:'bee', x:4650, y:320},
+    ] },
+  { name:'うみべのどうくつ',
+    sky:['#06121f','#123047','#1f5f7a'], hill:'#0e2a40',
+    dirt:'#2f3e46', grass:'#26a69a', grass2:'#4db6ac',
+    levelW:4800, goalX:4650,
+    platforms:[
+      {x:0, y:GROUND_Y, w:900, h:80},
+      {x:1050, y:GROUND_Y, w:450, h:80},
+      {x:1650, y:GROUND_Y, w:600, h:80},
+      {x:2400, y:GROUND_Y, w:300, h:80},
+      {x:2850, y:GROUND_Y, w:700, h:80},
+      {x:3700, y:GROUND_Y, w:1100, h:80},
+      {x:400, y:360, w:130, h:24},
+      {x:700, y:300, w:130, h:24},
+      {x:930, y:400, w:100, h:24},
+      {x:1250, y:330, w:130, h:24},
+      {x:1520, y:390, w:110, h:24},
+      {x:1800, y:300, w:130, h:24},
+      {x:2100, y:360, w:130, h:24},
+      {x:2280, y:280, w:110, h:24},
+      {x:2560, y:380, w:110, h:24},
+      {x:2720, y:300, w:110, h:24},
+      {x:3050, y:330, w:130, h:24},
+      {x:3400, y:390, w:120, h:24},
+      {x:3550, y:300, w:120, h:24},
+      {x:3950, y:340, w:140, h:24},
+      {x:4250, y:290, w:140, h:24},
+    ],
+    spawns:[
+      {t:'slime', x:450}, {t:'hopper', x:650},
+      {t:'bee', x:850, y:300}, {t:'slime', x:1100},
+      {t:'hopper', x:1300}, {t:'slime', x:1700},
+      {t:'bee', x:1950, y:260}, {t:'hopper', x:2100},
+      {t:'slime', x:2450}, {t:'bee', x:2650, y:280},
+      {t:'hopper', x:2950}, {t:'slime', x:3200},
+      {t:'chili', x:3400}, {t:'bee', x:3600, y:280},
+      {t:'hopper', x:3800}, {t:'slime', x:4000},
+      {t:'hopper', x:4200}, {t:'bee', x:4400, y:300},
+    ] },
+  { name:'さんごの海', water:true,
+    sky:['#4fc3f7','#1976d2','#0d2b5e'], hill:'#0e3d74',
+    dirt:'#d7b98a', grass:'#f0dcae', grass2:'#e6cb94',
+    levelW:4800, goalX:4650,
+    platforms:[
+      {x:0, y:GROUND_Y, w:1100, h:80},
+      {x:1300, y:GROUND_Y, w:700, h:80},
+      {x:2200, y:GROUND_Y, w:500, h:80},
+      {x:2900, y:GROUND_Y, w:800, h:80},
+      {x:3900, y:GROUND_Y, w:900, h:80},
+      {x:500, y:330, w:140, h:24},
+      {x:900, y:250, w:120, h:24},
+      {x:1400, y:300, w:130, h:24},
+      {x:1750, y:220, w:130, h:24},
+      {x:2050, y:340, w:120, h:24},
+      {x:2450, y:260, w:140, h:24},
+      {x:2750, y:330, w:110, h:24},
+      {x:3200, y:240, w:140, h:24},
+      {x:3550, y:320, w:130, h:24},
+      {x:4100, y:280, w:140, h:24},
+    ],
+    spawns:[
+      {t:'fish', x:500, y:300}, {t:'slime', x:700},
+      {t:'jelly', x:900, y:260}, {t:'fish', x:1200, y:220},
+      {t:'slime', x:1450}, {t:'jelly', x:1650, y:300},
+      {t:'fish', x:1900, y:200}, {t:'fish', x:2100, y:360},
+      {t:'jelly', x:2350, y:240}, {t:'slime', x:2450},
+      {t:'fish', x:2700, y:300}, {t:'jelly', x:3000, y:200},
+      {t:'slime', x:3100}, {t:'fish', x:3400, y:260},
+      {t:'jelly', x:3700, y:300}, {t:'fish', x:4000, y:220},
+      {t:'slime', x:4200}, {t:'jelly', x:4400, y:260},
+    ] },
+  { name:'くもの上',
+    sky:['#29b6f6','#b3e5fc','#fce4ec'], hill:'#e3f2fd',
+    dirt:'#e1f5fe', grass:'#ffffff', grass2:'#f3e5f5',
+    levelW:5200, goalX:5050,
+    platforms:[
+      {x:0, y:GROUND_Y, w:800, h:80},
+      {x:1500, y:GROUND_Y, w:400, h:80},
+      {x:2700, y:GROUND_Y, w:350, h:80},
+      {x:3900, y:GROUND_Y, w:1300, h:80},
+      {x:850, y:380, w:120, h:24, mv:{ax:'x', r:60, sp:0.02}},
+      {x:1100, y:320, w:110, h:24, mv:{ax:'y', r:50, sp:0.025}},
+      {x:1300, y:380, w:110, h:24},
+      {x:1650, y:300, w:130, h:24},
+      {x:1950, y:380, w:120, h:24, mv:{ax:'x', r:90, sp:0.018}},
+      {x:2250, y:320, w:110, h:24, mv:{ax:'y', r:60, sp:0.02, ph:1.5}},
+      {x:2500, y:380, w:110, h:24},
+      {x:2800, y:300, w:120, h:24},
+      {x:3100, y:370, w:120, h:24, mv:{ax:'x', r:100, sp:0.016}},
+      {x:3400, y:300, w:110, h:24, mv:{ax:'y', r:70, sp:0.022}},
+      {x:3650, y:380, w:120, h:24, mv:{ax:'x', r:50, sp:0.03, ph:1}},
+      {x:4200, y:320, w:140, h:24},
+      {x:4550, y:280, w:140, h:24},
+    ],
+    spawns:[
+      {t:'slime', x:500}, {t:'bee', x:650, y:280},
+      {t:'bee', x:1150, y:220}, {t:'slime', x:1600},
+      {t:'walker', x:1800}, {t:'bee', x:2300, y:220},
+      {t:'slime', x:2800}, {t:'bee', x:3000, y:250},
+      {t:'bee', x:3500, y:230}, {t:'chili', x:4000},
+      {t:'walker', x:4300}, {t:'bee', x:4500, y:260},
+      {t:'slime', x:4700}, {t:'bee', x:4850, y:280},
     ] },
   { name:'ほしぞら城',
     sky:['#1a1140','#3b2f6e','#8e7cc3'], hill:'#2e2a52',
@@ -323,13 +708,14 @@ const STAGES = [
 function loadStage(i){  
   const st = STAGES[i];  
   LEVEL_W = st.levelW; GOAL_X = st.goalX;  
-  platforms = st.platforms;  
+  platforms = st.platforms.map(pf=>({ ...pf, bx:pf.x, by:pf.y, dx:0, dy:0 })); // 動く足場があるのでコピー
+  game.stageSeeds = 0; game.stageHit = false;  
   enemies = st.spawns.map(s=>{  
     const d = ENEMY_TYPES[s.t];  
     return { type:s.t, ...JSON.parse(JSON.stringify(d)),  
       x:s.x, y: s.y!==undefined ? s.y : GROUND_Y - d.h,  
-      vx:-d.speed, vy:0, baseY:s.y, t:Math.random()*100,  
-      alive:true, frozen:0, beingSucked:false };  
+      vx:-d.speed*D().enemySpeed, vy:0, baseY:s.y, t:Math.random()*100,  
+      alive:true, frozen:0, beingSucked:false, hopT:Math.floor(Math.random()*75) };  
   });  
   bullets = []; particles = []; popups = []; seeds = []; items = [];
   // ボス
@@ -337,45 +723,217 @@ function loadStage(i){
   if(st.boss){
     const bd = BOSS_TYPES[st.boss.type];
     boss = { type:st.boss.type, ...bd, x:st.boss.x, y:GROUND_Y - bd.h,
-      vx:0, vy:0, onGround:false, hp:bd.hp, maxHp:bd.hp, inv:0, atkCd:120,
+      vx:0, vy:0, onGround:false, hp:Math.ceil(bd.hp*D().bossHp), maxHp:Math.ceil(bd.hp*D().bossHp), inv:0, atkCd:120,
       t:0, alive:true, engaged:false, face:-1,
       arenaMin:st.boss.x - 280, arenaMax:st.goalX - 40 };
     game.bossActive = true;
   }
   game.cam = 0;
-  player.x = 100; player.y = GROUND_Y - 40;
+  player.x = 220; player.y = GROUND_Y - 40;
   player.vx = 0; player.vy = 0; player.dir = 1;  
   player.mouthful = null; player.puff = 0; player.airPuffs = 4;  
 }  
   
-// ---------- ゲーム状態 ----------  
-const game = { state:'title', cam:0, time:0, score:0, frame:0 };  
+// ---------- ゲーム状態 ----------
+const game = { state:'title', cam:0, time:0, score:0, frame:0,
+               menuSel:0, shake:0, flash:0, intro:0, diff:'normal', newRecord:false };
 let player, enemies, bullets, particles, popups, seeds, items, boss;
-  
-function resetGame(){  
-  player = {  
-    x:100, y:GROUND_Y-40, w:40, h:38, vx:0, vy:0,  
-    dir:1, onGround:false, hp:5, maxHp:8, inv:0,  
-    sucking:false, mouthful:null,  
-    ability:null, abilityT:0,  
-    puff:0,  
-    airPuffs:0,  
-    anim:0, squash:1, frozenSpit:0,  
-  };  
-  game.cam = 0; game.score = 0; game.time = 0; game.frame = 0;  
-  game.stage = 0; game.banner = 0; game.seedCount = 0;  
-  loadStage(0);  
-}  
-  
-function startOrRetry(){  
-  audio(); // iOSオーディオ解禁  
-  if(game.state==='title' || game.state==='over' || game.state==='clear'){  
-    resetGame(); game.state = 'play';  
-    document.body.classList.add('playing');  
-    playBGM();  
-  }  
-}  
-  
+
+// ---------- むずかしさ ----------
+const DIFFS = {
+  easy:   { label:'かんたん', note:'HPが多い・落ちてもへらない・敵とボスがよわめ',
+            hp:8, inv:150, pitDmg:0, keepAbility:true,  enemySpeed:0.75, bossHp:0.6, bossAtk:1.4 },
+  normal: { label:'ふつう',   note:'ダメージを受けると 能力がにげる',
+            hp:5, inv:90,  pitDmg:1, keepAbility:false, enemySpeed:1,    bossHp:1,   bossAtk:1   },
+};
+const D = ()=> DIFFS[game.diff] || DIFFS.normal;
+
+// ---------- セーブ(この端末のブラウザに保存される) ----------
+const SAVE_KEY = 'hohobari-hamster-save-v1';
+const SEED_STAR = 30; // ★ たね何こで もらえるか
+function loadSave(){
+  let d = {};
+  try{ d = JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }catch(e){}
+  let cont = d.cont || null;
+  let unlocked = d.unlocked|0;
+  const stars = Array.isArray(d.stars) ? d.stars.map(v=>v|0) : [];
+  // 4ステージ時代のセーブは 新しいステージ番号に読みかえる
+  if(!d.ver){
+    if(cont) cont = { ...cont, stage:[0,2,4,8][cont.stage] ?? 0 };
+    if(d.cleared) unlocked = STAGES.length - 1;
+  }
+  // さんごの海(7面)を入れる前のセーブは、7面より後ろを 1つずらす
+  if(d.ver === 2){
+    if(cont && cont.stage >= 6) cont = { ...cont, stage:cont.stage + 1 };
+    if(unlocked >= 6) unlocked++;
+    if(stars.length > 6) stars.splice(6, 0, 0);
+  }
+  if(cont && !(cont.stage >= 1 && cont.stage < STAGES.length)) cont = null;
+  if(cont) unlocked = Math.max(unlocked, cont.stage);
+  while(stars.length < STAGES.length) stars.push(0);
+  stars.length = STAGES.length;
+  return { ver:3, diff: DIFFS[d.diff] ? d.diff : 'normal', best: d.best|0, cont, cleared: !!d.cleared,
+           unlocked: Math.min(unlocked, STAGES.length-1), stars,
+           bgm: d.bgm !== false, se: d.se !== false };
+}
+function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+const save = loadSave();
+const starCount = v=> (v&1) + ((v>>1)&1) + ((v>>2)&1);
+const totalStars = ()=> save.stars.reduce((a, v)=> a + starCount(v), 0);
+
+// cp = チェックポイント(ステージ開始時の状態)。なければ最初から
+function resetGame(cp){
+  game.diff = save.diff;
+  player = {
+    x:100, y:GROUND_Y-40, w:40, h:38, vx:0, vy:0,
+    dir:1, onGround:false, hp:0, maxHp:8, inv:0,
+    sucking:false, mouthful:null,
+    ability:null, abilityT:0,
+    puff:0,
+    airPuffs:0, coyote:0,
+    anim:0, squash:1, frozenSpit:0,
+  };
+  player.hp = cp ? Math.min(player.maxHp, Math.max(cp.hp, D().hp)) : D().hp;
+  game.cam = 0; game.time = 0; game.frame = 0; game.banner = 0;
+  game.score = cp ? cp.score : 0;
+  game.stage = cp ? cp.stage : 0;
+  game.seedCount = cp ? cp.seeds : 0;
+  game.newRecord = false; game.shake = 0; game.flash = 0; game.intro = 0;
+  loadStage(game.stage);
+}
+
+// ステージ開始時に呼ぶ: ここから再開できるようにする
+function markCheckpoint(){
+  game.checkpoint = { stage:game.stage, hp:player.hp, score:game.score, seeds:game.seedCount };
+  save.cont = game.stage > 0 ? { ...game.checkpoint } : null;
+  save.unlocked = Math.max(save.unlocked, game.stage);
+  writeSave();
+}
+
+function setState(st){
+  game.state = st; game.menuSel = 0;
+  document.body.classList.toggle('playing', st==='play' || st==='next');
+}
+function clearInput(){
+  for(const k in input) input[k] = false;
+  document.querySelectorAll('.on').forEach(el=>el.classList.remove('on'));
+}
+function unlockAudio(){ const ac = audio(); try{ if(ac && ac.state==='suspended') ac.resume(); }catch(e){} }
+
+function startGame(cp){
+  unlockAudio();
+  resetGame(cp); markCheckpoint();
+  setState('play'); clearInput();
+  game.intro = 150;
+  playBGM();
+}
+function toTitle(){ unlockAudio(); resetGame(); setState('title'); playBGM(); }
+function pauseGame(){
+  if(game.state!=='play') return;
+  setState('pause'); clearInput();
+  try{ if(AC) AC.suspend(); }catch(e){}
+}
+function resumeGame(){ setState('play'); clearInput(); unlockAudio(); playBGM(); }
+function updateBest(){
+  if(game.score > save.best){ save.best = game.score; game.newRecord = true; writeSave(); }
+}
+function gameOver(){ setState('over'); stopBGM(); updateBest(); }
+function gameClear(){ setState('clear'); save.cont = null; save.cleared = true; updateBest(); writeSave(); }
+
+// ---------- メニュー(タイトル・ステージせんたく・せってい・ポーズ・ゲームオーバー・クリア) ----------
+let menuButtons = [];
+function openSettings(from){ setState('settings'); game.settingsFrom = from; }
+function menuItems(){
+  if(game.state==='title'){
+    const a = [];
+    if(save.cont) a.push({ label:'つづきから(STAGE ' + (save.cont.stage+1) + ')', act:()=>startGame(save.cont) });
+    a.push({ label:'はじめから', act:()=>startGame(null) });
+    if(save.unlocked > 0) a.push({ label:'ステージせんたく', act:()=>{
+      setState('select'); game.menuSel = Math.min(save.unlocked, STAGES.length-1); } });
+    a.push({ label:'せってい', act:()=>openSettings('title') });
+    return a;
+  }
+  if(game.state==='select'){
+    const a = STAGES.map((st, i)=>({ label:st.name, act: i <= save.unlocked
+      ? ()=>startGame({ stage:i, hp:D().hp, score:0, seeds:0 })
+      : ()=>SFX.hurt() }));
+    a.push({ label:'もどる', act:()=>setState('title') });
+    return a;
+  }
+  if(game.state==='settings') return [
+    { label:'むずかしさ:' + DIFFS[save.diff].label, act:()=>{
+      save.diff = save.diff==='easy' ? 'normal' : 'easy'; game.diff = save.diff; writeSave(); } },
+    { label:'BGM:' + (save.bgm ? 'ON' : 'OFF'), act:()=>{ save.bgm = !save.bgm; writeSave(); if(!save.bgm) stopBGM(); else if(game.settingsFrom!=='pause') playBGM(); } },
+    { label:'こうかおん:' + (save.se ? 'ON' : 'OFF'), act:()=>{ save.se = !save.se; writeSave(); } },
+    { label:'もどる', act:()=>{ const back = game.settingsFrom || 'title'; setState(back); } },
+  ];
+  if(game.state==='pause') return [
+    { label:'つづける', act:resumeGame },
+    { label:'このステージを やりなおす', act:()=>startGame(game.checkpoint) },
+    { label:'せってい', act:()=>openSettings('pause') },
+    { label:'タイトルへ', act:toTitle },
+  ];
+  if(game.state==='over') return [
+    { label:'このステージから', act:()=>startGame(game.checkpoint) },
+    { label:'タイトルへ', act:toTitle },
+  ];
+  if(game.state==='clear') return [{ label:'タイトルへ', act:toTitle }];
+  return [];
+}
+// リザルト画面はタップで早送り
+function menuMusic(){
+  if(game.state==='title' || game.state==='select' || (game.state==='settings' && game.settingsFrom!=='pause')) playBGM();
+}
+function skipResult(){ if(game.state==='next' && 210 - game.banner > 50 && game.banner > 25) game.banner = 25; }
+function canvasPoint(e){
+  const r = cv.getBoundingClientRect();
+  const t = e.changedTouches ? e.changedTouches[0] : e;
+  return { x:(t.clientX - r.left) * W / r.width, y:(t.clientY - r.top) * H / r.height };
+}
+const PAUSE_BTN = { x:662, y:8, w:86, h:42 }; // 画面上の ポーズボタン
+const inRect = (pt, b)=> pt.x>=b.x && pt.x<=b.x+b.w && pt.y>=b.y && pt.y<=b.y+b.h;
+function menuTap(e){
+  if(e.type==='touchstart' && e.cancelable) e.preventDefault();
+  audio();
+  if(game.state==='play'){
+    // タップしやすいよう まわりを少し広めに判定
+    const b = PAUSE_BTN, pt = canvasPoint(e);
+    if(inRect(pt, { x:b.x-12, y:0, w:b.w+24, h:b.y+b.h+12 })) pauseGame();
+    return;
+  }
+  if(game.state==='next'){ skipResult(); return; }
+  if(!menuItems().length) return;
+  const pt = canvasPoint(e);
+  const i = menuButtons.findIndex(b=> inRect(pt, b));
+  if(i >= 0){ game.menuSel = i; unlockAudio(); SFX.seed(); menuButtons[i].act(); menuMusic(); }
+}
+cv.addEventListener('touchstart', menuTap, {passive:false});
+cv.addEventListener('mousedown', menuTap);
+addEventListener('keydown', e=>{
+  if(e.code==='Escape' || e.code==='KeyP'){
+    if(game.state==='play'){ pauseGame(); return; }
+    if(game.state==='pause'){ resumeGame(); return; }
+  }
+  if(game.state==='next'){ if(e.code==='Space' || e.code==='Enter') skipResult(); return; }
+  const items = menuItems(); if(!items.length) return;
+  const n = items.length, grid = game.state==='select';
+  let sel = Math.min(game.menuSel, n-1);
+  if(e.code==='ArrowUp' || e.code==='KeyW') sel = grid ? (sel===n-1 ? SEL_COLS : (sel >= SEL_COLS ? sel-SEL_COLS : sel)) : (sel+n-1) % n;
+  else if(e.code==='ArrowDown' || e.code==='KeyS') sel = grid ? (sel < SEL_COLS ? Math.min(sel+SEL_COLS, n-2) : n-1) : (sel+1) % n;
+  else if(grid && (e.code==='ArrowLeft' || e.code==='KeyA')) sel = (sel+n-1) % n;
+  else if(grid && (e.code==='ArrowRight' || e.code==='KeyD')) sel = (sel+1) % n;
+  else if(e.code==='Space' || e.code==='Enter' || e.code==='KeyZ'){
+    e.preventDefault(); if(e.repeat) return;
+    audio(); unlockAudio();
+    items[sel].act(); menuMusic(); return;
+  } else if(e.code==='Escape' || e.code==='Backspace'){
+    if(items[n-1].label==='もどる') items[n-1].act();
+    return;
+  } else return;
+  e.preventDefault();
+  if(sel !== game.menuSel){ game.menuSel = sel; SFX.seed(); }
+});
+
 // ---------- ユーティリティ ----------  
 const hit = (a,b)=> a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;  
 function spawnParticles(x,y,color,n=8,spd=3){  
@@ -389,7 +947,8 @@ function popup(x,y,text,color='#fff'){ popups.push({x,y,text,color,life:60}); }
 // ---------- プレイヤー更新 ----------  
 function updatePlayer(){  
   const p = player;  
-  const SPEED = 3.2, GRAV = 0.45, JUMP = -9.5;  
+  const water = !!STAGES[game.stage].water; // 水中ステージ
+  const SPEED = water ? 2.6 : 3.2, GRAV = water ? (input.jump ? 0.05 : 0.13) : 0.45, JUMP = -9.5;  
   
   // 左右移動  
   if(input.left){ p.vx = -SPEED; p.dir = -1; }  
@@ -397,9 +956,21 @@ function updatePlayer(){
   else p.vx *= 0.7;  
   
   // ジャンプ & ぷくぷく滞空(空中でジャンプ→ふくらんでふわっ)  
+  // 水中: ジャンプボタンで ひとかき(何回でも)。おしっぱなしだと ゆっくり うかぶ
+  if(water && input.jumpPressed){
+    input.jumpPressed = false;
+    p.vy = Math.max(-4.5, Math.min(p.vy, 0) - 3.6);
+    p.onGround = false; p.coyote = 0; p.squash = 1.15; SFX.puff();
+    for(let k=0;k<3;k++) particles.push({ x:p.x+p.w/2 + (Math.random()-0.5)*16, y:p.y+p.h, vx:(Math.random()-0.5)*0.6, vy:-0.5,
+      life:40, color:'rgba(255,255,255,.7)', r:2 + Math.random()*2, rise:true });
+  }
+  if(water && game.frame % 50 === 0) particles.push({ x:p.x+p.w/2 + p.dir*14, y:p.y+8, vx:p.dir*0.3, vy:-0.6,
+    life:50, color:'rgba(255,255,255,.6)', r:2.5, rise:true });
   if(input.jumpPressed){  
     input.jumpPressed = false;  
-    if(p.onGround){ p.vy = JUMP; p.onGround=false; p.airPuffs = 4; SFX.jump(); p.squash = 1.25; }  
+    if(p.onGround || p.coyote > 0){ // 足場のはしから少しおくれても ジャンプできる
+      p.vy = JUMP; p.onGround=false; p.coyote = 0; p.airPuffs = 4; SFX.jump(); p.squash = 1.25;
+      spawnParticles(p.x+p.w/2, p.y+p.h, 'rgba(255,255,255,.8)', 4, 1.5); }  
     else if(p.airPuffs > 0){  
       p.airPuffs--; p.vy = -5.5; p.puff = 25; SFX.puff();  
       spawnParticles(p.x+p.w/2, p.y+p.h, '#fff', 5, 2);  
@@ -410,21 +981,33 @@ function updatePlayer(){
   
   // 重力  
   p.vy += GRAV;  
-  if(p.vy > 11) p.vy = 11;  
+  if(p.vy > (water ? 2.2 : 11)) p.vy = water ? 2.2 : 11;
+  if(water && p.y < 70){ p.y = 70; if(p.vy < 0) p.vy = 0; } // 海面より上には出ない  
   p.x += p.vx; p.y += p.vy;  
   if(p.x < 0) p.x = 0;  
   if(p.x > LEVEL_W - p.w) p.x = LEVEL_W - p.w;  
   
   // 足場判定  
-  p.onGround = false;  
+  const wasGround = p.onGround, fallV = p.vy;
+  p.onGround = false; p.standPf = null;  
   for(const pf of platforms){  
     if(p.x+p.w > pf.x && p.x < pf.x+pf.w){  
       if(p.vy >= 0 && p.y+p.h > pf.y && p.y+p.h - p.vy <= pf.y + 8){  
-        p.y = pf.y - p.h; p.vy = 0;  
+        p.y = pf.y - p.h; p.vy = 0; p.standPf = pf;  
         if(!p.onGround){ p.onGround = true; p.airPuffs = 4; }  
       }  
     }  
   }  
+  if(p.onGround){
+    p.coyote = 7;
+    if(!wasGround && fallV > 5){ // 着地: ぽよんとつぶれて土ぼこり
+      p.squash = 0.78;
+      spawnParticles(p.x+p.w/2, p.y+p.h, 'rgba(255,255,255,.8)', 6, 2);
+    }
+    if(Math.abs(p.vx) > 2.5 && game.frame % 9 === 0)
+      particles.push({ x:p.x+p.w/2 - p.dir*14, y:p.y+p.h-2, vx:-p.dir*0.6, vy:-0.8,
+        life:18, color:'rgba(255,255,255,.7)', r:3 });
+  } else if(p.coyote > 0) p.coyote--;
   // 落下死  
   if(p.y > H + 60){ damagePlayer(1, true); }  
   
@@ -490,19 +1073,22 @@ function fireAbility(){
   }  
 }  
   
-function damagePlayer(d, pit=false){  
-  const p = player;  
-  if(p.inv > 0 && !pit) return;  
-  p.hp -= d; p.inv = 90; SFX.hurt();  
-  spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ff8a80', 10, 4);  
-  if(pit){ p.x = Math.max(60, p.x - 160); p.y = 100; p.vy = 0;  
-    // 安全な足場の上に戻す  
-    let best = platforms[0];  
-    for(const pf of platforms){ if(pf.x < p.x && pf.x+pf.w > p.x && pf.h > 50) best = pf; }  
-    p.x = Math.min(Math.max(best.x+20, p.x), best.x+best.w-60);  
-  }  
-  if(p.ability){ p.ability = null; popup(p.x+p.w/2, p.y-20, '能力が逃げた!', '#aaa'); }  
-  if(p.hp <= 0){ game.state = 'over'; document.body.classList.remove('playing'); stopBGM(); }
+function damagePlayer(d, pit=false){
+  const p = player;
+  if(p.inv > 0 && !pit) return;
+  if(pit) d = D().pitDmg;
+  p.hp -= d; p.inv = D().inv; SFX.hurt();
+  if(d > 0) game.stageHit = true;
+  game.shake = 10; game.flash = d > 0 ? 14 : 0;
+  spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ff8a80', 10, 4);
+  if(pit){ p.x = Math.max(60, p.x - 160); p.y = 100; p.vy = 0;
+    // 安全な足場の上に戻す
+    let best = platforms[0];
+    for(const pf of platforms){ if(pf.x < p.x && pf.x+pf.w > p.x && pf.h > 50) best = pf; }
+    p.x = Math.min(Math.max(best.x+20, p.x), best.x+best.w-60);
+  }
+  if(p.ability && d > 0 && !D().keepAbility){ p.ability = null; popup(p.x+p.w/2, p.y-20, '能力が逃げた!', '#aaa'); }
+  if(p.hp <= 0) gameOver();
 }
 
 // ---------- ボス更新 ----------
@@ -527,7 +1113,7 @@ function updateBoss(){
   // プレイヤーが近づくと戦闘開始
   if(!b.engaged){
     if(p.x > b.x - 560){ b.engaged = true; b.atkCd = 60;
-      popup(b.x+b.w/2, b.y-24, BOSS_TYPES[b.type].name + ' とうじょう!', '#ff8a80'); }
+      popup(b.x+b.w/2, b.y-24, BOSS_TYPES[b.type].name + ' とうじょう!', '#ff8a80'); playBGM(); }
     return;
   }
 
@@ -542,7 +1128,7 @@ function updateBoss(){
   if(b.x > b.arenaMax){ b.x = b.arenaMax; b.vx = -Math.abs(b.vx); }
 
   // 攻撃
-  if(--b.atkCd <= 0){ bossAttack(); b.atkCd = 80 + Math.floor(Math.random()*45); }
+  if(--b.atkCd <= 0){ bossAttack(); b.atkCd = Math.round((80 + Math.random()*45) * D().bossAtk); }
 
   // プレイヤーとの接触
   if(hit(b, p)){
@@ -580,7 +1166,7 @@ function bossAttack(){
 function damageBoss(d, by){
   const b = boss;
   if(!b || !b.alive || b.inv > 0) return;
-  b.hp -= d; b.inv = 24; SFX.ko();
+  b.hp -= d; b.inv = 24; SFX.ko(); game.shake = Math.max(game.shake, 5);
   const c = by==='fire' ? '#ff7043' : by==='ice' ? '#81d4fa' : by==='spark' ? '#fff176' : '#fff';
   spawnParticles(b.x+b.w/2, b.y+b.h/2, c, 10, 4);
   game.score += 120;
@@ -590,7 +1176,8 @@ function damageBoss(d, by){
 
 function defeatBoss(){
   const b = boss;
-  b.alive = false; game.bossDefeated = true;
+  b.alive = false; game.bossDefeated = true; game.shake = 18;
+  playBGM(); // ステージの曲にもどす
   game.score += 3000; SFX.goal();
   for(let i=0;i<40;i++) spawnParticles(
     b.x+b.w/2 + (Math.random()-0.5)*b.w, b.y+b.h/2 + (Math.random()-0.5)*b.h,
@@ -649,9 +1236,23 @@ function updateEnemies(){
     }  
   
     // 通常移動  
-    if(e.fly){  
+    if(e.hopper){
+      e.vy += 0.4; if(e.vy > 10) e.vy = 10;
+      e.x += e.vx; e.y += e.vy;
+      let g = null;
+      for(const pf of platforms){
+        if(e.x+e.w > pf.x && e.x < pf.x+pf.w && e.vy >= 0 && e.y+e.h > pf.y && e.y+e.h - e.vy <= pf.y + 10) g = pf;
+      }
+      if(g){
+        e.y = g.y - e.h; e.vy = 0;
+        const footX = e.vx<0 ? e.x-4 : e.x+e.w+4;
+        if(!(footX > g.x && footX < g.x+g.w)) e.vx *= -1;
+        if(++e.hopT % 75 === 0) e.vy = -7.5;
+      }
+      if(e.y > H + 80){ e.alive = false; continue; }
+    } else if(e.fly){  
       e.x += e.vx;  
-      e.y = (e.baseY ?? 280) + Math.sin(e.t*0.06)*36;  
+      e.y = (e.baseY ?? 280) + Math.sin(e.t*0.06)*(e.amp || 36);  
       if(Math.abs(e.x - (e.spawnX ?? (e.spawnX = e.x))) > 130) e.vx *= -1;  
     } else {  
       e.x += e.vx;  
@@ -774,7 +1375,7 @@ function updateSeeds(){
     if(dist < 70){ sd.x += dx*0.18; sd.y += dy*0.18; }  
     if(dist < 22){  
       sd.picked = true; SFX.seed();  
-      game.seedCount++; game.score += 10;  
+      game.seedCount++; game.stageSeeds++; game.score += 10;  
       if(game.seedCount >= 100){  
         game.seedCount -= 100;  
         if(player.hp < player.maxHp){ player.hp++; popup(p.x+p.w/2, p.y-30, '1UP! HP+1', '#ef9a9a'); }  
@@ -808,26 +1409,34 @@ function updateSeeds(){
 }  
   
 // ---------- メイン更新 ----------  
-function update(){  
+function update(){
+  if(game.shake > 0){ game.shake *= 0.86; if(game.shake < 0.4) game.shake = 0; }
+  if(game.flash > 0) game.flash--;
+  
   if(game.state==='next'){  
-    game.banner--;  
-    for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; }  
+    game.banner--;
+    const rt = 210 - game.banner; // ★ がひとつずつ出る
+    for(let k=0;k<3;k++) if(rt === 22 + k*18 && (game.lastStars>>k)&1) SFX.power();  
+    for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy += pt.rise ? -0.04 : 0.12; pt.life--; }  
     particles = particles.filter(p=>p.life>0);  
     if(game.banner <= 0){  
-      game.stage++; loadStage(game.stage);  
-      game.time = 0; game.state = 'play';  
+      game.stage++; loadStage(game.stage); playBGM();
+      markCheckpoint(); game.intro = 150;
+      game.time = 0; setState('play');  
     }  
     return;  
   }  
   if(game.state!=='play') return;  
-  game.frame++; game.time++;  
+  game.frame++; game.time++;
+  if(game.intro > 0) game.intro--;  
+  updatePlatforms();
   updatePlayer();
   updateEnemies();
   updateBoss();
   updateBullets();
   updateSeeds();
   
-  for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.12; pt.life--; }  
+  for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy += pt.rise ? -0.04 : 0.12; pt.life--; }  
   particles = particles.filter(p=>p.life>0);  
   for(const pp of popups){ pp.y -= 0.7; pp.life--; }  
   popups = popups.filter(p=>p.life>0);  
@@ -843,137 +1452,463 @@ function update(){
   }
   if(player.x + player.w > GOAL_X && (!game.bossActive || game.bossDefeated)){
     SFX.goal();
-    game.score += Math.max(0, 5000 - Math.floor(game.time/6)*10);  
-    if(game.stage >= STAGES.length - 1){  
-      game.state = 'clear';  
-      document.body.classList.remove('playing');  
-    } else {  
-      game.state = 'next'; game.banner = 150;  
-      player.hp = Math.min(player.maxHp, player.hp + 1);  
-    }  
-  }  
-}  
-  
+    game.score += Math.max(0, 5000 - Math.floor(game.time/6)*10);
+    ['#ffd54f','#ff8a80','#81d4fa','#aed581','#ce93d8'].forEach(c=>spawnParticles(GOAL_X+4, GROUND_Y-180, c, 10, 5));
+    recordStage();
+    if(game.stage >= STAGES.length - 1){
+      gameClear();
+    } else {
+      setState('next'); game.banner = 210;
+      player.hp = Math.min(player.maxHp, player.hp + 1);
+    }
+  }
+}
+
 // ---------- 描画 ----------  
-function draw(){  
-  const th = STAGES[Math.min(game.stage, STAGES.length-1)];  
-  const sky = ctx.createLinearGradient(0,0,0,H);  
-  sky.addColorStop(0, th.sky[0]); sky.addColorStop(0.7, th.sky[1]); sky.addColorStop(1, th.sky[2]);  
-  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);  
-  
-  // 雲(パララックス)  
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';  
-  for(let i=0;i<8;i++){  
-    const span = 2100;  
-    const cx = ((i*620 - game.cam*0.3) % span + span) % span - 100;  
-    const cy = 50 + (i%3)*55;  
-    ctx.beginPath();  
-    ctx.ellipse(cx, cy, 55, 20, 0, 0, Math.PI*2);  
-    ctx.ellipse(cx+35, cy-10, 38, 17, 0, 0, Math.PI*2);  
-    ctx.ellipse(cx-35, cy-6, 32, 15, 0, 0, Math.PI*2);  
-    ctx.fill();  
-  }  
-  // 遠景の丘  
-  ctx.fillStyle = th.hill;  
-  for(let i=0;i<10;i++){  
-    const span = 2940;  
-    const hx = ((i*500 - game.cam*0.55) % span + span) % span - 150;  
-    ctx.beginPath(); ctx.ellipse(hx, GROUND_Y+40, 230, 130, 0, Math.PI, 0); ctx.fill();  
-  }  
-  
-  ctx.save();  
-  ctx.translate(-Math.floor(game.cam), 0);  
-  
-  // 足場  
-  for(const pf of platforms){  
-    if(pf.x+pf.w < game.cam || pf.x > game.cam+W) continue;  
-    if(pf.h > 50){  
-      ctx.fillStyle = th.dirt; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);  
-      ctx.fillStyle = th.grass; ctx.fillRect(pf.x, pf.y, pf.w, 14);  
-      ctx.fillStyle = th.grass2;  
-      for(let gx=pf.x; gx<pf.x+pf.w; gx+=26) ctx.fillRect(gx, pf.y, 13, 7);  
-    } else {  
-      ctx.fillStyle = '#a1887f'; rounded(pf.x, pf.y, pf.w, pf.h, 8); ctx.fill();  
-      ctx.fillStyle = '#aed581'; rounded(pf.x, pf.y, pf.w, 10, 6); ctx.fill();  
-    }  
-  }  
-  
-  // ゴール(ひまわりの旗)  
-  ctx.fillStyle = '#795548'; ctx.fillRect(GOAL_X, GROUND_Y-180, 8, 180);  
-  ctx.fillStyle = '#ffb300';  
-  for(let i=0;i<10;i++){  
-    const a = i/10*Math.PI*2;  
-    ctx.beginPath(); ctx.ellipse(GOAL_X+4+Math.cos(a)*26, GROUND_Y-180+Math.sin(a)*26, 13, 7, a, 0, Math.PI*2); ctx.fill();  
-  }  
-  ctx.fillStyle = '#6d4c41'; ctx.beginPath(); ctx.arc(GOAL_X+4, GROUND_Y-180, 16, 0, Math.PI*2); ctx.fill();  
-  
+// ステージごとの見た目の追加設定
+const THEME_X = {
+  'そよかぜ草原':     { deco:'meadow', far:'#9fd0b4', cloud:'rgba(255,255,255,.85)', plat:'#a1887f', platTop:'#9ccc65', sun:'#fff59d' },
+  'きのこの森':       { deco:'forest', far:'#2e6b3a', cloud:'rgba(255,255,255,.35)', plat:'#6d4c41', platTop:'#8bc34a', sun:'#fff9c4' },
+  'こおりの谷':       { deco:'snow',   far:'#9fa8da', cloud:'rgba(255,255,255,.75)', plat:'#78909c', platTop:'#e1f5fe', sun:'#ffffff', pit:'water' },
+  'さばくのオアシス': { deco:'desert', far:'#e0a95e', cloud:'rgba(255,255,255,.5)',  plat:'#a1887f', platTop:'#ffe0b2', sun:'#fffde7' },
+  'ゆうやけ火山':     { deco:'ember',  far:'#7b3325', cloud:'rgba(90,50,60,.35)',    plat:'#5d4037', platTop:'#ff8a65', sun:'#ffb74d', pit:'lava' },
+  'うみべのどうくつ': { deco:'cave',   far:'#15314d', cloud:null,                    plat:'#455a64', platTop:'#4dd0e1', sun:null, pit:'water' },
+  'さんごの海':       { deco:'sea',    far:'#0e4a8a', cloud:null,                    plat:'#e57373', platTop:'#ffab91', sun:null },
+  'くもの上':         { deco:'cloud',  far:'#c5e1f5', cloud:'rgba(255,255,255,.95)', plat:'#ffffff', platTop:'#ffffff', sun:'#fff59d' },
+  'ほしぞら城':       { deco:'star',   far:'#3a2f66', cloud:'rgba(180,160,230,.22)', plat:'#4a3b6b', platTop:'#b39ddb', sun:'#fff8e1' },
+};
+// いつも同じ値を返す乱数(背景の飾りの位置を固定するため)
+const rnd = n=>{ const x = Math.sin(n*127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const wrap = (v, m)=> ((v % m) + m) % m;
+
+function draw(){
+  const si = Math.min(game.stage, STAGES.length-1);
+  const th = STAGES[si], tx = THEME_X[th.name];
+  const T = performance.now() / 16.67;
+
+  ctx.save();
+  if(game.shake > 0) ctx.translate((Math.random()-0.5)*game.shake, (Math.random()-0.5)*game.shake);
+
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0, th.sky[0]); sky.addColorStop(0.7, th.sky[1]); sky.addColorStop(1, th.sky[2]);
+  ctx.fillStyle = sky; ctx.fillRect(-20,-20,W+40,H+40);
+  drawSkyDeco(tx, T);
+
+  // 遠くの山
+  ctx.fillStyle = tx.far;
+  ctx.beginPath(); ctx.moveTo(-20, H);
+  for(let x=-20; x<=W+40; x+=30){
+    const wx = x + game.cam*0.15;
+    ctx.lineTo(x, GROUND_Y - 150 - Math.sin(wx*0.004)*60 - Math.sin(wx*0.011+1.3)*28);
+  }
+  ctx.lineTo(W+40, H); ctx.closePath(); ctx.fill();
+
+  // 雲(パララックス)
+  ctx.fillStyle = tx.cloud || 'rgba(0,0,0,0)';
+  for(let i=0;i<8;i++){
+    const span = 2100;
+    const cx = wrap(i*620 - game.cam*0.3 + T*0.15, span) - 100;
+    const cy = 50 + (i%3)*55;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 55, 20, 0, 0, Math.PI*2);
+    ctx.ellipse(cx+35, cy-10, 38, 17, 0, 0, Math.PI*2);
+    ctx.ellipse(cx-35, cy-6, 32, 15, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  // 手前の丘
+  ctx.fillStyle = th.hill;
+  for(let i=0;i<10;i++){
+    const span = 2940;
+    const hx = wrap(i*500 - game.cam*0.55, span) - 150;
+    ctx.beginPath(); ctx.ellipse(hx, GROUND_Y+40, 230, 130, 0, Math.PI, 0); ctx.fill();
+  }
+
+  ctx.save();
+  ctx.translate(-Math.floor(game.cam), 0);
+
+  // 穴の底(火山は溶岩、谷はつめたい水)
+  if(tx.pit){
+    const lava = tx.pit==='lava';
+    ctx.fillStyle = lava ? '#ff6f00' : '#3949ab';
+    ctx.beginPath(); ctx.moveTo(game.cam-10, H);
+    for(let x=-10; x<=W+30; x+=20)
+      ctx.lineTo(game.cam + x, H - 22 + Math.sin((x + game.cam)*0.05 + T*0.08)*4);
+    ctx.lineTo(game.cam+W+30, H); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = lava ? 'rgba(255,236,179,.8)' : 'rgba(197,202,233,.6)';
+    for(let i=0;i<6;i++){
+      const bx = game.cam + wrap(i*173 + T*(lava?0.3:0.8), W+40) - 20;
+      ctx.beginPath(); ctx.ellipse(bx, H-16 + Math.sin(T*0.1+i)*2, lava?4:10, lava?4:1.5, 0, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // 足場
+  for(const pf of platforms){
+    if(pf.x+pf.w < game.cam || pf.x > game.cam+W) continue;
+    if(pf.h > 50){
+      ctx.fillStyle = th.dirt; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+      const sh = ctx.createLinearGradient(0, pf.y, 0, pf.y+pf.h);
+      sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.3)');
+      ctx.fillStyle = sh; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+      // 土の中の小石
+      ctx.fillStyle = 'rgba(0,0,0,.13)';
+      for(let gx = pf.x + 16; tx.deco!=='cloud' && gx < pf.x + pf.w - 12; gx += 38){
+        const r = rnd(gx); if(r < 0.35) continue;
+        ctx.beginPath(); ctx.ellipse(gx + r*14, pf.y + 28 + rnd(gx+1)*40, 3 + r*4, 2 + r*2, 0, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = th.grass; ctx.fillRect(pf.x, pf.y, pf.w, 14);
+      ctx.fillStyle = th.grass2;
+      for(let gx=pf.x; gx<pf.x+pf.w; gx+=26) ctx.fillRect(gx, pf.y, 13, 7);
+      drawGroundDeco(pf, tx, T);
+    } else {
+      drawFloat(pf, tx);
+    }
+  }
+
+  // ゴール(ひまわりの旗)
+  const gy = GROUND_Y - 180;
+  ctx.fillStyle = '#795548'; ctx.fillRect(GOAL_X, gy, 8, 180);
+  ctx.fillStyle = '#7cb342';
+  ctx.beginPath(); ctx.ellipse(GOAL_X+18, gy+90, 14, 6, -0.5, 0, Math.PI*2); ctx.ellipse(GOAL_X-10, gy+120, 14, 6, 0.5, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.translate(GOAL_X+4, gy); ctx.rotate(Math.sin(T*0.04)*0.12);
+  ctx.fillStyle = '#ffb300';
+  for(let i=0;i<12;i++){
+    const a = i/12*Math.PI*2 + T*0.01;
+    ctx.beginPath(); ctx.ellipse(Math.cos(a)*27, Math.sin(a)*27, 14, 7, a, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#6d4c41'; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4e342e';
+  for(let i=0;i<7;i++){ const a = i*2.4; ctx.beginPath(); ctx.arc(Math.cos(a)*(4+i), Math.sin(a)*(4+i), 1.6, 0, Math.PI*2); ctx.fill(); }
+  ctx.restore();
+
   for(const e of enemies){ if(e.alive) drawEnemy(e); }
   if(boss && boss.alive) drawBoss();
   for(const b of bullets) drawBullet(b);
-  // ひまわりの種  
-  for(const sd of seeds){  
-    if(sd.picked) continue;  
-    ctx.save(); ctx.translate(sd.x, sd.y);  
-    ctx.fillStyle = '#3e2723';  
-    ctx.beginPath(); ctx.ellipse(0, 0, 4, 6, Math.sin(sd.life*0.1)*0.3, 0, Math.PI*2); ctx.fill();  
-    ctx.fillStyle = '#f5f0e0';  
-    ctx.beginPath(); ctx.ellipse(-1, -1, 1.4, 2.4, 0, 0, Math.PI*2); ctx.fill();  
-    ctx.restore();  
-  }  
-  // メロンソーダ  
-  for(const it of items){  
-    if(it.taken) continue;  
-    const bob = it.settled ? Math.sin(it.t*0.1)*2 : 0;  
-    ctx.save(); ctx.translate(it.x+it.w/2, it.y+it.h/2 + bob);  
-    // グラス  
-    ctx.fillStyle = 'rgba(255,255,255,.25)';  
-    ctx.beginPath(); ctx.moveTo(-9,-13); ctx.lineTo(9,-13); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();  
-    // ソーダ  
-    ctx.fillStyle = '#43c64a';  
-    ctx.beginPath(); ctx.moveTo(-8,-4); ctx.lineTo(8,-4); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();  
-    // アイス  
-    ctx.fillStyle = '#fffde7';  
-    ctx.beginPath(); ctx.arc(-2,-13,5,0,Math.PI*2); ctx.fill();  
-    // さくらんぼ  
-    ctx.fillStyle = '#e53935';  
-    ctx.beginPath(); ctx.arc(5,-15,3,0,Math.PI*2); ctx.fill();  
-    // ストロー  
-    ctx.strokeStyle = '#e91e63'; ctx.lineWidth=2;  
-    ctx.beginPath(); ctx.moveTo(3,-12); ctx.lineTo(8,-22); ctx.stroke();  
-    ctx.restore();  
-  }  
-  drawPlayer();  
-  
-  for(const pt of particles){  
-    ctx.globalAlpha = Math.min(1, pt.life/20);  
-    ctx.fillStyle = pt.color;  
-    ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill();  
-  }  
-  ctx.globalAlpha = 1;  
-  for(const pp of popups){  
-    ctx.globalAlpha = Math.min(1, pp.life/25);  
-    ctx.font = 'bold 16px sans-serif'; ctx.textAlign='center';  
-    ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=3;  
-    ctx.strokeText(pp.text, pp.x, pp.y);  
-    ctx.fillStyle = pp.color; ctx.fillText(pp.text, pp.x, pp.y);  
-  }  
-  ctx.globalAlpha = 1;  
-  ctx.restore();  
-  
-  drawHUD();  
-  if(game.state==='title') drawTitle();  
-  if(game.state==='over') drawOver();  
-  if(game.state==='clear') drawClear();  
-  if(game.state==='next') drawNext();  
-}  
-  
+  // ひまわりの種
+  for(const sd of seeds){
+    if(sd.picked) continue;
+    ctx.save(); ctx.translate(sd.x, sd.y);
+    ctx.fillStyle = '#3e2723';
+    ctx.beginPath(); ctx.ellipse(0, 0, 4, 6, Math.sin(sd.life*0.1)*0.3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f5f0e0';
+    ctx.beginPath(); ctx.ellipse(-1, -1, 1.4, 2.4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  // メロンソーダ
+  for(const it of items){
+    if(it.taken) continue;
+    const bob = it.settled ? Math.sin(it.t*0.1)*2 : 0;
+    ctx.save(); ctx.translate(it.x+it.w/2, it.y+it.h/2 + bob);
+    // グラス
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    ctx.beginPath(); ctx.moveTo(-9,-13); ctx.lineTo(9,-13); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();
+    // ソーダ
+    ctx.fillStyle = '#43c64a';
+    ctx.beginPath(); ctx.moveTo(-8,-4); ctx.lineTo(8,-4); ctx.lineTo(7,13); ctx.lineTo(-7,13); ctx.closePath(); ctx.fill();
+    // アイス
+    ctx.fillStyle = '#fffde7';
+    ctx.beginPath(); ctx.arc(-2,-13,5,0,Math.PI*2); ctx.fill();
+    // さくらんぼ
+    ctx.fillStyle = '#e53935';
+    ctx.beginPath(); ctx.arc(5,-15,3,0,Math.PI*2); ctx.fill();
+    // ストロー
+    ctx.strokeStyle = '#e91e63'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(3,-12); ctx.lineTo(8,-22); ctx.stroke();
+    ctx.restore();
+  }
+  drawPlayerShadow();
+  drawPlayer();
+
+  for(const pt of particles){
+    ctx.globalAlpha = Math.min(1, pt.life/20);
+    ctx.fillStyle = pt.color;
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for(const pp of popups){
+    ctx.globalAlpha = Math.min(1, pp.life/25);
+    ctx.font = 'bold 16px '+FONT; ctx.textAlign='center';
+    ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=3;
+    ctx.strokeText(pp.text, pp.x, pp.y);
+    ctx.fillStyle = pp.color; ctx.fillText(pp.text, pp.x, pp.y);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  drawWeather(tx, T);
+  ctx.restore();
+
+  if(game.flash > 0){ ctx.fillStyle = 'rgba(255,60,60,' + (game.flash/14*0.28) + ')'; ctx.fillRect(0,0,W,H); }
+
+  drawHUD();
+  drawIntro();
+  if(game.state==='title') drawTitle();
+  if(game.state==='over') drawOver();
+  if(game.state==='clear') drawClear();
+  if(game.state==='next') drawNext();
+  if(game.state==='pause') drawPause();
+  if(game.state==='select') drawSelect();
+  if(game.state==='settings') drawSettings();
+  drawIris();
+}
+
+// 空の飾り(太陽・夕日・月と星・にじ・どうくつの天井)
+function drawSkyDeco(tx, T){
+  if(tx.deco==='sea'){
+    // 海面から さしこむ光
+    for(let i=0;i<6;i++){
+      const x = wrap(i*190 + 40 - game.cam*0.1, W+300) - 150;
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.06 + 0.04*Math.sin(T*0.03 + i)) + ')';
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x+60, 0); ctx.lineTo(x+170, H); ctx.lineTo(x+80, H); ctx.closePath(); ctx.fill();
+    }
+    // 海面のゆらゆら
+    ctx.fillStyle = 'rgba(255,255,255,.28)';
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    for(let x=0; x<=W; x+=20) ctx.lineTo(x, 12 + Math.sin(x*0.03 + T*0.06)*4);
+    ctx.lineTo(W, 0); ctx.closePath(); ctx.fill();
+    return;
+  }
+  if(tx.deco==='cave'){
+    // 天井からたれる岩
+    ctx.fillStyle = '#0a1c2e';
+    for(let i=0;i<22;i++){
+      const x = wrap(i*97 - game.cam*0.4, W+200) - 100;
+      const len = 40 + rnd(i)*100, w = 26 + rnd(i+5)*34;
+      ctx.beginPath(); ctx.moveTo(x-w/2, -5); ctx.lineTo(x+w/2, -5); ctx.lineTo(x, len); ctx.closePath(); ctx.fill();
+    }
+    // 光るこけ
+    for(let i=0;i<30;i++){
+      const x = wrap(rnd(i+40)*W*1.4 - game.cam*0.2, W*1.4) - W*0.2, y = 60 + rnd(i+60)*260;
+      ctx.globalAlpha = 0.25 + 0.35*(0.5 + 0.5*Math.sin(T*0.05 + i*1.7));
+      ctx.fillStyle = i%3 ? '#4dd0e1' : '#b2ff59';
+      ctx.beginPath(); ctx.arc(x, y, 2 + (i%4), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
+  if(tx.deco==='star'){
+    ctx.fillStyle = '#fff';
+    for(let i=0;i<70;i++){
+      const x = wrap(rnd(i)*W*1.5 - game.cam*0.05, W*1.5) - W*0.25;
+      const y = rnd(i+100) * 300;
+      ctx.globalAlpha = 0.35 + 0.65*(0.5 + 0.5*Math.sin(T*0.06 + i));
+      const sz = i%7===0 ? 3 : 2;
+      ctx.fillRect(x, y, sz, sz);
+    }
+    ctx.globalAlpha = 1;
+  }
+  const star = tx.deco==='star', ember = tx.deco==='ember';
+  const sx = ember ? W*0.72 : W-150, sy = ember ? 330 : 88, r = ember ? 70 : (star ? 32 : 38);
+  const g = ctx.createRadialGradient(sx, sy, r*0.6, sx, sy, r*2.4);
+  g.addColorStop(0, tx.sun); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.globalAlpha = star ? 0.25 : 0.45;
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r*2.4, 0, Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = tx.sun; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+  if(star){ // 月のもよう
+    ctx.fillStyle = 'rgba(120,100,160,.18)';
+    for(const [dx, dy, cr] of [[-10,-6,7],[9,10,5],[12,-12,3]]){ ctx.beginPath(); ctx.arc(sx+dx, sy+dy, cr, 0, Math.PI*2); ctx.fill(); }
+  }
+  if(tx.deco==='forest'){ // こもれび
+    ctx.fillStyle = 'rgba(255,249,196,.12)';
+    for(let i=0;i<4;i++){
+      const x = wrap(i*260 + 80 - game.cam*0.1, W+300) - 150;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x+70, 0); ctx.lineTo(x+230, H); ctx.lineTo(x+110, H); ctx.closePath(); ctx.fill();
+    }
+  }
+  if(tx.deco==='cloud'){ // にじ
+    const cx = W*0.3 - game.cam*0.03;
+    ['#ef9a9a','#ffcc80','#fff59d','#a5d6a7','#90caf9','#ce93d8'].forEach((c, k)=>{
+      ctx.strokeStyle = c; ctx.globalAlpha = 0.45; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.arc(cx, 470, 330 - k*9, Math.PI, 0); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+}
+
+// うかぶ足場
+function drawFloat(pf, tx){
+  if(tx.deco==='cloud'){ // ふわふわの雲
+    ctx.fillStyle = 'rgba(100,140,180,.18)'; rounded(pf.x+4, pf.y+10, pf.w, pf.h-2, 12); ctx.fill();
+    ctx.fillStyle = '#ffffff'; rounded(pf.x, pf.y+4, pf.w, pf.h-4, 12); ctx.fill();
+    const n = Math.max(2, Math.round(pf.w/36));
+    for(let k=0;k<n;k++){ ctx.beginPath(); ctx.arc(pf.x + (k+0.5)*pf.w/n, pf.y+9, pf.w/n*0.5, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = 'rgba(179,229,252,.6)'; ctx.fillRect(pf.x+10, pf.y+pf.h-6, pf.w-20, 3);
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,.16)'; rounded(pf.x+4, pf.y+7, pf.w, pf.h, 8); ctx.fill();
+    ctx.fillStyle = tx.plat; rounded(pf.x, pf.y, pf.w, pf.h, 8); ctx.fill();
+    ctx.fillStyle = tx.platTop; rounded(pf.x, pf.y, pf.w, 10, 6); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(pf.x+8, pf.y+2, pf.w-16, 2);
+    if(tx.deco==='snow' || tx.deco==='cave'){ // つらら
+      ctx.fillStyle = tx.deco==='snow' ? 'rgba(225,245,254,.9)' : 'rgba(77,208,225,.55)';
+      for(let ix = pf.x + 12; ix < pf.x + pf.w - 8; ix += 20){
+        const len = 6 + rnd(ix)*10;
+        ctx.beginPath(); ctx.moveTo(ix-4, pf.y+pf.h-1); ctx.lineTo(ix+4, pf.y+pf.h-1); ctx.lineTo(ix, pf.y+pf.h+len); ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+  if(pf.mv){ // 動く足場のしるし
+    ctx.fillStyle = 'rgba(255,179,0,.9)';
+    const cx = pf.x + pf.w/2, cy = pf.y + pf.h/2 + 3;
+    ctx.save(); ctx.translate(cx, cy); if(pf.mv.ax==='y') ctx.rotate(Math.PI/2);
+    for(const s of [-1, 1]){ ctx.beginPath(); ctx.moveTo(s*14, 0); ctx.lineTo(s*7, -4); ctx.lineTo(s*7, 4); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+  }
+}
+
+// 地面の飾り
+function drawGroundDeco(pf, tx, T){
+  for(let gx = pf.x + 30; gx < pf.x + pf.w - 20; gx += 64){
+    const r = rnd(gx*0.37);
+    if(r < 0.45) continue;
+    const x = gx + r*20, y = pf.y;
+    if(tx.deco==='meadow'){
+      ctx.strokeStyle = '#558b2f'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y-10); ctx.stroke();
+      ctx.fillStyle = r > 0.75 ? '#fff176' : (r > 0.6 ? '#f8bbd0' : '#ffffff');
+      for(let k=0;k<5;k++){ const a = k*Math.PI*0.4; ctx.beginPath(); ctx.arc(x+Math.cos(a)*3.5, y-12+Math.sin(a)*3.5, 2.6, 0, Math.PI*2); ctx.fill(); }
+      ctx.fillStyle = '#ffa000'; ctx.beginPath(); ctx.arc(x, y-12, 2, 0, Math.PI*2); ctx.fill();
+    } else if(tx.deco==='forest'){
+      ctx.fillStyle = '#fff3e0'; ctx.fillRect(x-2, y-9, 4, 9);
+      ctx.fillStyle = r > 0.7 ? '#e53935' : '#a1887f';
+      ctx.beginPath(); ctx.ellipse(x, y-9, 8, 6, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+      if(r > 0.7){ ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x-3, y-12, 1.5, 0, Math.PI*2); ctx.arc(x+3, y-11, 1.2, 0, Math.PI*2); ctx.fill(); }
+    } else if(tx.deco==='snow'){
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(x, y+1, 12 + r*8, 6, 0, Math.PI, 0); ctx.fill();
+    } else if(tx.deco==='desert'){
+      const h = 22 + r*14;
+      ctx.fillStyle = '#7cb342';
+      rounded(x-4, y-h, 8, h, 4); ctx.fill();
+      rounded(x-11, y-h*0.6, 7, 4, 2); ctx.fill(); rounded(x-11, y-h*0.6-9, 4, 12, 2); ctx.fill();
+      rounded(x+4, y-h*0.45, 7, 4, 2); ctx.fill(); rounded(x+7, y-h*0.45-8, 4, 11, 2); ctx.fill();
+    } else if(tx.deco==='sea'){
+      if(r > 0.72){ // さんご
+        ctx.strokeStyle = r > 0.86 ? '#ff8a80' : '#f48fb1'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y-18); ctx.moveTo(x, y-9); ctx.lineTo(x-7, y-17); ctx.moveTo(x, y-12); ctx.lineTo(x+6, y-22); ctx.stroke();
+      } else { // ゆれる かいそう
+        ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        for(const dx of [-4, 3]){
+          ctx.beginPath(); ctx.moveTo(x+dx, y);
+          for(let k=1;k<=4;k++) ctx.lineTo(x + dx + Math.sin(T*0.05 + k + gx)*4, y - k*8);
+          ctx.stroke();
+        }
+      }
+    } else if(tx.deco==='ember'){
+      ctx.strokeStyle = 'rgba(255,145,0,' + (0.45 + 0.35*Math.sin(T*0.08 + gx)) + ')'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(x-10, y+30); ctx.lineTo(x-2, y+42); ctx.lineTo(x-6, y+56); ctx.lineTo(x+4, y+68); ctx.stroke();
+    } else if(tx.deco==='cave' || tx.deco==='star'){
+      const cave = tx.deco==='cave';
+      if(cave) ctx.globalAlpha = 0.7 + 0.3*Math.sin(T*0.06 + gx);
+      ctx.fillStyle = cave ? (r > 0.7 ? '#80deea' : '#4dd0e1') : (r > 0.7 ? '#e1bee7' : '#b39ddb');
+      ctx.beginPath(); ctx.moveTo(x-4, y); ctx.lineTo(x, y-14 - r*6); ctx.lineTo(x+4, y); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.beginPath(); ctx.moveTo(x-1, y-2); ctx.lineTo(x, y-12); ctx.lineTo(x+1, y-2); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+// 画面の手前の天気
+function drawWeather(tx, T){
+  if(tx.deco==='snow'){
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    for(let i=0;i<60;i++){
+      const sp = 0.6 + rnd(i)*1.2;
+      const y = wrap(rnd(i+7)*H + T*sp, H+20) - 10;
+      const x = wrap(rnd(i+3)*W + Math.sin(T*0.02 + i)*20 - game.cam*0.3*sp, W);
+      ctx.beginPath(); ctx.arc(x, y, 1.2 + sp*1.2, 0, Math.PI*2); ctx.fill();
+    }
+  } else if(tx.deco==='ember'){
+    for(let i=0;i<36;i++){
+      const sp = 0.5 + rnd(i)*1.1;
+      const y = H - wrap(rnd(i+7)*H + T*sp, H+20);
+      const x = wrap(rnd(i+3)*W + Math.sin(T*0.03 + i)*16 - game.cam*0.3*sp, W);
+      ctx.globalAlpha = Math.max(0, Math.min(1, y/H + 0.2));
+      ctx.fillStyle = i%3 ? '#ffab40' : '#fff176';
+      ctx.fillRect(x, y, 2.5, 2.5);
+    }
+    ctx.globalAlpha = 1;
+  } else if(tx.deco==='meadow'){
+    ctx.fillStyle = 'rgba(248,187,208,.9)';
+    for(let i=0;i<14;i++){
+      const sp = 0.4 + rnd(i)*0.6;
+      const y = wrap(rnd(i+7)*H + T*sp, H+20) - 10;
+      const x = wrap(rnd(i+3)*W - T*sp*0.8 - game.cam*0.3*sp, W);
+      ctx.beginPath(); ctx.ellipse(x, y, 4, 2.2, T*0.05 + i, 0, Math.PI*2); ctx.fill();
+    }
+  } else if(tx.deco==='forest'){ // ほたる
+    for(let i=0;i<22;i++){
+      const x = wrap(rnd(i+3)*W + Math.sin(T*0.013 + i*2)*60 - game.cam*0.2, W);
+      const y = 150 + rnd(i+7)*300 + Math.sin(T*0.021 + i)*30;
+      ctx.globalAlpha = 0.3 + 0.7*Math.max(0, Math.sin(T*0.05 + i*1.3));
+      ctx.fillStyle = 'rgba(204,255,144,.35)'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f4ff81'; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if(tx.deco==='desert'){ // すなかぜ
+    ctx.strokeStyle = 'rgba(255,236,179,.55)'; ctx.lineWidth = 2;
+    for(let i=0;i<26;i++){
+      const sp = 2 + rnd(i)*3;
+      const x = W - wrap(rnd(i+3)*W + T*sp + game.cam*0.3, W+80) + 40;
+      const y = 120 + rnd(i+7)*380 + Math.sin(T*0.04 + i)*6;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14 + sp*4, y); ctx.stroke();
+    }
+  } else if(tx.deco==='cave' || tx.deco==='sea'){ // あわ
+    ctx.strokeStyle = 'rgba(179,229,252,.55)'; ctx.lineWidth = 1.5;
+    for(let i=0;i<18;i++){
+      const sp = 0.4 + rnd(i)*0.8;
+      const y = H - wrap(rnd(i+7)*H + T*sp, H+20);
+      const x = wrap(rnd(i+3)*W + Math.sin(T*0.04 + i)*10 - game.cam*0.3, W);
+      ctx.beginPath(); ctx.arc(x, y, 2 + rnd(i+11)*4, 0, Math.PI*2); ctx.stroke();
+    }
+  } else if(tx.deco==='star'){
+    const k = Math.floor(T/260), ph = (T % 260) / 34;
+    if(ph < 1){
+      const x0 = 150 + rnd(k)*(W-300), y0 = 30 + rnd(k+9)*80;
+      const x = x0 + ph*180, y = y0 + ph*80;
+      const g = ctx.createLinearGradient(x-60, y-27, x, y);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,.9)');
+      ctx.strokeStyle = g; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(x-60, y-27); ctx.lineTo(x, y); ctx.stroke();
+    }
+  }
+}
+
+// 足元のかげ
+function drawPlayerShadow(){
+  const p = player, cx = p.x + p.w/2, foot = p.y + p.h;
+  let gy = null;
+  for(const pf of platforms){
+    if(cx > pf.x && cx < pf.x+pf.w && pf.y >= foot-2 && (gy===null || pf.y < gy)) gy = pf.y;
+  }
+  if(gy===null) return;
+  const s = Math.max(0.3, 1 - (gy - foot)/260);
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.2*s) + ')';
+  ctx.beginPath(); ctx.ellipse(cx, gy+1, 17*s, 4*s, 0, 0, Math.PI*2); ctx.fill();
+}
+
+// ステージ開始の見出し
+function drawIntro(){
+  if(game.intro <= 0 || game.state!=='play') return;
+  const t = game.intro;
+  ctx.globalAlpha = Math.max(0, Math.min(1, t/30, (150-t)/15));
+  const slide = Math.max(0, (t-130)) * 3;
+  ctx.fillStyle = 'rgba(40,25,60,.6)'; rounded(W/2-230 - slide, 110, 460, 100, 22); ctx.fill();
+  ctx.save(); ctx.translate(-slide, 0);
+  bigText('STAGE ' + (game.stage+1), 150, 28, '#ffd54f');
+  bigText(STAGES[game.stage].name, 194, 36, '#fff');
+  if(STAGES[game.stage].water) bigText('ジャンプボタンで およげるよ!', 232, 18, '#b3e5fc');
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
 function rounded(x,y,w,h,r){  
   ctx.beginPath();  
   ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);  
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();  
 }  
   
-// ---------- ハムスター「モグ」 ----------  
+// ---------- ハムスター「リゼ丸」(緑のリーゼント) ----------  
 function drawPlayer(){  
   const p = player;  
   if(p.inv > 0 && Math.floor(p.inv/4)%2===0) return;  
@@ -1022,24 +1957,40 @@ function drawPlayer(){
   ctx.fillStyle = '#c8e89a';  
   ctx.beginPath(); ctx.ellipse(-10,-18,2.5,4,-0.2,0,Math.PI*2); ctx.ellipse(10,-18,2.5,4,0.2,0,Math.PI*2); ctx.fill();  
   
-  // 能力帽子  
-  if(ab){  
-    ctx.fillStyle = ab.color;  
-    if(p.ability==='fire'){  
-      ctx.beginPath(); ctx.moveTo(-12,-17); ctx.quadraticCurveTo(0,-40,12,-17);  
-      ctx.quadraticCurveTo(4,-23,0,-31); ctx.quadraticCurveTo(-4,-23,-12,-17); ctx.fill();  
-    } else if(p.ability==='spark'){  
-      ctx.beginPath();  
-      for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI*2/5;  
-        ctx.lineTo(Math.cos(a)*11, -24+Math.sin(a)*11);  
-        const a2=a+Math.PI/5; ctx.lineTo(Math.cos(a2)*5, -24+Math.sin(a2)*5); }  
-      ctx.closePath(); ctx.fill();  
-    } else {  
-      ctx.beginPath(); ctx.moveTo(-11,-16); ctx.lineTo(0,-33); ctx.lineTo(11,-16); ctx.closePath(); ctx.fill();  
-      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,-33,4,0,Math.PI*2); ctx.fill();  
-    }  
-  }  
-  
+  // ── リーゼント(緑のモフモフ前髪)。能力をコピーすると その色に そまる ──
+  const wob = Math.sin(p.anim*1.6) * 1.4 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3); // 走るとゆれる
+  ctx.fillStyle = ab ? ab.color : '#8bc34a';
+  ctx.beginPath();
+  ctx.moveTo(-17, -9);
+  ctx.bezierCurveTo(-19, -25, -5, -31, 9, -29);              // 後ろから ふくらむ
+  ctx.bezierCurveTo(22, -28, 33 + wob, -23, 33 + wob, -15);  // おでこの前に つきだす
+  ctx.bezierCurveTo(33 + wob, -9, 26, -8, 24, -12);          // 先っぽの カール
+  ctx.bezierCurveTo(21, -16, 11, -16, 4, -12);
+  ctx.bezierCurveTo(-3, -14, -11, -12, -17, -9);
+  ctx.closePath(); ctx.fill();
+  // カールの内がわの かげ
+  ctx.fillStyle = 'rgba(0,0,0,.16)';
+  ctx.beginPath(); ctx.ellipse(28 + wob*0.6, -14, 3.2, 2.4, 0.3, 0, Math.PI*2); ctx.fill();
+  // くしの すじ(つや)
+  ctx.strokeStyle = ab ? 'rgba(255,255,255,.7)' : '#d4ecaa'; ctx.lineWidth = 1.7; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-12, -20); ctx.quadraticCurveTo(6, -31, 25 + wob, -23);
+  ctx.moveTo(-8, -15);  ctx.quadraticCurveTo(9, -24, 28 + wob, -18);
+  ctx.stroke();
+  // 能力ごとの かざり
+  if(p.ability==='fire'){
+    const fl = Math.sin(game.frame*0.5)*2;
+    ctx.fillStyle = '#ffeb3b';
+    ctx.beginPath(); ctx.moveTo(27+wob, -24); ctx.quadraticCurveTo(36+wob, -30-fl, 33+wob, -37-fl); ctx.quadraticCurveTo(26+wob, -31, 27+wob, -24); ctx.fill();
+  } else if(p.ability==='spark'){
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    const k = game.frame % 12 < 6 ? 1 : -1;
+    ctx.beginPath(); ctx.moveTo(33+wob, -24); ctx.lineTo(38+wob, -28+k*2); ctx.lineTo(36+wob, -21); ctx.lineTo(41+wob, -23); ctx.stroke();
+  } else if(p.ability==='ice'){
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(10, -31, 2.4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(34+wob, -12, 1.8, 0, Math.PI*2); ctx.fill();
+  }
+
   // オレンジのほっぺ(ほおばると膨らむ)  
   const cheek = p.mouthful ? 9 : 5.5;  
   ctx.fillStyle = p.mouthful ? '#ffb74d' : '#ffa726';  
@@ -1086,49 +2037,114 @@ function drawPlayer(){
   }  
 }  
   
-function drawEnemy(e){  
-  const cx = e.x+e.w/2, cy = e.y+e.h/2;  
-  ctx.save(); ctx.translate(cx, cy);  
-  if(e.beingSucked){ ctx.rotate(game.frame*0.3); ctx.scale(0.85,0.85); }  
-  
-  if(e.type==='walker'){  
-    ctx.fillStyle = e.color;  
-    ctx.beginPath(); ctx.ellipse(0,2,16,13,0,0,Math.PI*2); ctx.fill();  
-    ctx.fillStyle = '#558b2f';  
-    ctx.beginPath(); ctx.ellipse(0,-8,7,5,0,0,Math.PI*2); ctx.fill();  
-  } else if(e.type==='chili'){  
-    ctx.fillStyle = e.color;  
-    ctx.beginPath(); ctx.ellipse(0,3,16,12,0.3,0,Math.PI*2); ctx.fill();  
-    ctx.fillStyle = '#4caf50'; ctx.fillRect(10,-14,5,9);  
-    ctx.fillStyle = '#ffab91';  
-    ctx.beginPath(); ctx.arc(-14,8,3,0,Math.PI*2); ctx.fill();  
-  } else if(e.type==='bee'){  
-    ctx.fillStyle = '#fdd835';  
-    ctx.beginPath(); ctx.ellipse(0,0,15,11,0,0,Math.PI*2); ctx.fill();  
-    ctx.fillStyle = '#424242';  
-    ctx.fillRect(-6,-10,5,20); ctx.fillRect(4,-9,5,18);  
-    ctx.fillStyle = 'rgba(200,230,255,.8)';  
-    const wing = Math.sin(game.frame*0.8)*4;  
-    ctx.beginPath(); ctx.ellipse(-3,-13+wing*0.3,9,5+Math.abs(wing),0,0,Math.PI*2); ctx.fill();  
-  } else if(e.type==='slime'){  
-    const wob = Math.sin(e.t*0.15)*2;  
-    ctx.fillStyle = e.color;  
-    ctx.beginPath(); ctx.ellipse(0,3,18+wob,13-wob,0,0,Math.PI*2); ctx.fill();  
-    ctx.fillStyle = 'rgba(255,255,255,.7)';  
-    ctx.beginPath(); ctx.ellipse(-6,-3,5,3,0,0,Math.PI*2); ctx.fill();  
-  }  
-  // 共通の目  
-  ctx.fillStyle = '#212121';  
-  ctx.beginPath(); ctx.arc(-5,-3,2.5,0,Math.PI*2); ctx.arc(4,-3,2.5,0,Math.PI*2); ctx.fill();  
-  
-  if(e.frozen > 0){  
-    ctx.fillStyle = 'rgba(178,235,242,.55)';  
-    rounded(-e.w/2-3, -e.h/2-3, e.w+6, e.h+6, 6); ctx.fill();  
-    ctx.strokeStyle = '#80deea'; ctx.lineWidth=2; ctx.stroke();  
-  }  
-  ctx.restore();  
-}  
-  
+function drawEnemy(e){
+  const cx = e.x+e.w/2, cy = e.y+e.h/2;
+  const face = e.vx > 0 ? 1 : -1;
+  ctx.save(); ctx.translate(cx, cy);
+  // 影(地面にいる敵だけ)
+  if(!e.fly && !e.beingSucked){
+    ctx.fillStyle = 'rgba(0,0,0,.16)';
+    ctx.beginPath(); ctx.ellipse(0, e.h/2, e.w*0.42, 3.5, 0, 0, Math.PI*2); ctx.fill();
+  }
+  if(e.beingSucked){ ctx.rotate(game.frame*0.3); ctx.scale(0.85,0.85); }
+  // てくてく はずむ
+  const hop = (!e.fly && !e.hopper && !e.frozen && !e.beingSucked) ? -Math.abs(Math.sin(e.t*0.18))*2.5 : 0;
+  ctx.translate(0, hop);
+
+  if(e.type==='walker'){
+    const st = e.frozen ? 0 : Math.sin(e.t*0.35)*3;
+    ctx.fillStyle = '#33691e';
+    ctx.beginPath(); ctx.ellipse(-7+st, 13-hop, 5, 3, 0, 0, Math.PI*2); ctx.ellipse(7-st, 13-hop, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0,2,16,13,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#558b2f'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,-16); ctx.stroke();
+    ctx.fillStyle = '#7cb342';
+    ctx.beginPath(); ctx.ellipse(-5,-17,5,2.6,-0.5,0,Math.PI*2); ctx.ellipse(5,-17,5,2.6,0.5,0,Math.PI*2); ctx.fill();
+  } else if(e.type==='chili'){
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0,3,16,12,0.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4caf50'; ctx.fillRect(10,-14,5,9);
+    ctx.beginPath(); ctx.ellipse(10,-8,7,3,0.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffab91';
+    ctx.beginPath(); ctx.arc(-14,8,3,0,Math.PI*2); ctx.fill();
+  } else if(e.type==='bee'){
+    ctx.fillStyle = '#424242';
+    ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(21,2); ctx.lineTo(14,5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fdd835';
+    ctx.beginPath(); ctx.ellipse(0,0,15,11,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#424242';
+    ctx.fillRect(-6,-10,5,20); ctx.fillRect(4,-9,5,18);
+    ctx.strokeStyle = '#424242'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-8,-9); ctx.quadraticCurveTo(-12,-18,-15,-17); ctx.stroke();
+    ctx.fillStyle = 'rgba(200,230,255,.8)';
+    const wing = Math.sin(game.frame*0.8)*4;
+    ctx.beginPath(); ctx.ellipse(-3,-13+wing*0.3,9,5+Math.abs(wing),0,0,Math.PI*2); ctx.fill();
+  } else if(e.type==='fish'){
+    ctx.fillStyle = '#ff7043';
+    ctx.beginPath(); ctx.moveTo(-face*12, 0); ctx.lineTo(-face*23, -8); ctx.lineTo(-face*23, 8); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-4, -9); ctx.lineTo(4, -15); ctx.lineTo(6, -8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0, 0, 16, 11, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.fillRect(-face*6 - 1.5, -9, 3, 18);
+  } else if(e.type==='jelly'){
+    ctx.strokeStyle = 'rgba(244,143,177,.85)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for(const tx2 of [-9, -3, 3, 9]){
+      ctx.beginPath(); ctx.moveTo(tx2, 6);
+      for(let k=1;k<=3;k++) ctx.lineTo(tx2 + Math.sin(e.t*0.15 + k + tx2)*3, 6 + k*5);
+      ctx.stroke();
+    }
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0, 2, 15, 14, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.ellipse(0, 2, 15, 4, 0, 0, Math.PI*2); ctx.fill();
+  } else if(e.type==='hopper'){
+    const sq = e.vy < -1 ? 1.12 : 1; // とぶときに のびる
+    ctx.scale(1/sq, sq);
+    ctx.fillStyle = '#fff3e0'; rounded(-8, -6, 16, 20, 6); ctx.fill();
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0, -6, 17, 12, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-7, -11, 3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5, -14, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -8, 2, 0, Math.PI*2); ctx.fill();
+  } else if(e.type==='slime'){
+    const wob = Math.sin(e.t*0.15)*2;
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.ellipse(0,3,18+wob,13-wob,0,0,Math.PI*2); ctx.fill();
+  }
+  // つや
+  ctx.fillStyle = 'rgba(255,255,255,.45)';
+  ctx.beginPath(); ctx.ellipse(-8,-5,4,2.5,-0.4,0,Math.PI*2); ctx.fill();
+
+  // 目(まばたき・進む方向を見る)
+  const blink = (Math.floor(e.t) % 140) < 5;
+  for(const ox of [-5, 4]){
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(ox, -3, 3.4, 4, 0, 0, Math.PI*2); ctx.fill();
+    if(blink){
+      ctx.strokeStyle = '#212121'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(ox-3, -3); ctx.lineTo(ox+3, -3); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#212121';
+      ctx.beginPath(); ctx.arc(ox + face*1.4, -2.5, 2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  if(e.type==='chili'){ // おこり眉
+    ctx.strokeStyle = '#7f0000'; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(-9,-10); ctx.lineTo(-2,-7); ctx.moveTo(8,-10); ctx.lineTo(1,-7); ctx.stroke();
+  }
+
+  if(e.frozen > 0){
+    ctx.fillStyle = 'rgba(178,235,242,.55)';
+    rounded(-e.w/2-3, -e.h/2-3, e.w+6, e.h+6, 6); ctx.fill();
+    ctx.strokeStyle = '#80deea'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillRect(-e.w/2+2, -e.h/2+1, 8, 3);
+  }
+  ctx.restore();
+}
+
 function drawBullet(b){  
   if(b.kind==='star'){  
     ctx.save(); ctx.translate(b.x+b.w/2, b.y+b.h/2); ctx.rotate(game.frame*0.25);  
@@ -1241,50 +2257,114 @@ function drawBoss(){
 }
 
 // ---------- HUD・画面 ----------
-function drawHUD(){  
-  if(game.state==='title') return;  
-  for(let i=0;i<player.maxHp;i++){  
-    ctx.fillStyle = i<player.hp ? '#ef5350' : 'rgba(0,0,0,.25)';  
-    const hx = 24+i*30, hy = 24;  
-    ctx.beginPath();  
-    ctx.arc(hx-5, hy, 7, 0, Math.PI*2); ctx.arc(hx+5, hy, 7, 0, Math.PI*2);  
-    ctx.moveTo(hx-11, hy+3); ctx.lineTo(hx, hy+16); ctx.lineTo(hx+11, hy+3);  
-    ctx.fill();  
-  }  
-  ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'right';  
-  ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=4;  
-  ctx.strokeText('SCORE ' + game.score, W-20, 34);  
-  ctx.fillStyle = '#fff'; ctx.fillText('SCORE ' + game.score, W-20, 34);  
-  
-  ctx.textAlign = 'left'; ctx.font = 'bold 16px sans-serif';  
-  let st = '', sc = '#fff';  
-  if(player.mouthful){ st = 'ほおばり中:' + ENEMY_TYPES[player.mouthful].name + ' → のみこむ?はきだす?'; sc='#ffcc80'; }  
-  else if(player.ability){ const a=ABILITIES[player.ability]; st = '★ ' + a.name + ':' + a.desc + '(すいこむボタンで発動)'; sc=a.color; }  
-  if(st){  
-    ctx.strokeText(st, 20, 64); ctx.fillStyle=sc; ctx.fillText(st, 20, 64);  
-  }  
-  ctx.fillStyle='rgba(0,0,0,.25)'; rounded(W/2-150, 14, 300, 10, 5); ctx.fill();  
-  ctx.fillStyle='#ffb300'; rounded(W/2-150, 14, Math.max(8, 300*Math.min(1,player.x/GOAL_X)), 10, 5); ctx.fill();  
-  ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';  
-  const stLabel = 'STAGE ' + (game.stage+1) + '/' + STAGES.length + ' ' + STAGES[Math.min(game.stage,STAGES.length-1)].name;  
-  ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=3;  
-  ctx.strokeText(stLabel, W/2, 42);  
-  ctx.fillStyle = '#fff'; ctx.fillText(stLabel, W/2, 42);  
-  // 種カウンター  
-  ctx.textAlign = 'right'; ctx.font = 'bold 18px sans-serif';  
-  const seedLabel = '種 ' + game.seedCount + '/100';  
-  ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=4;  
-  ctx.strokeText(seedLabel, W-20, 60);  
-  ctx.fillStyle = '#ffe082'; ctx.fillText(seedLabel, W-20, 60);  
-  ctx.fillStyle = '#3e2723';
-  ctx.beginPath(); ctx.ellipse(W-118, 54, 4, 6, 0, 0, Math.PI*2); ctx.fill();
+function drawHeart(hx, hy, on, s=1){
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(s, s);
+  ctx.fillStyle = on ? '#ef5350' : 'rgba(0,0,0,.3)';
+  ctx.beginPath();
+  ctx.arc(-5, 0, 7, 0, Math.PI*2); ctx.arc(5, 0, 7, 0, Math.PI*2);
+  ctx.moveTo(-11, 3); ctx.lineTo(0, 16); ctx.lineTo(11, 3);
+  ctx.fill();
+  if(on){ ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(-6, -2, 2.2, 0, Math.PI*2); ctx.fill(); }
+  ctx.restore();
+}
+function drawAbilityIcon(kind, x, y){
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  if(kind==='fire'){
+    ctx.beginPath(); ctx.moveTo(0,-8); ctx.quadraticCurveTo(8,1,0,8); ctx.quadraticCurveTo(-8,1,0,-8); ctx.fill();
+  } else if(kind==='spark'){
+    drawStarPath(0, 0, 8); ctx.fill();
+  } else if(kind==='ice'){
+    ctx.beginPath();
+    for(let i=0;i<3;i++){ const a = i*Math.PI/3; ctx.moveTo(Math.cos(a)*7, Math.sin(a)*7); ctx.lineTo(-Math.cos(a)*7, -Math.sin(a)*7); }
+    ctx.stroke();
+  } else { // ほおばり中
+    ctx.fillStyle = '#ff8f00';
+    ctx.beginPath(); ctx.arc(-4, 1, 4, 0, Math.PI*2); ctx.arc(4, 1, 4, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function hudText(t, x, y, font, color, align='left'){
+  ctx.font = font; ctx.textAlign = align;
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+  ctx.strokeText(t, x, y); ctx.fillStyle = color; ctx.fillText(t, x, y);
+}
+
+function drawHUD(){
+  if(game.state==='title' || game.state==='select' || game.state==='settings') return;
+  const p = player;
+  // 左上: HP
+  ctx.fillStyle = 'rgba(30,20,50,.4)'; rounded(10, 8, 20 + p.maxHp*28, 38, 19); ctx.fill();
+  for(let i=0;i<p.maxHp;i++) drawHeart(30 + i*28, 21, i < p.hp, 0.9);
+
+  // 能力・ほおばり のバッジ
+  let label = null, col = '#fff', sub = '';
+  if(p.mouthful){ label = 'ほおばり中:' + ENEMY_TYPES[p.mouthful].name; col = '#ffcc80'; sub = 'のみこむ → 能力コピー / すいこむ → 星をはく'; }
+  else if(p.ability){ const a = ABILITIES[p.ability]; label = a.name; col = a.color; sub = a.desc + '(すいこむで発動・のみこむで すてる)'; }
+  if(label){
+    ctx.fillStyle = 'rgba(30,20,50,.6)'; rounded(10, 52, 336, 40, 20); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(31, 72, 13, 0, Math.PI*2); ctx.fill();
+    drawAbilityIcon(p.mouthful ? 'mouth' : p.ability, 31, 72);
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 15px '+FONT; ctx.fillStyle = col; ctx.fillText(label, 52, 69);
+    ctx.font = '11px '+FONT; ctx.fillStyle = '#fff'; ctx.fillText(sub, 52, 85);
+  }
+
+  // 上のまんなか: すすみぐあい
+  const bx = W/2 - 150, bw = 300, by = 14;
+  const prog = Math.max(0, Math.min(1, p.x / GOAL_X));
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; rounded(bx, by, bw, 10, 5); ctx.fill();
+  ctx.fillStyle = '#ffb300'; rounded(bx, by, Math.max(10, bw*prog), 10, 5); ctx.fill();
+  if(boss && boss.alive){
+    const bp = Math.min(1, boss.x / GOAL_X);
+    ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(bx + bw*bp, by+5, 6, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#fff'; ctx.fillRect(bx+bw+5, by-8, 2, 22);
+  ctx.fillStyle = '#ffb300';
+  ctx.beginPath(); ctx.moveTo(bx+bw+7, by-8); ctx.lineTo(bx+bw+20, by-3); ctx.lineTo(bx+bw+7, by+2); ctx.closePath(); ctx.fill();
+  const mx = bx + bw*prog; // リゼ丸のしるし
+  ctx.fillStyle = '#aed572'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(mx, by+5, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7cb342'; ctx.beginPath(); ctx.moveTo(mx-6, by); ctx.quadraticCurveTo(mx+2, by-11, mx+11, by-3); ctx.quadraticCurveTo(mx+3, by-4, mx-6, by); ctx.fill();
+  ctx.fillStyle = '#ffa726';
+  ctx.beginPath(); ctx.arc(mx-4, by+7, 2, 0, Math.PI*2); ctx.arc(mx+4, by+7, 2, 0, Math.PI*2); ctx.fill();
+  hudText('STAGE ' + (game.stage+1) + '/' + STAGES.length + ' ' + STAGES[Math.min(game.stage,STAGES.length-1)].name,
+    W/2, 42, 'bold 14px '+FONT, '#fff', 'center');
+  // ★ のもくひょう
+  const seedOk = game.stageSeeds >= SEED_STAR;
+  hudText((seedOk ? '★' : '☆') + 'たね ' + Math.min(game.stageSeeds, SEED_STAR) + '/' + SEED_STAR + '    ' +
+          (game.stageHit ? '☆' : '★') + 'ノーダメージ', W/2, 60, 'bold 12px '+FONT, '#ffe082', 'center');
+
+  // 右上: スコアとたね
+  ctx.fillStyle = 'rgba(30,20,50,.4)'; rounded(W-206, 8, 196, 64, 18); ctx.fill();
+  hudText('SCORE', W-194, 31, 'bold 11px '+FONT, '#ffe082');
+  hudText(String(game.score).padStart(7, '0'), W-22, 32, 'bold 20px '+FONT, '#fff', 'right');
+  const gx = W-182, gy = 53; // たねゲージ(100こで HP+1)
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,.25)';
+  ctx.beginPath(); ctx.arc(gx, gy, 10, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = '#ffd54f';
+  ctx.beginPath(); ctx.arc(gx, gy, 10, -Math.PI/2, -Math.PI/2 + Math.PI*2*game.seedCount/100); ctx.stroke();
+  ctx.fillStyle = '#3e2723'; ctx.beginPath(); ctx.ellipse(gx, gy, 3, 5, 0, 0, Math.PI*2); ctx.fill();
+  hudText('たね ' + game.seedCount, W-164, 58, 'bold 14px '+FONT, '#ffe082');
+  hudText('100こで HP+1', W-22, 58, '10px '+FONT, 'rgba(255,255,255,.8)', 'right');
+  // ポーズボタン
+  if(game.state==='play'){
+    const b = PAUSE_BTN;
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; rounded(b.x, b.y+3, b.w, b.h, 14); ctx.fill();
+    ctx.fillStyle = '#ffb300'; rounded(b.x, b.y, b.w, b.h, 14); ctx.fill();
+    ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#3e2723';
+    ctx.fillRect(b.x+13, b.y+12, 5, 18); ctx.fillRect(b.x+23, b.y+12, 5, 18);
+    ctx.font = 'bold 15px '+FONT; ctx.textAlign = 'left'; ctx.fillText('ポーズ', b.x+34, b.y+27);
+  }
   // ボスHPバー
   if(game.bossActive && boss && boss.alive && boss.engaged){
     const bw = 360, bx = W/2 - bw/2, by = H - 30;
     ctx.fillStyle = 'rgba(0,0,0,.4)'; rounded(bx-3, by-3, bw+6, 18, 8); ctx.fill();
     ctx.fillStyle = '#5d0f0f'; rounded(bx, by, bw, 12, 6); ctx.fill();
     ctx.fillStyle = '#ff5252'; rounded(bx, by, bw*Math.max(0, boss.hp/boss.maxHp), 12, 6); ctx.fill();
-    ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center';
+    ctx.font = 'bold 15px '+FONT; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3;
     const bl = 'BOSS  ' + BOSS_TYPES[boss.type].name;
     ctx.strokeText(bl, W/2, by-8);
@@ -1293,46 +2373,269 @@ function drawHUD(){
 }
 
 function overlay(){ ctx.fillStyle='rgba(40,25,60,.72)'; ctx.fillRect(0,0,W,H); }
-function bigText(t, y, size=46, color='#fff'){  
-  ctx.font = 'bold '+size+'px sans-serif'; ctx.textAlign='center';  
-  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=8;  
-  ctx.strokeText(t, W/2, y); ctx.fillStyle=color; ctx.fillText(t, W/2, y);  
-}  
-function drawTitle(){  
-  overlay();  
-  bigText('ほおばりハムスター', 140, 52, '#ffd54f');  
-  bigText('モグモグ大冒険', 205, 52, '#ffd54f');  
-  bigText('全4ステージ! てきを すいこんで ほおばろう!', 280, 24);
-  bigText('のみこむと能力コピー / はきだすと星アタック!', 320, 20, '#ffcc80');
-  bigText('さいごのステージで ボスとたいけつ!', 350, 19, '#ff8a80');
-  bigText('わざ:とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 378, 16, '#aed581');
-  bigText('PC: ←→移動 Space ジャンプ(空中れんだで ぷくぷく滞空) X 吸う/はく ↓ のみこむ', 408, 16, '#b3e5fc');
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップ または Space で スタート!', 465, 28, '#fff176');  
-}  
-function drawOver(){  
-  overlay();  
-  bigText('やられた…', 220, 56, '#ef9a9a');  
-  bigText('SCORE: '+game.score, 300, 32);  
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど!', 380, 26, '#fff176');  
-}  
-function drawNext(){  
-  ctx.fillStyle='rgba(40,25,60,.55)'; ctx.fillRect(0,0,W,H);  
-  bigText('STAGE ' + (game.stage+1) + ' クリア!', 220, 48, '#ffd54f');  
-  bigText('つぎは「' + STAGES[game.stage+1].name + '」!', 295, 28, '#fff');  
-  bigText('HP +1 かいふく!', 345, 22, '#ef9a9a');  
-}  
-function drawClear(){  
-  overlay();  
-  bigText('全ステージクリア!!', 200, 56, '#ffd54f');  
-  bigText('SCORE: '+game.score, 285, 36);  
-  bigText('ほっぺもおなかも いっぱい だいまんぞく!', 340, 24, '#ffcc80');  
-  if(Math.floor(performance.now()/500)%2===0) bigText('タップで もういちど あそぶ', 420, 24, '#fff176');  
-}  
-  
-// ---------- ループ ----------  
-resetGame();  
-function loop(){ update(); draw(); requestAnimationFrame(loop); }  
-loop();  
+function bigText(t, y, size=46, color='#fff'){
+  ctx.font = 'bold '+size+'px '+FONT; ctx.textAlign='center';
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=Math.max(4, Math.round(size*0.18)); ctx.lineJoin='round';
+  ctx.strokeText(t, W/2, y); ctx.fillStyle=color; ctx.fillText(t, W/2, y);
+}
+const blinkOn = ()=> Math.floor(performance.now()/500)%2===0;
+
+// メニューのボタン(タップ・↑↓+Space で選ぶ)
+function drawMenuButton(x, y, w, h, label, sel){
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; rounded(x, y+4, w, h, h/2); ctx.fill();
+  ctx.fillStyle = sel ? '#ffb300' : 'rgba(255,255,255,.14)'; rounded(x, y, w, h, h/2); ctx.fill();
+  ctx.strokeStyle = sel ? '#fff3c4' : 'rgba(255,255,255,.5)'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.font = 'bold 21px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = sel ? '#3e2723' : '#fff';
+  ctx.fillText(label, x + w/2, y + h/2 + 1);
+  ctx.textBaseline = 'alphabetic';
+}
+function drawMenu(y0, gap=56){
+  const items = menuItems();
+  if(game.menuSel >= items.length) game.menuSel = 0;
+  menuButtons = [];
+  items.forEach((it, i)=>{
+    const w = 380, h = 46, x = W/2 - w/2, y = y0 + i*gap;
+    menuButtons.push({ x, y, w, h, act:it.act });
+    drawMenuButton(x, y, w, h, it.label, i===game.menuSel);
+  });
+}
+function drawStarPath(x, y, r){
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a = -Math.PI/2 + i*Math.PI*2/5;
+    ctx.lineTo(x + Math.cos(a)*r, y + Math.sin(a)*r);
+    const a2 = a + Math.PI/5;
+    ctx.lineTo(x + Math.cos(a2)*r*0.45, y + Math.sin(a2)*r*0.45);
+  }
+  ctx.closePath();
+}
+function drawStar(x, y, r, color){
+  drawStarPath(x, y, r);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = Math.max(1.5, r*0.12); ctx.stroke();
+}
+function drawLock(x, y){
+  ctx.strokeStyle = '#cfd8dc'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(x, y-8, 11, Math.PI, 0); ctx.stroke();
+  ctx.fillStyle = '#cfd8dc'; rounded(x-17, y-8, 34, 26, 5); ctx.fill();
+  ctx.fillStyle = '#37474f'; ctx.beginPath(); ctx.arc(x, y+3, 4, 0, Math.PI*2); ctx.fill(); ctx.fillRect(x-1.5, y+3, 3, 8);
+}
+const fmtTime = f=>{ const sec = Math.floor(f/60); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2, '0'); };
+
+// 画面の好きな位置にリゼ丸をかく(タイトル用)
+function drawMogAt(x, y, s, cheeks){
+  const bak = player;
+  player = { x:x-20, y:y-19, w:40, h:38, vx:0, vy:0, dir:1, inv:0, puff:0,
+    squash:1 + Math.sin(performance.now()/180)*0.05, anim:0,
+    sucking:false, mouthful:cheeks ? 'walker' : null, ability:null };
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-x, -y);
+  drawPlayer();
+  ctx.restore();
+  player = bak;
+}
+function drawEnemyAt(type, x, y, s, T){
+  const d = ENEMY_TYPES[type];
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  drawEnemy({ type, ...d, x:-d.w/2, y:-d.h/2, t:T, vx:-1, frozen:0, beingSucked:false });
+  ctx.restore();
+}
+function recordLine(y){
+  if(game.newRecord){ if(blinkOn()) bigText('NEW RECORD!', y, 24, '#fff176'); }
+  else if(save.best > 0) bigText('ベストスコア ' + save.best, y, 18, '#ffe082');
+}
+
+function drawTitle(){
+  overlay();
+  const T = performance.now()/16.67;
+  bigText('ほおばりハムスター', 62, 22, '#fff3c4');
+  bigText('リゼ丸のプチプチ冒険🟢島', 130, 54, '#ffd54f');
+  bigText('てきを すいこんで ほおばろう! 全' + STAGES.length + 'ステージ', 188, 20, '#fff');
+  drawMogAt(165, 318 - Math.abs(Math.sin(T*0.06))*16, 2.6, Math.floor(T/70)%2===0); // 大きなリゼ丸がぴょんぴょん
+  drawEnemyAt('bee',    800, 250 + Math.sin(T*0.06)*12, 1.7, T);
+  drawEnemyAt('chili',  840, 335, 1.7, T);
+  drawEnemyAt('hopper', 760, 340 - Math.abs(Math.sin(T*0.05))*20, 1.7, T+40);
+  drawMenu(206, 52);
+  bigText('スマホ: ◀▶ いどう / ジャンプ(空中でれんだ=ぷかぷか) / すいこむ・はきだす / のみこむ=能力コピー', 432, 14, '#b3e5fc');
+  bigText('PC: ←→ いどう  Space ジャンプ  X すう/はく  ↓ のみこむ  Esc ポーズ', 456, 14, '#b3e5fc');
+  bigText('わざ: とうがらし→ファイア / 蜂→スパーク / スライム→アイス', 482, 14, '#aed581');
+  const info = [];
+  if(save.best > 0) info.push('ベストスコア ' + save.best);
+  if(totalStars() > 0) info.push('★ ' + totalStars() + '/' + STAGES.length*3);
+  if(save.cleared) info.push('クリアずみ');
+  if(info.length) bigText(info.join('   '), 518, 16, '#ffe082');
+}
+
+// ステージせんたく
+const SEL_COLS = 5; // ステージせんたくの 1行の数
+function drawSelect(){
+  overlay();
+  bigText('ステージせんたく', 54, 32, '#ffd54f');
+  bigText('★ ' + totalStars() + ' / ' + STAGES.length*3 + '   (★ = クリア / たね' + SEED_STAR + 'こ / ノーダメージ)', 84, 15, '#ffe082');
+  const items = menuItems();
+  if(game.menuSel >= items.length) game.menuSel = 0;
+  menuButtons = [];
+  const cw = 170, ch = 146, gap = 14, x0 = (W - (cw*SEL_COLS + gap*(SEL_COLS-1))) / 2;
+  STAGES.forEach((st, i)=>{
+    const x = x0 + (i%SEL_COLS)*(cw+gap), y = 102 + Math.floor(i/SEL_COLS)*(ch+18);
+    menuButtons.push({ x, y, w:cw, h:ch, act:items[i].act });
+    const lock = i > save.unlocked, sel = i===game.menuSel;
+    ctx.save(); ctx.translate(0, sel ? -4 : 0);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; rounded(x, y+6, cw, ch, 16); ctx.fill();
+    // ステージのミニ風景
+    ctx.save(); rounded(x, y, cw, ch, 16); ctx.clip();
+    const g = ctx.createLinearGradient(0, y, 0, y+ch);
+    g.addColorStop(0, st.sky[0]); g.addColorStop(0.6, st.sky[1]); g.addColorStop(1, st.sky[2]);
+    ctx.fillStyle = g; ctx.fillRect(x, y, cw, ch);
+    ctx.fillStyle = st.hill;
+    ctx.beginPath(); ctx.ellipse(x+cw*0.25, y+ch-50, cw*0.45, 40, 0, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+cw*0.82, y+ch-50, cw*0.38, 30, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = st.dirt; ctx.fillRect(x, y+ch-54, cw, ch);
+    ctx.fillStyle = st.grass; ctx.fillRect(x, y+ch-54, cw, 7);
+    ctx.fillStyle = 'rgba(20,12,35,.66)'; ctx.fillRect(x, y+ch-50, cw, 50);
+    ctx.restore();
+    ctx.strokeStyle = sel ? '#ffd54f' : 'rgba(255,255,255,.55)'; ctx.lineWidth = sel ? 5 : 2.5;
+    rounded(x, y, cw, ch, 16); ctx.stroke();
+    // ばんごう
+    ctx.fillStyle = '#ffb300'; ctx.beginPath(); ctx.arc(x+24, y+24, 16, 0, Math.PI*2); ctx.fill();
+    ctx.font = 'bold 18px '+FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#3e2723'; ctx.fillText(String(i+1), x+24, y+25);
+    ctx.textBaseline = 'alphabetic';
+    if(st.boss){
+      ctx.fillStyle = '#e53935'; rounded(x+cw-62, y+12, 50, 22, 11); ctx.fill();
+      ctx.font = 'bold 13px '+FONT; ctx.fillStyle = '#fff'; ctx.fillText('BOSS', x+cw-37, y+28);
+    }
+    ctx.font = 'bold 17px '+FONT; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+    ctx.fillText(lock ? '? ? ?' : st.name, x+cw/2, y+ch-28);
+    const sv = save.stars[i]|0;
+    for(let k=0;k<3;k++) drawStar(x+cw/2 + (k-1)*26, y+ch-12, 9, (sv>>k)&1 ? '#ffd54f' : 'rgba(255,255,255,.22)');
+    if(lock){
+      ctx.fillStyle = 'rgba(20,12,35,.6)'; rounded(x, y, cw, ch, 16); ctx.fill();
+      drawLock(x+cw/2, y+62);
+    }
+    ctx.restore();
+  });
+  const bw = 220, bh = 44, bx = W/2 - bw/2, by = H - 64;
+  menuButtons.push({ x:bx, y:by, w:bw, h:bh, act:items[items.length-1].act });
+  drawMenuButton(bx, by, bw, bh, 'もどる', game.menuSel===items.length-1);
+}
+
+// せってい
+function drawSettings(){
+  overlay();
+  bigText('せってい', 104, 44, '#ffd54f');
+  drawMenu(150);
+  bigText(DIFFS[save.diff].label + ':' + DIFFS[save.diff].note, 400, 15, '#ffcc80');
+  if(game.settingsFrom==='pause') bigText('むずかしさは つぎのステージから ぜんぶに はんえいされます', 426, 13, 'rgba(255,255,255,.75)');
+}
+
+// ステージの始まりと終わりの まるいワイプ
+function drawIris(){
+  let r = null;
+  if(game.state==='play' && game.intro > 122){ const k = (150 - game.intro)/28; r = 8 + k*k*760; }
+  if(game.state==='next' && game.banner < 25){ const k = game.banner/25; r = 8 + k*k*760; }
+  if(r===null) return;
+  const px = player.x + player.w/2 - Math.floor(game.cam), py = player.y + player.h/2;
+  ctx.fillStyle = '#140c24';
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r, 0, Math.PI*2, true); ctx.fill();
+}
+
+// 動く足場
+function updatePlatforms(){
+  for(const pf of platforms){
+    if(!pf.mv) continue;
+    const m = pf.mv, off = Math.sin(game.frame*m.sp + (m.ph||0)) * m.r;
+    const nx = m.ax==='x' ? pf.bx + off : pf.bx, ny = m.ax==='y' ? pf.by + off : pf.by;
+    pf.dx = nx - pf.x; pf.dy = ny - pf.y; pf.x = nx; pf.y = ny;
+    if(player.onGround && player.standPf === pf){ player.x += pf.dx; player.y += pf.dy; }
+  }
+}
+
+// ステージクリアの記録(★ とステージ解放)
+function recordStage(){
+  const st = 1 | (game.stageSeeds >= SEED_STAR ? 2 : 0) | (game.stageHit ? 0 : 4);
+  game.lastStars = st;
+  save.stars[game.stage] = (save.stars[game.stage]|0) | st;
+  save.unlocked = Math.max(save.unlocked, Math.min(game.stage+1, STAGES.length-1));
+  writeSave();
+}
+
+function drawOver(){
+  overlay();
+  drawMogAt(W/2, 105, 1.8, false);
+  bigText('リゼ丸、やられた…', 190, 48, '#ef9a9a');
+  bigText('SCORE: '+game.score, 240, 28);
+  recordLine(276);
+  drawMenu(310);
+}
+function drawPause(){
+  overlay();
+  bigText('ポーズ中', 140, 50, '#ffd54f');
+  bigText('STAGE ' + (game.stage+1) + ' ' + STAGES[game.stage].name + '  /  むずかしさ:' + D().label, 188, 18, '#fff');
+  drawMenu(222, 54);
+}
+function drawNext(){
+  const t = 210 - game.banner;
+  ctx.fillStyle = 'rgba(40,25,60,.62)'; ctx.fillRect(0,0,W,H);
+  bigText('STAGE ' + (game.stage+1) + ' クリア!', 112, 46, '#ffd54f');
+  const names = ['クリア', 'たね' + SEED_STAR + 'こ', 'ノーダメージ'];
+  for(let k=0;k<3;k++){
+    const x = W/2 + (k-1)*120, at = 22 + k*18;
+    const on = (game.lastStars>>k)&1;
+    const pop = t < at ? 0 : Math.min(1, (t-at)/8);
+    const r = 34 * (on && pop < 1 ? 0.6 + pop*0.6 : 1);
+    drawStar(x, 186, r, on && t >= at ? '#ffd54f' : 'rgba(255,255,255,.18)');
+    ctx.globalAlpha = t >= at ? 1 : 0.4;
+    ctx.font = 'bold 14px '+FONT; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText(names[k], x, 240);
+    ctx.globalAlpha = 1;
+  }
+  bigText('たね ' + game.stageSeeds + 'こ    タイム ' + fmtTime(game.time), 290, 20, '#ffe082');
+  bigText('つぎは「' + STAGES[game.stage+1].name + '」!', 342, 28, '#fff');
+  bigText('HP +1 かいふく!  じどうセーブしました', 382, 17, '#ef9a9a');
+  if(t > 50 && game.banner > 25 && blinkOn()) bigText('タップで すすむ', 444, 18, '#fff176');
+}
+function drawClear(){
+  overlay();
+  const T = performance.now()/16.67;
+  // 紙ふぶき
+  const cols = ['#ffd54f','#ff8a80','#81d4fa','#aed581','#ce93d8'];
+  for(let i=0;i<60;i++){
+    const x = wrap(rnd(i)*W + Math.sin(T*0.03 + i)*30, W);
+    const y = wrap(rnd(i+50)*H + T*(1 + rnd(i+9)), H+20) - 10;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(T*0.08 + i);
+    ctx.fillStyle = cols[i%5]; ctx.fillRect(-4, -2, 8, 4);
+    ctx.restore();
+  }
+  drawMogAt(W/2, 95, 2, true);
+  bigText('全ステージクリア!!', 175, 52, '#ffd54f');
+  bigText('SCORE: '+game.score, 228, 32);
+  bigText('リゼ丸、ほっぺもおなかも いっぱい!   ★ ' + totalStars() + '/' + STAGES.length*3, 268, 22, '#ffcc80');
+  recordLine(304);
+  drawMenu(340);
+}
+
+// ---------- ループ ----------
+// 画面のリフレッシュレート(60Hz / 120Hz など)に関係なく、1秒に60回ぶん動かす
+resetGame();
+const STEP = 1000/60;
+let lastT = 0, acc = 0;
+function loop(now){
+  if(!lastT) lastT = now;
+  acc += Math.min(100, now - lastT); lastT = now;
+  let n = 0;
+  while(acc >= STEP - 1 && n < 4){ update(); acc -= STEP; n++; }
+  if(n === 4) acc = 0;
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// アプリを切りかえたり、スマホをたてにしたら自動でポーズ
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) pauseGame(); });
+const portraitMQ = matchMedia('(orientation:portrait) and (pointer:coarse)');
+const onOrient = ()=>{ if(portraitMQ.matches) pauseGame(); };
+if(portraitMQ.addEventListener) portraitMQ.addEventListener('change', onOrient); else portraitMQ.addListener(onOrient);
 </script>  
 </body>  
 </html>  
