@@ -5,8 +5,9 @@
 | | パス |
 |---|---|
 | 焼肉ロス管理アプリ | `index.html` |
-| ハムスターゲーム | `hamster.html` |
+| リゼ丸のプチプチ冒険🟢島(ハムスターゲーム) | `hamster.html` |
 | Cyber Rose Crimson | `crc/index.html` |
+| CRC 紹介LP(拡散用) | `crc/lp/index.html` |
 
 ## 配信方法
 
@@ -33,6 +34,31 @@ Settings → Pages → Source: `Deploy from a branch` → `main` / `(root)` を�
 ```
 https://yama5150.github.io/shouhei/crc/
 ```
+
+### Vercel(推奨・push で自動反映)
+
+**接続済み: https://shouhei.vercel.app** (`main` に入れると自動で反映)。公開・更新の手順は `.claude/skills/shouhei-release/SKILL.md`、AI 向けの入口は `AGENTS.md`。
+
+`vercel.json` 設置済み。リポジトリを一度つなげば、以降は **push するだけで反映**される。
+
+- `main` に push → 本番URLが自動で更新される
+- それ以外のブランチに push → そのブランチ専用の**プレビューURL**が自動で出る(マージ前に確認できる)
+- デプロイのたびに CDN キャッシュが入れ替わるので、githack のような「古い版が出る」問題が起きない
+
+| URL | 中身 |
+|---|---|
+| `/` | CRC 紹介LP(`/crc/lp/` に転送) |
+| `/play`・`/crimson` | ゲーム本体(`/crc/index.html` に転送) |
+| `/yakiniku.html` | 焼肉ロス管理アプリ |
+
+**初回だけの接続手順**(スマホのブラウザでも可):
+
+1. vercel.com に GitHub アカウントでログイン
+2. 「Add New… → Project」→ `yama5150/shouhei` を Import
+3. 設定は触らずに「Deploy」(`vercel.json` が「ビルドしない・直下をそのまま配る」を指定している)
+
+⚠️ `vercel.json` が無いと、Vercel は `vite.config.js` を見つけて焼肉アプリだけをビルドして公開する(Netlify と同じ罠)。消さないこと。
+⚠️ Hobby(無料)プランの転送量は月100GB。ゲーム本体は初回1回で約41MB なので、**初回プレイ換算で月2,400回前後**が目安。
 
 ### Netlify
 
