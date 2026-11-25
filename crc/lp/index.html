@@ -390,7 +390,6 @@ footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:v
 
 <script>
 (()=>{
-const BASE="https://rawcdn.githack.com/yama5150/shouhei/main/crc/";
 const TRACKS=[
  ["obscure","obscure","常に鳴っている、世界の呼吸。気づかれないことが仕事の曲。……その正体は、Track 11で。","5344ec1e-7fa7-48b5-baca-a43548e40473"],
  ["gag","carrot-hoofbeats","SDの相棒。プリンが盗まれる時、必ず鳴る。","ad7eb6ad-aa90-46d5-8ca5-313bcfa19f25"],
@@ -446,7 +445,7 @@ new IntersectionObserver(([e])=>{finVis=e.isIntersecting;upd();}).observe(docume
 /* share */
 document.getElementById("shareBtn").addEventListener("click",async()=>{
   const text="「薔薇は、愛か、呪いか。」\n全16話のノベル × 12曲のアルバム『Cyber Rose Crimson』\n#CyberRoseCrimson";
-  const url=BASE+"lp/index.html";
+  const url=location.origin+location.pathname;
   if(navigator.share){ try{ await navigator.share({title:"Cyber Rose Crimson",text,url}); return; }catch(e){ if(e.name==="AbortError") return; } }
   open("https://x.com/intent/post?text="+encodeURIComponent(text)+"&url="+encodeURIComponent(url),"_blank","noopener");
 });
