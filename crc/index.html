@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v88">
+<meta name="build" content="v88.1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -57,15 +57,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--abyss);
 #linerView{position:absolute;inset:0;z-index:47;display:none;flex-direction:column;
   background:#080310;}
 #linerView.show{display:flex;}
-#linerHead{flex-shrink:0;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
+#linerHead,#xferHead{flex-shrink:0;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
   color:var(--rose);font-size:13px;letter-spacing:.35em;text-align:center;}
 #linerBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:0 16px 12px;display:flex;flex-direction:column;align-items:center;}
-#linerClose{flex-shrink:0;margin:14px auto calc(18px + env(safe-area-inset-bottom));
+#linerClose,#xferClose{flex-shrink:0;margin:14px auto calc(18px + env(safe-area-inset-bottom));
   padding:10px 30px;background:none;border:1px solid rgba(232,55,95,.5);
   border-radius:20px;color:var(--silver);font-size:12px;letter-spacing:.18em;
   font-family:inherit;cursor:pointer;}
 #logView.show{display:flex;}
+/* しおりの引き継ぎ。LINER NOTES と同じ作りの独立画面 */
+#xferView{position:absolute;inset:0;z-index:47;display:none;flex-direction:column;background:#080310;}
+#xferView.show{display:flex;}
+#xferBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 18px 12px;
+  color:var(--silver);font-size:12.5px;line-height:1.9;letter-spacing:.04em;}
+#xferBody h4{color:var(--rose);font-size:12px;letter-spacing:.25em;font-weight:normal;margin:22px 0 6px;}
+#xferBody p{color:#b9a6c9;margin:0 0 8px;}
+#xferBody textarea{width:100%;box-sizing:border-box;min-height:84px;padding:10px;border-radius:10px;
+  background:rgba(28,10,30,.8);border:1px solid rgba(232,55,95,.35);color:var(--silver);
+  font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.5;word-break:break-all;resize:vertical;}
+.xferBtn{display:block;width:100%;margin-top:8px;padding:12px;border-radius:22px;font-family:inherit;
+  font-size:12.5px;letter-spacing:.16em;color:var(--silver);background:rgba(232,55,95,.18);
+  border:1px solid rgba(232,55,95,.55);cursor:pointer;}
+.xferBtn:active{background:rgba(232,55,95,.35);}
+#xferMsg{min-height:1.9em;margin-top:8px;color:var(--rose);font-size:12px;}
+#chXfer{display:block;margin:18px auto 0;font-family:inherit;font-size:12px;letter-spacing:.18em;
+  padding:11px 26px;color:#c9b6e0;background:rgba(28,10,30,.8);border:1px solid rgba(232,55,95,.45);
+  border-radius:20px;cursor:pointer;}
 #logHead{flex-shrink:0;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
   color:var(--rose);font-size:13px;letter-spacing:.35em;text-align:center;}
 #logBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 18px 12px;}
@@ -692,6 +710,24 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
     </div>
     <button id="linerClose">とじる</button>
   </div>
+  <!-- しおりの引き継ぎ。セーブはブラウザがサイトの住所ごとに持つので、
+       機種変更や別のブラウザでは最初からになる。コードにして持ち運べるようにする -->
+  <div id="xferView">
+    <div id="xferHead">― しおりの引き継ぎ ―</div>
+    <div id="xferBody">
+      <p>読んだところ・読了の印・選んだ選択肢を、別のスマホやブラウザに持っていけます。</p>
+      <h4>◆ この端末のしおり</h4>
+      <p>下のコードをコピーして、メモやLINEなどで新しい端末に送ってください。</p>
+      <textarea id="xferOut" readonly></textarea>
+      <button class="xferBtn" id="xferCopy">コードをコピー</button>
+      <h4>◆ コードを読み込む</h4>
+      <p>前の端末でコピーしたコードを貼りつけてください。<br>この端末のしおりは上書きされます。</p>
+      <textarea id="xferIn" placeholder="CRC1-…"></textarea>
+      <button class="xferBtn" id="xferLoad">読み込む</button>
+      <div id="xferMsg"></div>
+    </div>
+    <button id="xferClose">とじる</button>
+  </div>
   <div id="pv">
     <div class="pvImg" id="pvA"></div>
     <div class="pvImg" id="pvB"></div>
@@ -774,6 +810,7 @@ div[style*="netlify"] { display:none !important; visibility:hidden !important;
         <button class="epBtn" id="btnMusic">♪　MUSIC ROOM</button>
         <button class="epBtn" id="btnLiner">◆　LINER NOTES</button>
       </div>
+      <button id="chXfer">⇄　しおりの引き継ぎ</button>
       <button id="chBackFoot">‹　タイトルへ戻る</button>
     </div>
   </div>
@@ -3848,15 +3885,40 @@ function progOf(ep){
 /* 話を読み切った印。位置は消す(次に選んだら頭から始まる) */
 function markDone(ep){
   const p=loadProg(); const k=String(ep);
-  p.eps[k]=Object.assign({}, p.eps[k], {done:true, i:0, at:Date.now()});
+  p.eps[k]=Object.assign({}, p.eps[k], {done:true, i:0, id:"", w:null, at:Date.now()});
   saveProg(p);
+}
+
+/* ---- しおり ----
+   位置を添字(i)だけで持つと、増築(間に挟む)のたびに途中の読者の位置がずれる。
+   だから読んでいた行の住所も一緒に覚える。住所は voiceId と同じ「話者+本文」のハッシュ
+   (選択肢の直後はラベル名)。再開するときはその行を探し直し、同じ行が複数あれば
+   元の添字に一番近いものを選ぶ。本文が書き換えられて見つからなければ、添字に戻る。 */
+function anchorOf(sc, i){
+  const c=sc&&sc[i]; if(!c) return "";
+  if(c.t!==undefined) return voiceId(c);
+  if(c.label!==undefined) return "L:"+c.label;
+  return "";
+}
+function resolvePos(ep, pr){
+  const sc=EPISODES[ep]; if(!sc||!pr||pr.done) return 0;
+  const i=pr.i|0;
+  if(pr.id){
+    let best=-1;
+    for(let j=0;j<sc.length;j++){
+      if(anchorOf(sc,j)===pr.id && (best<0 || Math.abs(j-i)<Math.abs(best-i))) best=j;
+    }
+    if(best>=0) return best;
+  }
+  return Math.max(0, Math.min(i, sc.length-1));
 }
 
 function save(){
   try{
     const p=loadProg(); const k=String(state.ep);
     const was=p.eps[k]||{};
-    p.eps[k]={i:state.i, done:!!was.done, at:Date.now()};
+    // w = その時の背景・曲・立ち絵。再開したとき真っ暗な画面から始まらないように
+    p.eps[k]={i:state.i, id:anchorOf(SC,state.i), w:worldNow(), done:!!was.done, at:Date.now()};
     p.last=k;
     saveProg(p);
     // 旧キーも書き続ける。前の版に戻しても位置を失わないため(数十バイト)
@@ -3867,7 +3929,7 @@ function save(){
 function loadSave(){
   const p=loadProg();
   const k=p.last && p.eps[p.last] ? p.last : null;
-  if(k && typeof p.eps[k].i==="number") return {ep:k, i:p.eps[k].i, flags:loadFlags()};
+  if(k && typeof p.eps[k].i==="number") return {ep:k, i:p.eps[k].i, pr:p.eps[k], flags:loadFlags()};
   return null;
 }
 function loadFlags(){
@@ -4069,17 +4131,21 @@ function startGame(ep, fromSave, fresh){
   $("msgWin").classList.add("show");
   $("menuBar").classList.add("show");
   state.ep=ep;
+  let resumeW=null;
   if(fromSave){
     const d=loadSave();
-    if(d){ state.ep=String(d.ep||"1"); state.i=d.i; state.flags=d.flags||{}; }
+    if(d){ state.ep=String(d.ep||"1"); state.i=d.pr?resolvePos(state.ep,d.pr):d.i; state.flags=d.flags||{};
+           resumeW=d.pr&&d.pr.w; }
   }else{
     state.flags=loadFlags();
     const pr=fresh ? null : progOf(ep);
-    state.i = (pr && !pr.done && pr.i>0) ? pr.i : 0;
+    state.i = (pr && !pr.done && pr.i>0) ? resolvePos(ep,pr) : 0;
+    resumeW = state.i>0 && pr ? pr.w : null;
   }
   SC=EPISODES[state.ep]||EP1;
   ensureCtx();
   startAmbient();
+  if(state.i>0 && resumeW) worldRestore(resumeW);   // 再開位置の背景・曲・立ち絵
   if(state.i===0){
     const et=EP_TITLES[state.ep]||["",""];
     $("curtainText").textContent=et[0]+"\n"+et[1];
@@ -4146,7 +4212,7 @@ function paintChapterMark(b){
   if(pr.done){
     mk.classList.add("done"); mk.textContent="✓ 読了";
   }else if(pr.i>0){
-    mk.textContent="▶ "+Math.max(1,Math.min(99,Math.round(100*pr.i/total)))+"%";
+    mk.textContent="▶ "+Math.max(1,Math.min(99,Math.round(100*resolvePos(ep,pr)/total)))+"%";
     // 途中の話は、頭から読み直す道も残す
     const rs=document.createElement("button");
     rs.className="chRestart"; rs.textContent="↺"; rs.title="最初から";
@@ -4482,6 +4548,71 @@ $("btnMusic").onclick=e=>{e.stopPropagation(); ensureCtx(); startAmbient();
 function openLiner(){ $("linerView").classList.add("show"); $("linerBody").scrollTop=0; }
 $("btnLiner").onclick=e=>{e.stopPropagation(); openLiner();};
 $("linerClose").onclick=e=>{e.stopPropagation(); $("linerView").classList.remove("show");};
+
+/* ---- しおりの引き継ぎ ----
+   中身は進行(話ごとの位置・しおり・読了)とフラグ。世界(w)は最後に読んでいた話の分だけ持つ
+   (全話分だと長くなりすぎて、手で貼りつけにくい)。
+   形式: "CRC1-" + JSON を UTF-8 → base64url にしたもの。 */
+const XFER_PREFIX="CRC1-";
+function xferEncode(){
+  const p=loadProg(), eps={};
+  Object.keys(p.eps||{}).forEach(k=>{
+    const e=p.eps[k]; if(!e) return;
+    const o={i:e.i|0, d:e.done?1:0}; if(e.id) o.id=e.id;
+    if(k===p.last && e.w && !e.done) o.w=e.w;
+    eps[k]=o;
+  });
+  const json=JSON.stringify({v:1, last:p.last||null, eps, f:loadFlags()});
+  const b64=btoa(unescape(encodeURIComponent(json))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  return XFER_PREFIX+b64;
+}
+function xferDecode(code){
+  code=(code||"").replace(/\s+/g,"");
+  if(code.indexOf(XFER_PREFIX)!==0) throw new Error("prefix");
+  let b=code.slice(XFER_PREFIX.length).replace(/-/g,"+").replace(/_/g,"/");
+  while(b.length%4) b+="=";
+  const d=JSON.parse(decodeURIComponent(escape(atob(b))));
+  if(!d || d.v!==1 || typeof d.eps!=="object") throw new Error("shape");
+  const p={v:1, eps:{}, last:null};
+  Object.keys(d.eps).forEach(k=>{
+    if(!EPISODES[k]) return;                 // 知らない話は捨てる(未来の版のコードなど)
+    const e=d.eps[k];
+    p.eps[k]={i:Math.max(0,e.i|0), id:typeof e.id==="string"?e.id:"", w:e.w||null, done:!!e.d, at:Date.now()};
+  });
+  if(d.last && p.eps[d.last]) p.last=d.last;
+  return {p, f:(d.f && typeof d.f==="object") ? d.f : {}};
+}
+function openXfer(){
+  $("xferOut").value=xferEncode(); $("xferIn").value=""; $("xferMsg").textContent="";
+  $("xferView").classList.add("show"); $("xferBody").scrollTop=0;
+}
+$("chXfer").onclick=e=>{e.stopPropagation(); openXfer();};
+$("xferClose").onclick=e=>{e.stopPropagation(); $("xferView").classList.remove("show"); paintChapters();};
+$("xferCopy").onclick=async e=>{
+  e.stopPropagation();
+  const ta=$("xferOut"), msg=$("xferMsg");
+  try{ await navigator.clipboard.writeText(ta.value); msg.textContent="コピーしました"; return; }catch(err){}
+  try{ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+       msg.textContent = document.execCommand("copy") ? "コピーしました" : "コードを長押しして、コピーしてください"; }
+  catch(err){ msg.textContent="コードを長押しして、コピーしてください"; }
+};
+$("xferLoad").onclick=e=>{
+  e.stopPropagation();
+  const msg=$("xferMsg"); let r;
+  try{ r=xferDecode($("xferIn").value); }
+  catch(err){ msg.textContent="コードが読めませんでした。最初から最後まで、そのまま貼りつけてください"; return; }
+  if(!confirm("この端末のしおりを、読み込んだものに置き換えます。よろしいですか?")) return;
+  saveProg(r.p);
+  try{
+    localStorage.setItem("crc_flags", JSON.stringify(r.f));
+    const L=r.p.last && r.p.eps[r.p.last];
+    if(L && !L.done) localStorage.setItem("crc_save", JSON.stringify({ep:r.p.last, i:L.i, flags:r.f}));
+    else localStorage.removeItem("crc_save");
+  }catch(err){}
+  state.flags=r.f;
+  $("xferOut").value=xferEncode(); $("xferIn").value="";
+  msg.textContent="読み込みました。「とじる」でチャプターに戻ると、印が反映されています";
+};
 $("mrClose").onclick=e=>{e.stopPropagation(); mrStopSrc(); stopBgm();
   state.ambOff=mrPrevAmb; updateAmb();                      // 出たら元通り
   $("musicRoom").classList.remove("show");};
