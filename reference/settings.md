@@ -10,7 +10,7 @@
 
 **新しいセッションはここだけ読めば状況がわかる。** 詳細は各節へ。
 
-最終更新: 2026-11-25(v95)
+最終更新: 2026-11-25(v96・本番)
 
 ### 公開中
 
@@ -29,7 +29,7 @@ https://rawcdn.githack.com/yama5150/shouhei/main/crc/index.html
 | **ビジュアル面** | **ブランチ `claude/elegant-dijkstra-w9yj7t` で開発中(v95 で `main` を取り込み済み)。** 表情差分などはそちらで進めている。**`crc/index.html` を両方から触ると食い違う**ので、組み込む前に `main` の最新を取ってから作業すること |
 | **表情差分の生成** | **翔平が作業中。** ユウジの「落ち込み」「眠気」から。第22節に仕様 |
 | **劇中BGMの追加** | **4曲中1曲入った**(v80「朝の静寂」)。残り3曲の候補は第28節 |
-| **Vercel で公開中** | **https://shouhei.vercel.app**(2026-11-25 接続)。`main` に入れると1〜2分で本番に出る。本編は `/play`、紹介LPは `/`(`crc/lp/`)。手順と罠は `.claude/skills/shouhei-release/`。**本番の本編はまだ v88**(v95 は `claude/elegant-dijkstra-w9yj7t`、PR待ち) |
+| **Vercel で公開中** | **https://shouhei.vercel.app**(2026-11-25 接続)。`main` に入れると1〜2分で本番に出る。本編は `/play`、紹介LPは `/`(`crc/lp/`)。手順と罠は `.claude/skills/shouhei-release/`。**本番の本編は v96**(2026-11-25、PR #27 でマージ) |
 | **Netlifyへの移行** | `netlify.toml` 設置済み・未接続。githackが重くなったら移る(第26節) |
 | **音源の録り直し** | 保留。`bara` と `gag` の2曲だけで改善分の100%(第21節) |
 
