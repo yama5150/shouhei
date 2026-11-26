@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v98">
+<meta name="build" content="v99">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -1421,6 +1421,7 @@ const EP3 = [
  {jump:"ep3_monshou"},
 
  {label:"ep3_monshou"},
+ {bgmStop:true},
  {n:N,t:"名刺の紋章を見せた瞬間、ソメイの早口が、止まった。"},
  {n:SOM,t:"「…………これ、どこで」"},
  {n:SOM,t:"「《ロザリウム》。表向きは旧時代技術の回収団体。実態は──空白期の遺産を独占してる結社だよ」"},
@@ -1455,6 +1456,7 @@ const EP3 = [
  {bg:"kobo", dim:true},
  {spr:"none"},
  {n:N,t:"工房に戻って、鍵を閉めて、息をついた──その時。"},
+ {bgmStop:true},
  {amb:false},
  {n:N,t:"音が、消えた。"},
  {n:N,t:"雨の音も。街の遠いざわめきも。自分の足音さえも。"},
@@ -1485,8 +1487,10 @@ const EP3 = [
  {bgm:"crimson"},
  {glitch:true},
  {wash:true},
+ {se:"boom"},
  {n:N,t:"パワーコード、一撃。"},
  {n:N,t:"世界に、音が帰ってきた。"},
+ {se:"shatter"},
  {n:N,t:"無音化フィールドが悲鳴を上げて割れる。ガラスみたいに。空気が震えて、埃が舞って、俺の骨まで揺れて──"},
  {n:N,t:"そして。"},
  {bg:"core"},
@@ -1507,6 +1511,7 @@ const EP3 = [
 
  {label:"ep3_shinrai"},
  {n:N,t:"弦を掻き鳴らす。ありったけの音で。"},
+ {se:"slash"},
  {n:N,t:"エルザが跳んだ。紅い軌跡が、夜を三日月形に裂く。"},
  {jump:"ep3_scan"},
 
@@ -1516,6 +1521,7 @@ const EP3 = [
  {n:YU,yu:"en",t:"「音は近い方がデカいんだよ!!」"},
  {n:EL,t:"「…………ほんっと、うに」"},
  {n:EL,t:"「……いいわ。特等席で聴かせなさい!」"},
+ {se:"slash"},
  {n:N,t:"零距離の爆音の中、彼女の剣が閃いた。"},
  {jump:"ep3_scan"},
 
@@ -1523,6 +1529,7 @@ const EP3 = [
  {n:N,t:"回収機体のレンズが、最後に何かを走査した。"},
  {glitch:true},
  {n:KAI,t:"『照合……型番00……エラー。該当機体ハ──No.──』",gt:true},
+ {se:"cross"},
  {n:N,t:"言い終わる前に、Rosy Edgeがそれを両断した。"},
 
  {curtain:""},
@@ -3902,7 +3909,7 @@ function run(){
   }
 }
 /* ---- 効果音(v97〜)。素材を持たず WebAudio で合成する=容量ゼロ ----
-   種類: boom(炸裂)/ quake(振動波)/ whip(鞭)/ clash3(剣戟×3)/ slash3(斬撃×3)/ cross(十字斬り+炸裂)
+   種類: boom(炸裂)/ quake(振動波)/ whip(鞭)/ clash3(剣戟×3)/ slash(斬撃)/ slash3(斬撃×3)/ shatter(ガラスが割れる)/ cross(十字斬り+炸裂)
    音楽OFF・SKIP中は鳴らさない */
 let seGain=null, noiseBuf=null;
 function seNoise(){
@@ -3950,6 +3957,8 @@ function playSe(kind){
   else if(kind==="quake"){ seBoom(t,1.8); seBoom(t+0.35,1.4); seShake("shakeL"); }
   else if(kind==="whip"){ seWhip(t); setTimeout(()=>seShake("shakeS"),300); }
   else if(kind==="clash3"){ [0,0.24,0.48].forEach((d,k)=>{ seClash(t+d); setTimeout(()=>seShake("shakeS"),d*1000); }); }
+  else if(kind==="slash"){ seSlash(t); seShake("shakeS"); }
+  else if(kind==="shatter"){ for(let k=0;k<7;k++) seClash(t+k*0.045+Math.random()*0.03); seBoom(t,0.7); seShake("shakeS"); }
   else if(kind==="slash3"){ [0,0.2,0.4].forEach(d=>seSlash(t+d)); }
   else if(kind==="cross"){ seSlash(t); seSlash(t+0.26); seBoom(t+0.55,1.6); setTimeout(()=>seShake("shakeL"),550); }
 }
