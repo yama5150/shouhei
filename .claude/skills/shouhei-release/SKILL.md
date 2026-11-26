@@ -129,6 +129,11 @@ python3 -m venv /tmp/qv && /tmp/qv/bin/pip -q install "qrcode[pil]" opencv-pytho
 7. **Vercel の初回設定中に本人確認(メールの6桁コード)が割り込むと、入力がリセットされて
    同じリポジトリのプロジェクトが2つできた。** 余分な方は Settings → Advanced(または General)
    の一番下「Delete Project」で消した。残すのは `shouhei`
+9. **プレビューは 2026-11-26 から誰でも開ける。** Vercel の Deployment Protection(Vercel認証)を翔平がオフにした。
+   ブランチ `claude/elegant-dijkstra-w9yj7t` のプレビュー
+   `shouhei-git-claude-elegant-dijkstra-w9yj7t-yama5150-22e2a646.vercel.app` は作業環境の許可リストにも入れてある。
+   **確認用の URL は githack ではなくこのプレビューを渡す。** プレビューの HTML の末尾には Vercel のフィードバック用
+   スクリプトが1行足される(本番には付かない)ので、手元のファイルとハッシュは一致しない。中身の比較は末尾を除いて行う
 8. **作業環境から外に出られないことがある。** Claude のクラウド環境では許可したホストにしか
    繋がらない。`shouhei.vercel.app` と `vercel.com` は許可済み。プレビューURL(`*-git-*.vercel.app`)は
    見られないので、本番で確かめるか翔平に見てもらう
