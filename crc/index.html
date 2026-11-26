@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v99">
+<meta name="build" content="v100">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -3117,6 +3117,7 @@ const EN3 = [
  {gaugeLabel:{a:"蒼の支配", b:"紅の共鳴"}},
  {gauge:{armor:50, reso:100}},
  {n:N,t:"──始まった。"},
+ {se:"quake"},
  {n:N,t:"潮の共鳴が、大聖堂を呑み始める。"},
  {gauge:{armor:70, reso:80}},
  {n:N,t:"完璧に制御された音。揺らぎゼロ。空間の音響特性ごと、青く塗り替えられていく。"},
@@ -3140,16 +3141,19 @@ const EN3 = [
  {n:EL,t:"「遅い。もっと前に出なさい」"},
  {n:YU,yu:"en",t:"「言われなくても!!」"},
  {n:N,t:"線が、面になる。紅がじわりと滲んで、青を押し返す。"},
+ {se:"clap"},
  {n:N,t:"と──ぱん、と乾いた音が、背中で鳴った。"},
  {spr:"somei"},
  {n:N,t:"振り返る。ソメイが、扇を開いていた。"},
  {n:YU,yu:"bik",t:"「!? ちょ、ソメイさん戦えんの!?」"},
  {n:SOM,t:"「失礼だなあ。僕は情報屋だよ、あくまで。……ただまあ」"},
+ {se:"clap3"},
  {n:N,t:"ぱん。ぱん。ぱん。扇が、俺のギターの裏拍を、寸分違わず叩いた。"},
  {n:SOM,t:"「──昔とった杵柄って、やつでね」"},
  {n:N,t:"その言い方が、やけに長い時間の匂いをさせたけど。今は、聞いてる場合じゃない。"},
  {n:N,t:"そして最後に、鋼の音が入ってきた。"},
  {spr:"sakuyaKen"},
+ {se:"swordbeat"},
  {n:N,t:"咲耶の剣が、床を、柱を、宙を打つ。滅茶苦茶に見えて──一拍も、外さない。"},
  {n:SAK,t:"「……姉さんの隣は、私の場所じゃない」"},
  {n:SAK,t:"「でも。……後ろなら、いい?」"},
@@ -3175,6 +3179,7 @@ const EN3 = [
  {gauge:{armor:10, reso:100}},
  {spr:"smile"},
  {n:EL,t:"「──フィナーレよ!!」"},
+ {se:"finale"},
  {glitch:true},
  {wash:true},
  {gauge:{armor:0}},
@@ -3185,6 +3190,7 @@ const EN3 = [
  {curtain:""},
  {bg:"ushio"},
  {spr:"none"},
+ {se:"shatter"},
  {n:N,t:"──般若の面が、割れた。"},
  {n:N,t:"素顔の潮が、割れた面を、両手で拾い上げる。"},
  {n:N,t:"泣いてなんか、いなかった。"},
@@ -3449,7 +3455,7 @@ async function playBgm(key, loop=true){
     bgmGain.gain.cancelScheduledValues(actx.currentTime);
     bgmGain.gain.value=state.bgmOn?0.9:0;
     s.start();
-    curSrc=s;
+    curSrc=s; bgmT0=actx.currentTime;
     updateAmb();
   }catch(e){
     if(curBgmKey===key) curBgmKey=null;  // 例外のときも再試行できるようにする
@@ -3909,9 +3915,10 @@ function run(){
   }
 }
 /* ---- 効果音(v97〜)。素材を持たず WebAudio で合成する=容量ゼロ ----
-   種類: boom(炸裂)/ quake(振動波)/ whip(鞭)/ clash3(剣戟×3)/ slash(斬撃)/ slash3(斬撃×3)/ shatter(ガラスが割れる)/ cross(十字斬り+炸裂)
+   種類: clap(扇)/ clap3(扇×3)/ swordbeat(剣のリズム)/ finale(終幕)/ boom(炸裂)/ quake(振動波)/ whip(鞭)/ clash3(剣戟×3)/ slash(斬撃)/ slash3(斬撃×3)/ shatter(ガラスが割れる)/ cross(十字斬り+炸裂)
    音楽OFF・SKIP中は鳴らさない */
-let seGain=null, noiseBuf=null;
+let seGain=null, noiseBuf=null, bgmT0=0;
+const SE_BPM={gyakuten:144};   // この曲が鳴っている間は、効果音を拍に合わせる(v100〜)
 function seNoise(){
   if(!noiseBuf){ const n=actx.sampleRate*2; noiseBuf=actx.createBuffer(1,n,actx.sampleRate);
     const d=noiseBuf.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; }
@@ -3947,13 +3954,25 @@ function seWhip(t){
   const c=seNoise(), h=actx.createBiquadFilter(); h.type="highpass"; h.frequency.value=1800;
   c.connect(h); h.connect(seEnv(t+0.28,1.0,0.05)); c.start(t+0.28); c.stop(t+0.34);
 }
+function seClap(t){
+  [0,0.011,0.023].forEach((d,k)=>{ const n=seNoise(), f=actx.createBiquadFilter(); f.type="bandpass"; f.frequency.value=1300; f.Q.value=1.4;
+    n.connect(f); f.connect(seEnv(t+d,k===2?0.9:0.5,k===2?0.16:0.02)); n.start(t+d); n.stop(t+d+0.2); });
+}
 function seShake(cls){ const st=$("stage"); st.classList.remove("shakeS","shakeL"); void st.offsetWidth; st.classList.add(cls);
   if(navigator.vibrate) navigator.vibrate(cls==="shakeL"?[60,30,90]:30); }
 function playSe(kind){
   if(!actx||!state.bgmOn||state.skip) return;
   if(!seGain){ seGain=actx.createGain(); seGain.gain.value=0.55; seGain.connect(actx.destination); }
-  const t=actx.currentTime+0.02;
-  if(kind==="boom"){ seBoom(t,1.1); seShake("shakeL"); }
+  let t=actx.currentTime+0.02;
+  // 拍合わせ:曲の頭からの経過を拍の格子に丸め、次の拍に置く
+  const bpm=SE_BPM[curBgmKey]; let beat=0.25;
+  if(bpm&&curSrc){ beat=60/bpm; const el=t-bgmT0; t=bgmT0+Math.ceil(el/beat)*beat; }
+  const wait=Math.max(0,(t-actx.currentTime)*1000);
+  if(kind==="clap"){ seClap(t); setTimeout(()=>seShake("shakeS"),wait); }
+  else if(kind==="clap3"){ [0,1,2].forEach(k=>{ seClap(t+k*beat*(bpm?1:1.6)); setTimeout(()=>seShake("shakeS"),wait+k*beat*(bpm?1000:1600)); }); }
+  else if(kind==="swordbeat"){ [0,0.5,1,1.5,2,3].forEach(k=>{ seClash(t+k*beat); setTimeout(()=>seShake("shakeS"),wait+k*beat*1000); }); }
+  else if(kind==="finale"){ seSlash(t); seClash(t+0.05); seBoom(t+0.1,2.2); setTimeout(()=>seShake("shakeL"),wait+100); }
+  else if(kind==="boom"){ seBoom(t,1.1); seShake("shakeL"); }
   else if(kind==="quake"){ seBoom(t,1.8); seBoom(t+0.35,1.4); seShake("shakeL"); }
   else if(kind==="whip"){ seWhip(t); setTimeout(()=>seShake("shakeS"),300); }
   else if(kind==="clash3"){ [0,0.24,0.48].forEach((d,k)=>{ seClash(t+d); setTimeout(()=>seShake("shakeS"),d*1000); }); }
