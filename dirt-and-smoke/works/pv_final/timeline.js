@@ -67,7 +67,7 @@ cut(S(227.6),.07,'eyes_red');
 txt(S(228.6),S(236.5),[L('心の闇が','n',0,.12),L('本当の私《紫》','n',1.2,.14)],{pos:'center',size:1.15});
 bg(S(236.0),'none',{fade:1.2});
 bg(S(238.0),'ending_new',{fade:3.5});
-txt(S(246.0),S(259.0),[L('DIRT AND SMOKE','n',0,0),L('総監督・音楽　shouyama','n',1.0,0,{small:true}),L('ビジュアル　ChatGPT','n',1.6,0,{small:true}),L('シナリオ　Claude','n',2.2,0,{small:true})],{pos:'credit',out:2.0});
+txt(S(246.0),S(259.0),[L('DIRT AND SMOKE','n',0,0),L('原作・企画・音楽・ビジュアル　shou.5150','n',1.0,0,{small:true}),L('シナリオ　shou.5150 × Claude','n',1.6,0,{small:true})],{pos:'credit',out:2.0});
 bg(S(264.5),'none',{fade:3.5});
 txt(175.0,181.5,[L('おやすみ。','n',0,.2)],{pos:'center',out:1.5});
 
