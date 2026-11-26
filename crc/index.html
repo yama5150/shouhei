@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="v97">
+<meta name="build" content="v98">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Cyber Rose Crimson</title>
@@ -1528,7 +1528,6 @@ const EP3 = [
  {curtain:""},
  {bgmStop:true},
  {bg:"kobo", dim:true},
- {bgm:"bara"},
  {spr:"n"},
  {n:N,t:"戦いが終わって、工房には焦げた匂いと、アンプの残響だけが残った。"},
  {n:N,t:"エルザは剣を消して、しばらく黙って俺のギターを見ていた。"},
@@ -3453,9 +3452,14 @@ function stopBgm(){
   playToken++;
   if(curSrc&&actx){
     const s=curSrc; curSrc=null;
-    // フェードアウト
-    bgmGain.gain.setTargetAtTime(0, actx.currentTime, 0.2);
-    setTimeout(()=>{ try{s.stop()}catch(e){} }, 900);
+    // フェードアウト。v98: 消える曲だけに専用の段を挟んで絞る。
+    // 以前は bgmGain ごと絞っていたため、直後に次の曲が始まると bgmGain が 0.9 に戻され、
+    // 消えかけの曲が最大900ms、次の曲と重なって大音量で鳴っていた
+    const f=actx.createGain(); f.gain.value=1;
+    try{ s.disconnect(); }catch(e){}
+    s.connect(f); f.connect(bgmGain);
+    f.gain.setTargetAtTime(0, actx.currentTime, 0.2);
+    setTimeout(()=>{ try{s.stop()}catch(e){} try{f.disconnect()}catch(e){} }, 1200);
   }
   curBgmKey=null;
   updateAmb();
