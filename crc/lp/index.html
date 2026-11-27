@@ -90,6 +90,18 @@ p.lead{color:var(--sub);font-size:15px;max-width:34em}
   background:radial-gradient(circle at 40% 38%,#ff8fa8,#c3173f 45%,#5a0619 75%,transparent 76%);
   filter:blur(1px);opacity:.18}
 
+/* ---------- trailer ---------- */
+.trailer{padding-top:72px}
+.tr-frame{position:relative;margin:0 auto;border-radius:8px;overflow:hidden;background:#000;
+  box-shadow:0 30px 80px rgba(232,55,95,.22);aspect-ratio:9/16;max-width:min(420px,100%);max-height:78svh}
+.tr-frame video{width:100%;height:100%;object-fit:contain;background:#000}
+.tr-play{position:absolute;inset:0;display:grid;place-items:center;border:0;cursor:pointer;color:#fff;
+  background:linear-gradient(180deg,rgba(8,3,16,0) 40%,rgba(8,3,16,.55));font-family:var(--serif);font-size:14px;letter-spacing:.2em}
+.tr-play span{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.65);background:rgba(232,55,95,.55);backdrop-filter:blur(4px)}
+.tr-play svg{width:15px;height:15px;fill:currentColor}
+@media(min-width:820px){.tr-frame{aspect-ratio:16/9;max-width:960px;max-height:none}}
+
 /* ---------- story ---------- */
 .story{background:var(--bg)}
 .story-grid{display:grid;gap:40px;align-items:center}
@@ -267,6 +279,7 @@ footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:v
     </ul>
     <div class="btns rv">
       <a class="btn btn-main" href="../index.html">▶ 物語をはじめる</a>
+      <a class="btn btn-ghost" href="#trailer">▶ トレーラー</a>
       <a class="btn btn-ghost" href="#music">♪ 曲を聴く</a>
     </div>
   </div>
@@ -274,6 +287,19 @@ footer .logo{font-family:var(--latin);font-size:14px;letter-spacing:.4em;color:v
 </header>
 
 <!-- ============ STORY ============ -->
+<!-- ============ TRAILER ============ -->
+<section class="trailer" id="trailer">
+  <div class="wrap">
+    <div class="eyebrow rv">Trailer</div>
+    <h2 class="rv">トレーラー<small>OFFICIAL TRAILER</small></h2>
+    <div class="tr-frame rv" id="trFrame">
+      <video id="trVid" playsinline preload="none"></video>
+      <button class="tr-play" id="trPlay" type="button"><span><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>音を出して再生</span></button>
+    </div>
+    <p class="note rv">♪ Eruza: Cyber Rose Crimson</p>
+  </div>
+</section>
+
 <section class="story" id="story">
   <div class="moon" style="width:420px;height:420px;right:-160px;top:40px"></div>
   <div class="wrap story-grid">
@@ -507,6 +533,18 @@ audio.addEventListener("ended",()=>{
   const nx=cur.nextElementSibling; if(nx) nx.querySelector(".play").click();
 });
 
+/* トレーラー: スマホは縦長、広い画面は横長。押されるまで読み込まない */
+const trV=document.getElementById("trVid"), trB=document.getElementById("trPlay");
+const wide=matchMedia("(min-width:820px)");
+const setTr=()=>{ const k=wide.matches?"16x9":"9x16"; if(trV.dataset.k===k) return;
+  trV.dataset.k=k; trV.poster="img/trailer-"+k+".webp"; if(trV.src){ trV.src="trailer-"+k+".mp4"; } };
+setTr(); wide.addEventListener("change",setTr);
+trB.addEventListener("click",()=>{ trB.remove(); trV.src="trailer-"+trV.dataset.k+".mp4"; trV.controls=true; trV.play().catch(()=>{}); });
+trV.addEventListener("play",()=>{
+  if(cur&&!audio.paused){ audio.pause(); setRow(cur,false); }
+  const pv=document.getElementById("pv"); if(pv&&!pv.paused) pv.pause(); });
+audio.addEventListener("play",()=>{ if(!trV.paused) trV.pause(); });
+
 /* エルザ: NEW DESIGN / PROTOTYPE。ボタンでも、絵をタップしても切り替わる */
 const ea=document.getElementById("elzaArt");
 const setV=v=>{ ea.querySelectorAll("[data-v]").forEach(el=>el.classList.toggle("on",el.dataset.v===v)); };
@@ -519,7 +557,7 @@ ea.addEventListener("click",e=>{
 /* Dirt and Smoke PV */
 const pv=document.getElementById("pv"), pvBtn=document.getElementById("pvPlay");
 pvBtn.addEventListener("click",()=>{ pvBtn.remove(); pv.controls=true; pv.play().catch(()=>{}); });
-pv.addEventListener("play",()=>{ if(cur&&!audio.paused){ audio.pause(); setRow(cur,false); } });
+pv.addEventListener("play",()=>{ if(cur&&!audio.paused){ audio.pause(); setRow(cur,false); } if(!trV.paused) trV.pause(); });
 audio.addEventListener("play",()=>{ if(!pv.paused) pv.pause(); });
 
 /* reveal */
