@@ -353,7 +353,7 @@ function stopSeq(){
 
 // いまの場面に合った曲を流す(同じ曲なら そのまま)
 function currentTrack(){
-  if(game.state==='title' || game.state==='select' || game.state==='settings') return 'hoof';
+  if(game.state==='title' || game.state==='select' || game.state==='chara' || game.state==='settings') return 'hoof';
   if(boss && boss.alive && boss.engaged) return 'boss';
   return STAGE_BGM[STAGES[Math.min(game.stage, STAGES.length-1)].name] || 'hoof';
 }
@@ -731,7 +731,7 @@ function loadStage(i){
   game.cam = 0;
   player.x = 220; player.y = GROUND_Y - 40;
   player.vx = 0; player.vy = 0; player.dir = 1;  
-  player.mouthful = null; player.puff = 0; player.airPuffs = 4;  
+  player.mouthful = null; player.puff = 0; player.airPuffs = maxPuffs();  
 }  
   
 // ---------- ゲーム状態 ----------
@@ -750,7 +750,16 @@ const D = ()=> DIFFS[game.diff] || DIFFS.normal;
 
 // ---------- セーブ(この端末のブラウザに保存される) ----------
 const SAVE_KEY = 'hohobari-hamster-save-v1';
-const SEED_STAR = 30; // ★ たね何こで もらえるか
+const SEED_STAR = 30;
+// あそべるキャラ
+const CHARAS = {
+  rize:  { name:'リゼ丸',     color:'#aed572', note:['みどりのリーゼントの ハムスター', 'バランスがいい'],
+           speed:3.2, puffs:4, hp:0 },
+  manju: { name:'まんじゅう', color:'#8b5a2b', note:['頭にタオルの もちもちハムスター', 'HP+1・ぷかぷか6回・足は少しおそい'],
+           speed:2.9, puffs:6, hp:1 },
+};
+const CH = ()=> CHARAS[(player && player.chara) || 'rize'] || CHARAS.rize;
+const maxPuffs = ()=> CH().puffs; // ★ たね何こで もらえるか
 function loadSave(){
   let d = {};
   try{ d = JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }catch(e){}
@@ -774,7 +783,7 @@ function loadSave(){
   stars.length = STAGES.length;
   return { ver:3, diff: DIFFS[d.diff] ? d.diff : 'normal', best: d.best|0, cont, cleared: !!d.cleared,
            unlocked: Math.min(unlocked, STAGES.length-1), stars,
-           bgm: d.bgm !== false, se: d.se !== false };
+           bgm: d.bgm !== false, se: d.se !== false, chara: CHARAS[d.chara] ? d.chara : 'rize' };
 }
 function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
 const save = loadSave();
@@ -791,9 +800,10 @@ function resetGame(cp){
     ability:null, abilityT:0,
     puff:0,
     airPuffs:0, coyote:0,
-    anim:0, squash:1, frozenSpit:0,
+    anim:0, squash:1, frozenSpit:0, chara:save.chara,
   };
-  player.hp = cp ? Math.min(player.maxHp, Math.max(cp.hp, D().hp)) : D().hp;
+  const startHp = D().hp + CHARAS[save.chara].hp;
+  player.hp = cp ? Math.min(player.maxHp, Math.max(cp.hp, startHp)) : startHp;
   game.cam = 0; game.time = 0; game.frame = 0; game.banner = 0;
   game.score = cp ? cp.score : 0;
   game.stage = cp ? cp.stage : 0;
@@ -847,7 +857,7 @@ function menuItems(){
   if(game.state==='title'){
     const a = [];
     if(save.cont) a.push({ label:'つづきから(STAGE ' + (save.cont.stage+1) + ')', act:()=>startGame(save.cont) });
-    a.push({ label:'はじめから', act:()=>startGame(null) });
+    a.push({ label:'はじめから', act:()=>{ setState('chara'); game.menuSel = save.chara==='manju' ? 1 : 0; } });
     if(save.unlocked > 0) a.push({ label:'ステージせんたく', act:()=>{
       setState('select'); game.menuSel = Math.min(save.unlocked, STAGES.length-1); } });
     a.push({ label:'せってい', act:()=>openSettings('title') });
@@ -859,6 +869,11 @@ function menuItems(){
       : ()=>SFX.hurt() }));
     a.push({ label:'もどる', act:()=>setState('title') });
     return a;
+  }
+  if(game.state==='chara'){
+    const pick = c=>()=>{ save.chara = c; writeSave(); startGame(null); };
+    return [ { label:'リゼ丸', act:pick('rize') }, { label:'まんじゅう', act:pick('manju') },
+             { label:'もどる', act:()=>setState('title') } ];
   }
   if(game.state==='settings') return [
     { label:'むずかしさ:' + DIFFS[save.diff].label, act:()=>{
@@ -882,7 +897,7 @@ function menuItems(){
 }
 // リザルト画面はタップで早送り
 function menuMusic(){
-  if(game.state==='title' || game.state==='select' || (game.state==='settings' && game.settingsFrom!=='pause')) playBGM();
+  if(game.state==='title' || game.state==='select' || game.state==='chara' || (game.state==='settings' && game.settingsFrom!=='pause')) playBGM();
 }
 function skipResult(){ if(game.state==='next' && 210 - game.banner > 50 && game.banner > 25) game.banner = 25; }
 function canvasPoint(e){
@@ -920,8 +935,8 @@ addEventListener('keydown', e=>{
   let sel = Math.min(game.menuSel, n-1);
   if(e.code==='ArrowUp' || e.code==='KeyW') sel = grid ? (sel===n-1 ? SEL_COLS : (sel >= SEL_COLS ? sel-SEL_COLS : sel)) : (sel+n-1) % n;
   else if(e.code==='ArrowDown' || e.code==='KeyS') sel = grid ? (sel < SEL_COLS ? Math.min(sel+SEL_COLS, n-2) : n-1) : (sel+1) % n;
-  else if(grid && (e.code==='ArrowLeft' || e.code==='KeyA')) sel = (sel+n-1) % n;
-  else if(grid && (e.code==='ArrowRight' || e.code==='KeyD')) sel = (sel+1) % n;
+  else if((grid || game.state==='chara') && (e.code==='ArrowLeft' || e.code==='KeyA')) sel = (sel+n-1) % n;
+  else if((grid || game.state==='chara') && (e.code==='ArrowRight' || e.code==='KeyD')) sel = (sel+1) % n;
   else if(e.code==='Space' || e.code==='Enter' || e.code==='KeyZ'){
     e.preventDefault(); if(e.repeat) return;
     audio(); unlockAudio();
@@ -948,7 +963,7 @@ function popup(x,y,text,color='#fff'){ popups.push({x,y,text,color,life:60}); }
 function updatePlayer(){  
   const p = player;  
   const water = !!STAGES[game.stage].water; // 水中ステージ
-  const SPEED = water ? 2.6 : 3.2, GRAV = water ? (input.jump ? 0.05 : 0.13) : 0.45, JUMP = -9.5;  
+  const SPEED = water ? 2.6 : CH().speed, GRAV = water ? (input.jump ? 0.05 : 0.13) : 0.45, JUMP = -9.5;  
   
   // 左右移動  
   if(input.left){ p.vx = -SPEED; p.dir = -1; }  
@@ -969,7 +984,7 @@ function updatePlayer(){
   if(input.jumpPressed){  
     input.jumpPressed = false;  
     if(p.onGround || p.coyote > 0){ // 足場のはしから少しおくれても ジャンプできる
-      p.vy = JUMP; p.onGround=false; p.coyote = 0; p.airPuffs = 4; SFX.jump(); p.squash = 1.25;
+      p.vy = JUMP; p.onGround=false; p.coyote = 0; p.airPuffs = maxPuffs(); SFX.jump(); p.squash = 1.25;
       spawnParticles(p.x+p.w/2, p.y+p.h, 'rgba(255,255,255,.8)', 4, 1.5); }  
     else if(p.airPuffs > 0){  
       p.airPuffs--; p.vy = -5.5; p.puff = 25; SFX.puff();  
@@ -994,7 +1009,7 @@ function updatePlayer(){
     if(p.x+p.w > pf.x && p.x < pf.x+pf.w){  
       if(p.vy >= 0 && p.y+p.h > pf.y && p.y+p.h - p.vy <= pf.y + 8){  
         p.y = pf.y - p.h; p.vy = 0; p.standPf = pf;  
-        if(!p.onGround){ p.onGround = true; p.airPuffs = 4; }  
+        if(!p.onGround){ p.onGround = true; p.airPuffs = maxPuffs(); }  
       }  
     }  
   }  
@@ -1134,7 +1149,7 @@ function updateBoss(){
   if(hit(b, p)){
     if(p.vy > 1 && (p.y + p.h) - b.y < 26){
       damageBoss(1, 'stomp');
-      p.vy = input.jump ? -10 : -7.5; p.airPuffs = 4; p.squash = 1.3;
+      p.vy = input.jump ? -10 : -7.5; p.airPuffs = maxPuffs(); p.squash = 1.3;
     } else if(p.inv === 0){
       damagePlayer(1);
     }
@@ -1229,7 +1244,7 @@ function updateEnemies(){
       if(hit(e, p) && p.vy > 1 && (p.y + p.h) - e.y < 20){  
         killEnemy(e, 'ice');  
         p.vy = input.jump ? -9.5 : -6.5;  
-        p.airPuffs = 4; p.squash = 1.3;  
+        p.airPuffs = maxPuffs(); p.squash = 1.3;  
         popup(p.x+p.w/2, p.y-10, 'こなごな!', '#b3e5fc');  
       }  
       continue;  
@@ -1272,7 +1287,7 @@ function updateEnemies(){
         killEnemy(e, 'stomp');  
         SFX.stomp();  
         p.vy = input.jump ? -9.5 : -6.5; // ジャンプ押してたら大バウンド  
-        p.airPuffs = 4; p.squash = 1.3;  
+        p.airPuffs = maxPuffs(); p.squash = 1.3;  
         popup(p.x+p.w/2, p.y-10, 'ふみつけ!', '#fff');  
         continue;  
       }  
@@ -1647,6 +1662,7 @@ function draw(){
   if(game.state==='next') drawNext();
   if(game.state==='pause') drawPause();
   if(game.state==='select') drawSelect();
+  if(game.state==='chara') drawCharaSelect();
   if(game.state==='settings') drawSettings();
   drawIris();
 }
@@ -1908,6 +1924,88 @@ function rounded(x,y,w,h,r){
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();  
 }  
   
+// ---------- ハムスター「まんじゅう」(頭にタオル) ----------
+function drawManju(p, ab){
+  const C = '#8b5a2b', D2 = '#4e2c10';
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  // 耳
+  for(const ex of [-12, 12]){
+    ctx.fillStyle = C; ctx.strokeStyle = D2; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(ex, -17, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#a8703c'; ctx.beginPath(); ctx.arc(ex, -17, 3, 0, Math.PI*2); ctx.fill();
+  }
+  // からだ(たてながの おまんじゅう)
+  const g = ctx.createLinearGradient(0, -22, 0, 22);
+  g.addColorStop(0, '#9c6633'); g.addColorStop(1, '#7a4c22');
+  ctx.fillStyle = g; ctx.strokeStyle = D2; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(0, -21);
+  ctx.bezierCurveTo(14, -21, 20, -10, 20, 4);
+  ctx.bezierCurveTo(20, 16, 13, 21, 0, 21);
+  ctx.bezierCurveTo(-13, 21, -20, 16, -20, 4);
+  ctx.bezierCurveTo(-20, -10, -14, -21, 0, -21);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // ほおばると ほっぺが ぷっくり
+  if(p.mouthful){
+    ctx.fillStyle = C;
+    ctx.beginPath(); ctx.ellipse(-15, 6, 8, 7, 0, 0, Math.PI*2); ctx.ellipse(18, 6, 8, 7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = D2; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(-15, 6, 8, 7, 0, Math.PI*0.6, Math.PI*1.5); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(18, 6, 8, 7, 0, -Math.PI*0.5, Math.PI*0.4); ctx.stroke();
+  }
+  // おでこの 3本の なみせん
+  ctx.strokeStyle = D2; ctx.lineWidth = 1.6;
+  for(const fx of [-4, 1, 6]){
+    ctx.beginPath(); ctx.moveTo(fx, -16);
+    ctx.quadraticCurveTo(fx+2.5, -13.5, fx, -11); ctx.quadraticCurveTo(fx-2.5, -8.5, fx, -6);
+    ctx.stroke();
+  }
+  // 目
+  ctx.fillStyle = '#1b1b1b';
+  ctx.beginPath(); ctx.arc(-5, 0, 3.2, 0, Math.PI*2); ctx.arc(9, 0, 3.2, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-4, -1.2, 1.2, 0, Math.PI*2); ctx.arc(10, -1.2, 1.2, 0, Math.PI*2); ctx.fill();
+  // 口
+  if(p.sucking){
+    ctx.fillStyle = '#3e1f0a'; ctx.beginPath(); ctx.ellipse(2, 7, 4.5, 5.5, 0, 0, Math.PI*2); ctx.fill();
+  } else { // 「:3」みたいな口
+    ctx.strokeStyle = D2; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 5, 2, 0, Math.PI); ctx.arc(4, 5, 2, 0, Math.PI); ctx.stroke();
+  }
+  // 小さな手
+  ctx.strokeStyle = D2; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.arc(-8, 12, 3, Math.PI*0.1, Math.PI*0.9); ctx.stroke();
+  ctx.beginPath(); ctx.arc(11, 12, 3, Math.PI*0.1, Math.PI*0.9); ctx.stroke();
+  // 足
+  ctx.fillStyle = '#6d4520';
+  const step = Math.sin(p.anim*2)*3 * (Math.abs(p.vx)>0.5?1:0);
+  ctx.beginPath(); ctx.ellipse(-7+step, 20, 5, 3, 0, 0, Math.PI*2); ctx.ellipse(8-step, 20, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+  // 頭のタオル(能力をコピーすると その色に そまる)
+  const wob = Math.sin(p.anim*1.6) * 0.8 * (Math.abs(p.vx) > 0.5 ? 1 : 0.3);
+  ctx.save(); ctx.translate(1, -23 + wob*0.4); ctx.rotate(-0.06);
+  ctx.fillStyle = ab ? ab.color : '#b3e5fc'; ctx.strokeStyle = ab ? 'rgba(0,0,0,.3)' : '#5b9bc4'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(-11, 3); ctx.quadraticCurveTo(-12, -4, -4, -5); ctx.quadraticCurveTo(4, -7, 10, -3);
+  ctx.quadraticCurveTo(14, 0, 11, 4); ctx.quadraticCurveTo(0, 6, -11, 3);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(-7, -1); ctx.quadraticCurveTo(0, -4, 7, -2); ctx.stroke();
+  ctx.restore();
+  // 能力ごとの かざり
+  if(p.ability==='fire'){
+    const fl = Math.sin(game.frame*0.5)*2;
+    ctx.fillStyle = '#ffeb3b';
+    ctx.beginPath(); ctx.moveTo(4, -28); ctx.quadraticCurveTo(12, -34-fl, 8, -42-fl); ctx.quadraticCurveTo(1, -35, 4, -28); ctx.fill();
+  } else if(p.ability==='spark'){
+    const tw = 0.6 + 0.4*Math.abs(Math.sin(game.frame*0.3));
+    ctx.fillStyle = '#fff';
+    drawStarPath(14, -31, 4.5*tw); ctx.fill(); drawStarPath(-10, -32, 3*(1.6-tw)); ctx.fill();
+  } else if(p.ability==='ice'){
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-6, -31, 2.2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(12, -30, 1.8, 0, Math.PI*2); ctx.fill();
+  }
+}
+
 // ---------- ハムスター「リゼ丸」(緑のリーゼント) ----------  
 function drawPlayer(){  
   const p = player;  
@@ -1921,6 +2019,8 @@ function drawPlayer(){
   ctx.translate(cx, cy);  
   ctx.scale(p.dir*sx, sy);  
   
+  if(p.chara==='manju') drawManju(p, ab);
+  else {
   // しっぽ(小さくモフッと)  
   ctx.fillStyle = '#9ccc65';  
   ctx.beginPath(); ctx.arc(-21, 6, 5, 0, Math.PI*2); ctx.fill();  
@@ -2018,6 +2118,7 @@ function drawPlayer(){
   const step = Math.sin(p.anim*2)*3 * (Math.abs(p.vx)>0.5?1:0);  
   ctx.beginPath(); ctx.ellipse(-7+step, 18, 5, 3.2, 0, 0, Math.PI*2);  
   ctx.ellipse(7-step, 18, 5, 3.2, 0, 0, Math.PI*2); ctx.fill();  
+  }
   ctx.restore();  
   
   // 吸い込みの風エフェクト  
@@ -2291,7 +2392,7 @@ function hudText(t, x, y, font, color, align='left'){
 }
 
 function drawHUD(){
-  if(game.state==='title' || game.state==='select' || game.state==='settings') return;
+  if(game.state==='title' || game.state==='select' || game.state==='chara' || game.state==='settings') return;
   const p = player;
   // 左上: HP
   ctx.fillStyle = 'rgba(30,20,50,.4)'; rounded(10, 8, 20 + p.maxHp*28, 38, 19); ctx.fill();
@@ -2324,9 +2425,9 @@ function drawHUD(){
   ctx.fillStyle = '#ffb300';
   ctx.beginPath(); ctx.moveTo(bx+bw+7, by-8); ctx.lineTo(bx+bw+20, by-3); ctx.lineTo(bx+bw+7, by+2); ctx.closePath(); ctx.fill();
   const mx = bx + bw*prog; // リゼ丸のしるし
-  ctx.fillStyle = '#aed572'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.fillStyle = CH().color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(mx, by+5, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#7cb342'; ctx.beginPath(); ctx.moveTo(mx-6, by); ctx.quadraticCurveTo(mx+2, by-11, mx+11, by-3); ctx.quadraticCurveTo(mx+3, by-4, mx-6, by); ctx.fill();
+  ctx.fillStyle = p.chara==='manju' ? '#b3e5fc' : '#7cb342'; ctx.beginPath(); ctx.moveTo(mx-6, by); ctx.quadraticCurveTo(mx+2, by-11, mx+11, by-3); ctx.quadraticCurveTo(mx+3, by-4, mx-6, by); ctx.fill();
   ctx.fillStyle = '#ffa726';
   ctx.beginPath(); ctx.arc(mx-4, by+7, 2, 0, Math.PI*2); ctx.arc(mx+4, by+7, 2, 0, Math.PI*2); ctx.fill();
   hudText('STAGE ' + (game.stage+1) + '/' + STAGES.length + ' ' + STAGES[Math.min(game.stage,STAGES.length-1)].name,
@@ -2424,11 +2525,12 @@ function drawLock(x, y){
 const fmtTime = f=>{ const sec = Math.floor(f/60); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2, '0'); };
 
 // 画面の好きな位置にリゼ丸をかく(タイトル用)
-function drawMogAt(x, y, s, cheeks){
+function drawMogAt(x, y, s, cheeks, chara){
   const bak = player;
+  chara = chara || (bak && bak.chara) || save.chara;
   player = { x:x-20, y:y-19, w:40, h:38, vx:0, vy:0, dir:1, inv:0, puff:0,
     squash:1 + Math.sin(performance.now()/180)*0.05, anim:0,
-    sucking:false, mouthful:cheeks ? 'walker' : null, ability:null };
+    sucking:false, mouthful:cheeks ? 'walker' : null, ability:null, chara };
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-x, -y);
   drawPlayer();
   ctx.restore();
@@ -2451,7 +2553,7 @@ function drawTitle(){
   bigText('ほおばりハムスター', 62, 22, '#fff3c4');
   bigText('リゼ丸のプチプチ冒険🟢島', 130, 54, '#ffd54f');
   bigText('てきを すいこんで ほおばろう! 全' + STAGES.length + 'ステージ', 188, 20, '#fff');
-  drawMogAt(165, 318 - Math.abs(Math.sin(T*0.06))*16, 2.6, Math.floor(T/70)%2===0); // 大きなリゼ丸がぴょんぴょん
+  drawMogAt(165, 318 - Math.abs(Math.sin(T*0.06))*16, 2.6, Math.floor(T/70)%2===0, save.chara); // 大きなリゼ丸がぴょんぴょん
   drawEnemyAt('bee',    800, 250 + Math.sin(T*0.06)*12, 1.7, T);
   drawEnemyAt('chili',  840, 335, 1.7, T);
   drawEnemyAt('hopper', 760, 340 - Math.abs(Math.sin(T*0.05))*20, 1.7, T+40);
@@ -2521,6 +2623,38 @@ function drawSelect(){
 }
 
 // せってい
+// キャラせんたく
+function drawCharaSelect(){
+  overlay();
+  const T = performance.now()/16.67;
+  bigText('キャラせんたく', 66, 36, '#ffd54f');
+  bigText('だれで ぼうけんする?', 100, 17, '#fff');
+  const items = menuItems();
+  if(game.menuSel >= items.length) game.menuSel = 0;
+  menuButtons = [];
+  ['rize', 'manju'].forEach((c, i)=>{
+    const ch = CHARAS[c], cw = 300, chh = 300, x = W/2 - 320 + i*340, y = 120;
+    const sel = game.menuSel===i;
+    menuButtons.push({ x, y, w:cw, h:chh, act:items[i].act });
+    ctx.save(); ctx.translate(0, sel ? -5 : 0);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; rounded(x, y+6, cw, chh, 22); ctx.fill();
+    ctx.fillStyle = sel ? 'rgba(255,213,79,.22)' : 'rgba(255,255,255,.1)'; rounded(x, y, cw, chh, 22); ctx.fill();
+    ctx.strokeStyle = sel ? '#ffd54f' : 'rgba(255,255,255,.5)'; ctx.lineWidth = sel ? 5 : 2.5; ctx.stroke();
+    const hop = sel ? Math.abs(Math.sin(T*0.08))*14 : 0;
+    drawMogAt(x + cw/2, y + 125 - hop, 2.8, sel && Math.floor(T/60)%2===0, c);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 26px '+FONT; ctx.fillStyle = sel ? '#ffd54f' : '#fff';
+    ctx.fillText(ch.name, x + cw/2, y + 228);
+    ctx.font = '14px '+FONT; ctx.fillStyle = '#fff';
+    ctx.fillText(ch.note[0], x + cw/2, y + 256);
+    ctx.fillStyle = '#ffcc80'; ctx.fillText(ch.note[1], x + cw/2, y + 278);
+    ctx.restore();
+  });
+  const bw = 220, bh = 44, bx = W/2 - bw/2, by = H - 64;
+  menuButtons.push({ x:bx, y:by, w:bw, h:bh, act:items[2].act });
+  drawMenuButton(bx, by, bw, bh, 'もどる', game.menuSel===2);
+}
+
 function drawSettings(){
   overlay();
   bigText('せってい', 104, 44, '#ffd54f');
@@ -2563,7 +2697,7 @@ function recordStage(){
 function drawOver(){
   overlay();
   drawMogAt(W/2, 105, 1.8, false);
-  bigText('リゼ丸、やられた…', 190, 48, '#ef9a9a');
+  bigText(CH().name + '、やられた…', 190, 48, '#ef9a9a');
   bigText('SCORE: '+game.score, 240, 28);
   recordLine(276);
   drawMenu(310);
@@ -2610,7 +2744,7 @@ function drawClear(){
   drawMogAt(W/2, 95, 2, true);
   bigText('全ステージクリア!!', 175, 52, '#ffd54f');
   bigText('SCORE: '+game.score, 228, 32);
-  bigText('リゼ丸、ほっぺもおなかも いっぱい!   ★ ' + totalStars() + '/' + STAGES.length*3, 268, 22, '#ffcc80');
+  bigText(CH().name + '、ほっぺもおなかも いっぱい!   ★ ' + totalStars() + '/' + STAGES.length*3, 268, 22, '#ffcc80');
   recordLine(304);
   drawMenu(340);
 }
